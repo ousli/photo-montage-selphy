@@ -224,3 +224,22 @@ input[type="text"]:focus { outline: none; border-color: var(--accent); box-shado
   .cell-menu button { padding: 14px 16px; }
   .hint { font-size: 0.8rem; }
 }
+
+/* Évite la sélection de texte et le menu copier/traduire/enregistrer l'image sur appui long (iOS, Android) */
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+canvas {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+input[type="text"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

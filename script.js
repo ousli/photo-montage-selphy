@@ -360,6 +360,7 @@ canvas.addEventListener("pointerup", (ev) => {
   if (wasClick) showMenu(ev);
 });
 canvas.addEventListener("contextmenu", (ev) => ev.preventDefault());
+canvas.addEventListener("selectstart", (ev) => ev.preventDefault());
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
   if (pointers.size < 2) pinch = null;
