@@ -247,3 +247,6 @@ input[type="text"] {
 }
 ::selection { background: transparent; }
 input[type="text"]::selection { background: rgba(51, 102, 255, 0.3); }
+
+.check { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }

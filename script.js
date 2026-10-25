@@ -12,6 +12,9 @@ const canvas = $("montageCanvas");
 const ctx = canvas.getContext("2d");
 
 const LONG_EDGE_PX = 1800;
+const CAPTION_H = 76; // hauteur de la bande de légende (px canvas)
+const captionsOn = $("captionsOn");
+const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
 const slots = Array.from({ length: 6 }, () => null);
 let selected = 0;
@@ -61,6 +64,26 @@ function clampOffset(s) {
   s.oy = Math.max(-lim, Math.min(lim, s.oy));
 }
 
+// Zone occupée par la photo : la cellule moins la bande de légende
+function photoRect(c) {
+  return captionsOn.checked ? { ...c, h: c.h - CAPTION_H } : c;
+}
+
+function drawCaption(text, c) {
+  ctx.save();
+  let size = 40;
+  ctx.font = `${size}px sans-serif`;
+  while (size > 18 && ctx.measureText(text).width > c.w - 32) {
+    size -= 2;
+    ctx.font = `${size}px sans-serif`;
+  }
+  ctx.fillStyle = "#1f2430";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, c.x + c.w / 2, c.y + c.h - CAPTION_H / 2, c.w - 32);
+  ctx.restore();
+}
+
 function drawSlot(s, c) {
   const rad = (s.rot * Math.PI) / 180;
   const sin = Math.abs(Math.sin(rad));
@@ -104,12 +127,14 @@ function render(forExport = false) {
       }
       return;
     }
+    const pr = photoRect(c);
     ctx.save();
     ctx.beginPath();
-    ctx.rect(c.x, c.y, c.w, c.h);
+    ctx.rect(pr.x, pr.y, pr.w, pr.h);
     ctx.clip();
-    drawSlot(s, c);
+    drawSlot(s, pr);
     ctx.restore();
+    if (captionsOn.checked && s.caption) drawCaption(s.caption, c);
   });
 
   if (!forExport && cells[selected]) {
@@ -196,6 +221,10 @@ function refreshUI() {
   rotInput.value = s ? s.rot : 0;
   $("resetBtn").disabled = !s;
   zoomInput.value = s ? Math.round(s.zoom * 100) : 100;
+  captionInput.disabled = !s || !captionsOn.checked;
+  captionInput.placeholder = captionsOn.checked ? "Texte sous la photo" : "Active « Légendes sous les photos »";
+  const cap = s ? s.caption || "" : "";
+  if (captionInput.value !== cap) captionInput.value = cap;
 }
 
 function select(i) {
@@ -322,7 +351,7 @@ canvas.addEventListener("pointermove", (ev) => {
   }
   const r = canvas.getBoundingClientRect();
   const k = canvas.width / r.width;
-  const c = cells[selected];
+  const c = photoRect(cells[selected]);
   s.ox += ((ev.clientX - drag.x) * k) / c.w;
   s.oy += ((ev.clientY - drag.y) * k) / c.h;
   clampOffset(s);
@@ -437,6 +466,14 @@ $("gapReset").onclick = () => {
   render();
 };
 
+captionsOn.addEventListener("change", () => render());
+captionInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.caption = captionInput.value;
+  render();
+});
+
 $("resetAllBtn").onclick = () => {
   if (!confirm("Réinitialiser les réglages et retirer toutes les photos ?")) return;
   ratioSelect.value = "3:2";
@@ -445,6 +482,7 @@ $("resetAllBtn").onclick = () => {
   gapInput.value = DEFAULT_GAP;
   $("gapValue").textContent = DEFAULT_GAP;
   slots.fill(null);
+  captionsOn.checked = false;
   selected = 0;
   render();
   setMessage("Tout a été réinitialisé.");

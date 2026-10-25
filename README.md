@@ -10,6 +10,7 @@ Ouvre `index.html` dans ton navigateur.
 
 - **Format :** ratio (3:2, 4:3, 16:9), orientation, nombre de photos (2/4/6) et marge entre les photos.
 - **Photos :** clique une case pour choisir, remplacer ou supprimer sa photo (ou dépose un fichier dessus).
+- **Légendes (prototype) :** coche « Légendes sous les photos », puis tape le texte de chaque photo dans le champ « Légende ». Le texte rétrécit automatiquement s'il est trop long et il est inclus dans l'export et l'impression.
 - **Échange :** appui long sur une photo, puis glisse-la sur une autre case pour permuter les deux (ou la déplacer vers une case vide).
 - **Cadrage :** glisse pour déplacer, molette / pincement / curseur pour zoomer, curseur et boutons 90° pour pivoter.
 - **Préréglages :** trois préréglages Selphy fournis ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).

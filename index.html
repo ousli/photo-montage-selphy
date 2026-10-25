@@ -61,6 +61,10 @@
             <button id="gapReset" type="button" class="ghost small">Reset</button>
           </span>
         </label>
+        <label class="check">
+          <input id="captionsOn" type="checkbox" />
+          Légendes sous les photos
+        </label>
       </section>
 
       <section class="card" id="editor">
@@ -71,6 +75,9 @@
         </label>
         <label>Rotation
           <input id="rot" type="range" min="-180" max="180" value="0" />
+        </label>
+        <label>Légende
+          <input id="caption" type="text" maxlength="60" placeholder="Texte sous la photo" disabled />
         </label>
         <div class="row">
           <button id="rotLeftBtn" type="button" class="secondary small">⟲ 90°</button>
