@@ -113,7 +113,39 @@ function render(forExport = false) {
     ctx.lineWidth = 8;
     ctx.strokeRect(c.x + 4, c.y + 4, c.w - 8, c.h - 8);
   }
+  if (!forExport && swap) drawSwapOverlay();
   refreshUI();
+}
+
+function drawSwapOverlay() {
+  const src = cells[selected];
+  const target = cells.findIndex(
+    (c) => swap.x >= c.x && swap.x <= c.x + c.w && swap.y >= c.y && swap.y <= c.y + c.h
+  );
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.55)";
+  ctx.fillRect(src.x, src.y, src.w, src.h);
+  if (target >= 0 && target !== selected) {
+    const t = cells[target];
+    ctx.fillStyle = "rgba(51,102,255,0.18)";
+    ctx.fillRect(t.x, t.y, t.w, t.h);
+    ctx.strokeStyle = "#3366ff";
+    ctx.lineWidth = 8;
+    ctx.setLineDash([24, 16]);
+    ctx.strokeRect(t.x + 4, t.y + 4, t.w - 8, t.h - 8);
+  }
+  ctx.restore();
+  // miniature qui suit le pointeur
+  const g = { x: swap.x - src.w * 0.2, y: swap.y - src.h * 0.2, w: src.w * 0.4, h: src.h * 0.4 };
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 30;
+  ctx.beginPath();
+  ctx.rect(g.x, g.y, g.w, g.h);
+  ctx.clip();
+  drawSlot(slots[selected], g);
+  ctx.restore();
 }
 
 function refreshUI() {
@@ -192,14 +224,22 @@ function pickFor(index) {
   fileInput.click();
 }
 
-function cellAt(ev) {
+function canvasPoint(ev) {
   const r = canvas.getBoundingClientRect();
-  const x = ((ev.clientX - r.left) * canvas.width) / r.width;
-  const y = ((ev.clientY - r.top) * canvas.height) / r.height;
+  return {
+    x: ((ev.clientX - r.left) * canvas.width) / r.width,
+    y: ((ev.clientY - r.top) * canvas.height) / r.height,
+  };
+}
+
+function cellAt(ev) {
+  const { x, y } = canvasPoint(ev);
   return cells.findIndex((c) => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h);
 }
 
 let drag = null;
+let swap = null; // { x, y } position du pointeur en coordonnées canvas pendant un échange
+const LONG_PRESS_MS = 400;
 const pointers = new Map();
 let pinch = null;
 
@@ -217,8 +257,20 @@ canvas.addEventListener("pointerdown", (ev) => {
   if (i < 0) return;
   selected = i;
   hideMenu();
-  drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false };
+  drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false, swap: false };
   canvas.style.cursor = "grabbing";
+  // appui long sur une photo sans bouger : mode échange
+  if (slots[i]) {
+    const d = drag;
+    d.timer = setTimeout(() => {
+      if (drag !== d || d.moved) return;
+      d.swap = true;
+      swap = canvasPoint(ev);
+      canvas.style.cursor = "move";
+      navigator.vibrate?.(20);
+      render();
+    }, LONG_PRESS_MS);
+  }
   render();
 });
 canvas.addEventListener("pointermove", (ev) => {
@@ -233,19 +285,32 @@ canvas.addEventListener("pointermove", (ev) => {
     render();
     return;
   }
+  if (drag && drag.swap) {
+    swap = canvasPoint(ev);
+    render();
+    return;
+  }
   if (!drag || !s) return;
+  if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 5) {
+    drag.moved = true;
+    clearTimeout(drag.timer);
+  }
   const r = canvas.getBoundingClientRect();
   const k = canvas.width / r.width;
   const c = cells[selected];
   s.ox += ((ev.clientX - drag.x) * k) / c.w;
   s.oy += ((ev.clientY - drag.y) * k) / c.h;
   clampOffset(s);
-  if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 5) drag.moved = true;
-  drag = { ...drag, x: ev.clientX, y: ev.clientY };
+  drag.x = ev.clientX;
+  drag.y = ev.clientY;
   render();
 });
 const endDrag = () => {
+  if (drag) clearTimeout(drag.timer);
+  const wasSwapping = !!swap;
   drag = null;
+  swap = null;
+  if (wasSwapping) render();
   canvas.style.cursor = "grab";
 };
 canvas.addEventListener("pointerup", (ev) => {
@@ -255,10 +320,21 @@ canvas.addEventListener("pointerup", (ev) => {
     endDrag();
     return;
   }
+  if (drag && drag.swap) {
+    const to = cellAt(ev);
+    if (to >= 0 && to !== selected) {
+      [slots[selected], slots[to]] = [slots[to], slots[selected]];
+      selected = to;
+      setMessage(`Photos échangées.`);
+    }
+    endDrag();
+    return;
+  }
   const wasClick = drag && !drag.moved;
   endDrag();
   if (wasClick) showMenu(ev);
 });
+canvas.addEventListener("contextmenu", (ev) => ev.preventDefault());
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
   if (pointers.size < 2) pinch = null;
