@@ -86,8 +86,13 @@ function render(forExport = false) {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, w, h);
 
+  // pendant un échange, la case survolée montre déjà le résultat
+  const shown = slots.slice();
+  const hover = !forExport && swap ? swapTarget() : -1;
+  if (hover >= 0) [shown[selected], shown[hover]] = [shown[hover], shown[selected]];
+
   cells.forEach((c, i) => {
-    const s = slots[i];
+    const s = shown[i];
     if (!s) {
       if (!forExport) {
         ctx.fillStyle = "#eef1f8";
@@ -117,28 +122,48 @@ function render(forExport = false) {
   refreshUI();
 }
 
-function drawSwapOverlay() {
-  const src = cells[selected];
-  const target = cells.findIndex(
+function swapTarget() {
+  const t = cells.findIndex(
     (c) => swap.x >= c.x && swap.x <= c.x + c.w && swap.y >= c.y && swap.y <= c.y + c.h
   );
+  return t === selected ? -1 : t;
+}
+
+function drawSwapOverlay() {
+  const hover = swapTarget();
   ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,0.55)";
-  ctx.fillRect(src.x, src.y, src.w, src.h);
-  if (target >= 0 && target !== selected) {
-    const t = cells[target];
-    ctx.fillStyle = "rgba(51,102,255,0.18)";
-    ctx.fillRect(t.x, t.y, t.w, t.h);
+  cells.forEach((c, i) => {
+    if (i === selected) {
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+      return;
+    }
+    const on = i === hover;
+    ctx.fillStyle = on ? "rgba(51,102,255,0.22)" : "rgba(51,102,255,0.08)";
+    ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.strokeStyle = "#3366ff";
-    ctx.lineWidth = 8;
-    ctx.setLineDash([24, 16]);
-    ctx.strokeRect(t.x + 4, t.y + 4, t.w - 8, t.h - 8);
-  }
+    ctx.lineWidth = on ? 10 : 5;
+    ctx.setLineDash(on ? [] : [24, 16]);
+    ctx.strokeRect(c.x + 6, c.y + 6, c.w - 12, c.h - 12);
+    // pastille d'indication au centre de chaque zone de dépôt
+    const r = Math.min(c.w, c.h) * 0.09;
+    ctx.setLineDash([]);
+    ctx.fillStyle = on ? "#3366ff" : "rgba(51,102,255,0.75)";
+    ctx.beginPath();
+    ctx.arc(c.x + c.w / 2, c.y + c.h / 2, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = `bold ${Math.round(r * 1.3)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("⇄", c.x + c.w / 2, c.y + c.h / 2);
+  });
   ctx.restore();
   // miniature qui suit le pointeur
+  const src = cells[selected];
   const g = { x: swap.x - src.w * 0.2, y: swap.y - src.h * 0.2, w: src.w * 0.4, h: src.h * 0.4 };
   ctx.save();
-  ctx.globalAlpha = 0.9;
+  ctx.globalAlpha = 0.92;
   ctx.shadowColor = "rgba(0,0,0,0.35)";
   ctx.shadowBlur = 30;
   ctx.beginPath();
