@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Montage photo Selphy</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>📷 Montage photo</h1>
+    <div class="top-actions">
+      <button id="resetAllBtn" type="button" class="ghost">Tout réinitialiser</button>
+      <button id="downloadBtn" type="button" class="secondary">Télécharger</button>
+      <button id="printBtn" type="button">🖨 Imprimer</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Préréglages</h2>
+        <div id="presetList" class="presets"></div>
+        <div class="row">
+          <input id="presetName" type="text" placeholder="Nom du préréglage" maxlength="40" />
+          <button id="presetSave" type="button" class="small">Enregistrer</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Format</h2>
+        <label>Ratio
+          <select id="ratio">
+            <option value="3:2">3:2</option>
+            <option value="4:3">4:3</option>
+            <option value="16:9">16:9</option>
+          </select>
+        </label>
+        <label>Orientation
+          <select id="orientation">
+            <option value="landscape">Paysage</option>
+            <option value="portrait">Portrait</option>
+          </select>
+        </label>
+        <label>Nombre de photos
+          <select id="photoCount">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+        <label>Marge entre les photos <b><span id="gapValue">14</span> px</b>
+          <span class="row">
+            <input id="gap" type="range" min="0" max="60" value="14" />
+            <button id="gapReset" type="button" class="ghost small">Reset</button>
+          </span>
+        </label>
+      </section>
+
+      <section class="card" id="editor">
+        <h2 id="editorTitle">Photo 1</h2>
+        <div class="slots" id="slots"></div>
+        <label>Zoom
+          <input id="zoom" type="range" min="20" max="400" value="100" />
+        </label>
+        <label>Rotation
+          <input id="rot" type="range" min="-180" max="180" value="0" />
+        </label>
+        <div class="row">
+          <button id="rotLeftBtn" type="button" class="secondary small">⟲ 90°</button>
+          <button id="rotRightBtn" type="button" class="secondary small">⟳ 90°</button>
+          <button id="resetBtn" type="button" class="ghost small">Réinitialiser</button>
+        </div>
+        <input id="fileInput" type="file" accept="image/*" hidden />
+      </section>
+
+      <p id="message" class="message"></p>
+    </aside>
+
+    <section class="stage">
+      <div class="preview">
+        <canvas id="montageCanvas" width="1800" height="1200"></canvas>
+      </div>
+      <p class="hint">Clique une case pour choisir, remplacer ou supprimer sa photo · glisse pour recadrer · molette ou pincement pour zoomer · dépose un fichier sur une case</p>
+    </section>
+  </main>
+
+  <div id="cellMenu" class="cell-menu" hidden></div>
+  <script src="./script.js"></script>
+</body>
+</html>
