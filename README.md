@@ -15,6 +15,10 @@ Ouvre `index.html` dans ton navigateur.
 - **Préréglages :** trois préréglages Selphy fournis ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Sortie :** Télécharger (JPG) ou Imprimer.
 
+## Installation (PWA)
+
+En https (par exemple GitHub Pages), l'app est installable : « Ajouter à l'écran d'accueil » sur téléphone, ou l'icône d'installation dans la barre d'adresse sur ordinateur. Une fois installée, elle s'ouvre en plein écran et fonctionne hors ligne. Incrémente `CACHE` dans `sw.js` quand tu publies une nouvelle version.
+
 ## Impression
 
 Le navigateur ne peut pas imposer les réglages de l'imprimante. Dans la boîte de dialogue, vérifie :
@@ -29,4 +33,5 @@ Sur mobile, « Imprimer » ouvre la feuille de partage (AirPrint, app Canon).
 
 - `index.html` : structure de la page
 - `styles.css` : styles et animations
+- `manifest.webmanifest`, `sw.js`, `icons/` : installation et mode hors ligne (PWA)
 - `script.js` : logique (rendu canvas, cadrage, préréglages, impression)

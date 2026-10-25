@@ -629,3 +629,8 @@ $("presetSave").onclick = () => {
 presetName.addEventListener("keydown", (e) => e.key === "Enter" && $("presetSave").click());
 
 renderPresets();
+
+// PWA : le service worker n'est disponible qu'en https (ou localhost)
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
