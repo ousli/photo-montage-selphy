@@ -361,6 +361,12 @@ canvas.addEventListener("pointerup", (ev) => {
 });
 canvas.addEventListener("contextmenu", (ev) => ev.preventDefault());
 canvas.addEventListener("selectstart", (ev) => ev.preventDefault());
+// iOS : empêche l'appui long de lancer la sélection / la bulle copier-traduire
+canvas.addEventListener("touchstart", (ev) => ev.preventDefault(), { passive: false });
+document.addEventListener("selectionchange", () => {
+  const sel = getSelection();
+  if (drag && sel && !sel.isCollapsed) sel.removeAllRanges();
+});
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
   if (pointers.size < 2) pinch = null;

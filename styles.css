@@ -226,10 +226,12 @@ input[type="text"]:focus { outline: none; border-color: var(--accent); box-shado
 }
 
 /* Évite la sélection de texte et le menu copier/traduire/enregistrer l'image sur appui long (iOS, Android) */
-body {
+*, *::before, *::after {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -243,3 +245,5 @@ input[type="text"] {
   -webkit-user-select: text;
   user-select: text;
 }
+::selection { background: transparent; }
+input[type="text"]::selection { background: rgba(51, 102, 255, 0.3); }
