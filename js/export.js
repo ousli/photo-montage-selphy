@@ -52,7 +52,16 @@ function downloadFile(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-// « Imprimer » ouvre la boîte d'impression du système (AirPrint sur iPhone) ; « Télécharger » est celui qui partage sur mobile
+// Sur mobile avec partage de fichiers, un seul bouton (« Télécharger ») : la feuille de partage propose déjà Imprimer
+const canShareFiles = () => {
+  try {
+    return matchMedia("(pointer: coarse)").matches && !!navigator.canShare && navigator.canShare({ files: [new File([""], "a.jpg", { type: "image/jpeg" })] });
+  } catch {
+    return false;
+  }
+};
+if (canShareFiles()) $("printBtn").hidden = true;
+
 $("printBtn").onclick = () => {
   const w = window.open("", "_blank");
   if (!w) return setMessage("Popup bloquée : autorise-la pour imprimer.", true);
