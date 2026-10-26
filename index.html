@@ -64,7 +64,9 @@
         <label>Nombre de photos
           <select id="photoCount">
             <option value="2">2</option>
+            <option value="3">3</option>
             <option value="4">4</option>
+            <option value="5">5</option>
             <option value="6">6</option>
             <option value="8">8</option>
           </select>
@@ -84,6 +86,7 @@
         </label>
         <h2>Mise en page</h2>
         <div id="layoutChips" class="fonts"></div>
+        <p id="layoutNote" class="exif-note" hidden></p>
         <h2>Marges</h2>
         <div id="gapChips" class="fonts"></div>
         <label>Entre les photos <b></b>
@@ -154,6 +157,18 @@
           <button id="fitBtn" type="button" class="secondary small"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span>Ajuster</span></button>
         </div>
         <button id="resetBtn" type="button" class="ghost small">Réinitialiser le cadrage</button>
+        <h2>Retouche</h2>
+        <div id="lookChips" class="fonts"></div>
+        <label>Luminosité <b></b>
+          <input id="bright" type="range" min="50" max="150" value="100" />
+        </label>
+        <label>Contraste <b></b>
+          <input id="contrast" type="range" min="50" max="150" value="100" />
+        </label>
+        <div class="row">
+          <button id="filterResetBtn" type="button" class="ghost small">Réinitialiser la retouche</button>
+          <button id="filterAllBtn" type="button" class="secondary small">Appliquer à toutes</button>
+        </div>
         <p class="exif-note">Formats acceptés : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF. Les très grandes photos sont réduites automatiquement.</p>
         <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" hidden />
       </section>
@@ -166,6 +181,7 @@
         </label>
         <input id="titleText" type="text" maxlength="80" placeholder="Titre du montage" disabled />
         <div id="titlePos" class="fonts"></div>
+        <div id="titleAlignChips" class="fonts"></div>
         <label class="check switch">
           <input id="titleDate" type="checkbox" />
           <span>Ajouter la date du jour</span>
@@ -227,27 +243,27 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=41"></script>
-  <script src="./js/exif.js?v=41"></script>
-  <script src="./js/layout.js?v=41"></script>
-  <script src="./js/render.js?v=41"></script>
-  <script src="./js/printers-data.js?v=41"></script>
-  <script src="./js/printers.js?v=41"></script>
-  <script src="./js/selection.js?v=41"></script>
-  <script src="./js/import.js?v=41"></script>
-  <script src="./js/cell-menu.js?v=41"></script>
-  <script src="./js/interactions.js?v=41"></script>
-  <script src="./js/editors.js?v=41"></script>
-  <script src="./js/pickers.js?v=41"></script>
-  <script src="./js/montage-ui.js?v=41"></script>
-  <script src="./js/settings.js?v=41"></script>
-  <script src="./js/controls.js?v=41"></script>
-  <script src="./js/export.js?v=41"></script>
-  <script src="./js/segmented.js?v=41"></script>
-  <script src="./js/presets.js?v=41"></script>
-  <script src="./js/pwa.js?v=41"></script>
-  <script src="./js/tabs.js?v=41"></script>
-  <script src="./js/main.js?v=41"></script>
-  <script src="./js/history.js?v=41"></script>
+  <script src="./js/core.js?v=42"></script>
+  <script src="./js/exif.js?v=42"></script>
+  <script src="./js/layout.js?v=42"></script>
+  <script src="./js/render.js?v=42"></script>
+  <script src="./js/printers-data.js?v=42"></script>
+  <script src="./js/printers.js?v=42"></script>
+  <script src="./js/selection.js?v=42"></script>
+  <script src="./js/import.js?v=42"></script>
+  <script src="./js/cell-menu.js?v=42"></script>
+  <script src="./js/interactions.js?v=42"></script>
+  <script src="./js/editors.js?v=42"></script>
+  <script src="./js/pickers.js?v=42"></script>
+  <script src="./js/montage-ui.js?v=42"></script>
+  <script src="./js/settings.js?v=42"></script>
+  <script src="./js/controls.js?v=42"></script>
+  <script src="./js/export.js?v=42"></script>
+  <script src="./js/segmented.js?v=42"></script>
+  <script src="./js/presets.js?v=42"></script>
+  <script src="./js/pwa.js?v=42"></script>
+  <script src="./js/tabs.js?v=42"></script>
+  <script src="./js/main.js?v=42"></script>
+  <script src="./js/history.js?v=42"></script>
 </body>
 </html>

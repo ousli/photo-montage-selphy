@@ -73,10 +73,15 @@ const setTitlePosChips = chipGroup($("titlePos"), { top: "Titre en haut", bottom
   titlePosKey = k;
   render();
 });
+const setTitleAlignChips = chipGroup($("titleAlignChips"), { left: "À gauche", center: "Centré", right: "À droite" }, (k) => {
+  titleAlign = k;
+  render();
+});
 const syncTextUI = () => {
   titleText.disabled = !titleOn.checked;
   titleDate.disabled = !titleOn.checked;
   setTitlePosChips((k) => k === titlePosKey, !titleOn.checked);
+  setTitleAlignChips((k) => k === titleAlign, !titleOn.checked);
   titleEditor.setDisabled(!titleOn.checked);
 };
 [titleOn, titleText, titleDate].forEach((el) =>

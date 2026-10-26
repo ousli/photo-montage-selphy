@@ -183,6 +183,44 @@ rotInput.addEventListener("input", () => {
   s.rot = Number(rotInput.value);
   render();
 });
+
+// Retouche de la photo sélectionnée
+const brightInput = $("bright");
+const contrastInput = $("contrast");
+const setLookChips = chipGroup($("lookChips"), FILTER_LABELS, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.look = k;
+  render();
+});
+brightInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.bright = Number(brightInput.value);
+  render();
+});
+contrastInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.contrast = Number(contrastInput.value);
+  render();
+});
+$("filterResetBtn").onclick = () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.look = "none";
+  s.bright = 100;
+  s.contrast = 100;
+  render();
+};
+$("filterAllBtn").onclick = () => {
+  const src = slots[selected];
+  if (!src) return;
+  const f = filterOf(src);
+  slots.slice(0, count()).forEach((s) => s && Object.assign(s, { look: f.look, bright: f.bright, contrast: f.contrast }));
+  render();
+  setMessage("Retouche appliquée à toutes les photos.");
+};
 $("rotLeftBtn").onclick = () => rotateBy(-90);
 $("rotRightBtn").onclick = () => rotateBy(90);
 $("pickBtn").onclick = () => pickFor(selected);

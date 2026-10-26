@@ -357,6 +357,7 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 .flag-bold { font-weight: 800; }
 .flag-italic { font-style: italic; font-family: Georgia, serif; }
 .flag-underline { text-decoration: underline; }
+.flag-shadow { text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45); }
 .flag-upper { font-size: 0.85rem; letter-spacing: 0.04em; }
 
 .card[hidden] { display: none; }

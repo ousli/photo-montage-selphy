@@ -39,9 +39,9 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
     q(".fonts").appendChild(b);
     return [k, b];
   });
-  const flags = { bold: false, italic: false, underline: false, upper: false };
-  const FLAG_LABELS = { bold: "G", italic: "I", underline: "S", upper: "AA" };
-  const FLAG_TITLES = { bold: "Gras", italic: "Italique", underline: "Souligné", upper: "Majuscules" };
+  const flags = { bold: false, italic: false, underline: false, upper: false, shadow: false };
+  const FLAG_LABELS = { bold: "G", italic: "I", underline: "S", upper: "AA", shadow: "O" };
+  const FLAG_TITLES = { bold: "Gras", italic: "Italique", underline: "Souligné", upper: "Majuscules", shadow: "Ombre" };
   const flagBtns = Object.keys(FLAG_LABELS).map((k) => {
     const b = document.createElement("button");
     b.type = "button";
