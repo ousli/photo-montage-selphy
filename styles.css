@@ -1,3 +1,4 @@
+/* Feuille de style unique. L'ordre compte (cascade) : les blocs « Animations », « Mobile » et « Desktop/Mobile » plus bas surchargent les règles de base. */
 :root {
   --bg: #eef0f6;
   --card: #fff;
@@ -454,3 +455,24 @@ button.round:hover:not(:disabled) { filter: none; background: #eef1f8; }
 button.round svg { display: block; margin: auto; }
 button.round:disabled { opacity: 0.35; box-shadow: none; }
 @media (max-width: 860px) { .hide-sm, .top-actions .lbl { display: none; } .undo-bar { margin-right: 0; } .top-actions { gap: 6px; } button.round { width: 40px; height: 40px; min-height: 0; } }
+
+.custom-paper { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.custom-paper label { font-size: 0.85rem; }
+.custom-paper input[type="number"] { width: 100%; min-width: 0; border: 1px solid #cfd6ea; border-radius: 8px; padding: 9px 10px; background: #fff; }
+
+.printer-picker { position: relative; }
+.printer-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; background: #fff; color: var(--text); border: 1px solid #cfd6ea; border-radius: 10px; padding: 10px 12px; font-weight: 600; }
+.printer-btn:hover { filter: none; border-color: var(--accent); }
+.printer-panel { margin-top: 6px; border: 1px solid #cfd6ea; border-radius: 12px; background: #fff; padding: 8px; box-shadow: 0 8px 24px rgba(20, 30, 70, 0.12); }
+.printer-panel input[type="search"] { width: 100%; box-sizing: border-box; border: 1px solid #cfd6ea; border-radius: 8px; padding: 9px 10px; margin-bottom: 6px; }
+.printer-list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.printer-group { margin-top: 10px; position: sticky; top: 0; background: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding: 8px 6px 4px; }
+.printer-item { box-sizing: border-box; width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; background: transparent; color: var(--text); border-radius: 8px; padding: 8px 10px; font-weight: 500; }
+.printer-item small { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+.printer-item:hover { filter: none; background: #eef1f8; }
+.printer-item.on { background: #fff; box-shadow: inset 0 0 0 2px var(--accent); }
+.printer-group:first-child { margin-top: 0; }
+/* pas de translation/réduction au survol ou à l'appui : l'élément bouge sous le pointeur et le clic est perdu */
+.printer-list .printer-item:hover:not(:disabled),
+.printer-list .printer-item:active:not(:disabled) { transform: none; }
+.printer-list .printer-item { transition: background 0.15s; }

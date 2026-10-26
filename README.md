@@ -15,7 +15,8 @@ Ouvre `index.html` dans ton navigateur.
 - **Échange :** appui long sur une photo, puis glisse-la sur une autre case pour permuter les deux (ou la déplacer vers une case vide).
 - **Cadrage :** glisse pour déplacer, molette / curseur pour zoomer, curseur et boutons 90° pour pivoter. Sur téléphone, pince avec deux doigts : zoom, rotation et déplacement en même temps.
 - **Mobile :** l'aperçu reste fixe en haut ; les réglages sont dans une feuille en bas (onglets en bas). Touche ou glisse la poignée pour l'agrandir, la réduire ou ne garder que les onglets (aperçu maximal). « Ajouter plusieurs photos » (onglet Montage) remplit les cases vides en une fois ; « Imprimer » ouvre la feuille de partage (AirPrint).
-- **Préréglages :** trois préréglages Selphy fournis ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
+- **Imprimante :** choisis ton modèle (Canon Selphy, Kodak, HiTi, DNP, Epson, Instax, HP…), le format de papier, le ratio et la zone imprimable s'adaptent. « Imprimante personnalisée » permet de saisir largeur, hauteur et marge en mm.
+- **Préréglages :** un préréglage fourni par format de l'imprimante choisie ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
 - **Sortie :** Télécharger (JPG) ou Imprimer.
 
@@ -42,14 +43,19 @@ Sur mobile, « Imprimer » ouvre la feuille de partage (AirPrint, app Canon).
 - `index.html` : structure de la page
 - `styles.css` : styles et animations
 - `manifest.webmanifest`, `sw.js`, `icons/` : installation et mode hors ligne (PWA)
-- `script.js` : logique (rendu canvas, cadrage, préréglages, impression)
-- `extras.js` : historique annuler/rétablir et sauvegarde automatique
+- `js/` : scripts classiques chargés dans l'ordre de `index.html` (état global partagé, l'ordre compte) :
+  - `core`, `exif`, `layout`, `render` : constantes, lecture EXIF/légendes, mises en page, dessin du canvas
+  - `printers-data`, `printers` : catalogue d'imprimantes, sélecteur, papier et zone imprimable
+  - `selection`, `import`, `cell-menu`, `interactions` : sélection des cases, import des photos, menu, gestes canvas
+  - `editors`, `pickers`, `montage-ui`, `settings`, `controls`, `segmented` : réglages et interface
+  - `export`, `presets`, `pwa`, `tabs`, `main` : impression/export, préréglages, hors ligne, onglets, premier rendu
+  - `history` : historique annuler/rétablir et sauvegarde automatique (IndexedDB)
 
 ## Montage avancé
 
 - **Annuler / rétablir** : boutons flèches courbes en haut (ou Ctrl/Cmd+Z, Ctrl+Maj+Z).
 - **Sauvegarde automatique** : le montage en cours (photos et réglages) est restauré à la réouverture.
-- **Zone imprimable** : repères pointillés (≈ 3 mm, estimation) pour le papier Selphy 3:2 et 4:3.
+- **Zone imprimable** : repères pointillés (≈ 3 mm, estimation) selon le papier de l'imprimante choisie. Ces valeurs sont des estimations à vérifier par un test d'impression.
 - **Mise en page** : grille ou « une grande photo » ; marge extérieure séparée (optionnelle) ; fond, coins arrondis et cadre dans « Apparence ».
 - **Texte** : légende par photo, titre en haut ou en bas, date du jour automatique.
 - **Photos** : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF (60 Mo max) ; les grandes photos sont réduites à 3600 px.

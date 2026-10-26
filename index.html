@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=30" />
+  <link rel="stylesheet" href="./styles.css?v=36" />
 </head>
 <body>
   <header class="topbar">
@@ -38,6 +38,23 @@
       </div>
 
       <section class="card tab-panel" data-panel="montage">
+        <h2>Imprimante</h2>
+        <select id="printer" hidden aria-hidden="true" tabindex="-1"></select>
+        <div id="printerPicker" class="printer-picker">
+          <button type="button" id="printerBtn" class="printer-btn" aria-haspopup="listbox" aria-expanded="false">
+            <span id="printerBtnLabel"></span><span class="printer-caret" aria-hidden="true">▾</span>
+          </button>
+          <div id="printerPanel" class="printer-panel" hidden>
+            <input id="printerSearch" type="search" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Rechercher (Polaroid, Kodak, Selphy…)" autocomplete="off" />
+            <div id="printerList" class="printer-list" role="listbox"></div>
+          </div>
+        </div>
+        <div id="paperChips" class="fonts"></div>
+        <div id="customPaper" class="custom-paper" hidden>
+          <label>Largeur (mm) <input id="customW" type="number" inputmode="decimal" min="20" max="600" value="148" /></label>
+          <label>Hauteur (mm) <input id="customH" type="number" inputmode="decimal" min="20" max="600" value="100" /></label>
+          <label>Marge (mm) <input id="customSafe" type="number" inputmode="decimal" min="0" max="15" step="0.5" value="3" /></label>
+        </div>
         <h2>Format</h2>
         <button id="multiBtn" type="button" class="secondary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="14" height="14" rx="2"/><circle cx="8" cy="10" r="1.5"/><path d="m3 17 4-4 4 4 3-3 3 3"/><path d="M20 3v6M17 6h6" transform="translate(-1 0)"/></svg><span>Ajouter plusieurs photos</span></button>
         <input id="multiInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" multiple hidden />
@@ -49,7 +66,7 @@
             <option value="8">8</option>
           </select>
         </label>
-        <label>Ratio
+        <label id="ratioWrap">Ratio
           <select id="ratio">
             <option value="3:2">3:2</option>
             <option value="4:3">4:3</option>
@@ -103,7 +120,7 @@
         <h2>Impression</h2>
         <label class="check switch">
           <input id="guides" type="checkbox" checked />
-          <span>Zone imprimable Selphy</span>
+          <span>Zone imprimable</span>
         </label>
         <p id="paperNote" class="exif-note"></p>
         <details class="adv"><summary>Préréglages</summary>
@@ -116,7 +133,7 @@
         <button id="resetAllBtn2" type="button" class="ghost small">Tout réinitialiser</button>
       </section>
 
-      <section class="card tab-panel" data-panel="photo" id="editor" hidden>
+      <section class="card tab-panel" data-panel="photo" hidden>
         <div class="row">
           <button id="pickBtn" type="button" class="secondary small">Choisir / remplacer</button>
           <button id="removeBtn" type="button" class="ghost small">Supprimer</button>
@@ -207,7 +224,27 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./script.js?v=29"></script>
-  <script src="./extras.js?v=1"></script>
+  <script src="./js/core.js?v=40"></script>
+  <script src="./js/exif.js?v=40"></script>
+  <script src="./js/layout.js?v=40"></script>
+  <script src="./js/render.js?v=40"></script>
+  <script src="./js/printers-data.js?v=40"></script>
+  <script src="./js/printers.js?v=40"></script>
+  <script src="./js/selection.js?v=40"></script>
+  <script src="./js/import.js?v=40"></script>
+  <script src="./js/cell-menu.js?v=40"></script>
+  <script src="./js/interactions.js?v=40"></script>
+  <script src="./js/editors.js?v=40"></script>
+  <script src="./js/pickers.js?v=40"></script>
+  <script src="./js/montage-ui.js?v=40"></script>
+  <script src="./js/settings.js?v=40"></script>
+  <script src="./js/controls.js?v=40"></script>
+  <script src="./js/export.js?v=40"></script>
+  <script src="./js/segmented.js?v=40"></script>
+  <script src="./js/presets.js?v=40"></script>
+  <script src="./js/pwa.js?v=40"></script>
+  <script src="./js/tabs.js?v=40"></script>
+  <script src="./js/main.js?v=40"></script>
+  <script src="./js/history.js?v=40"></script>
 </body>
 </html>
