@@ -399,7 +399,10 @@ function refreshUI() {
     b.classList.toggle("active", i === selected);
     b.classList.toggle("filled", !!slots[i]);
   });
-  $("editorTitle").textContent = `Photo ${selected + 1}`;
+  $("editorTitle").textContent = `Photo ${selected + 1} sur ${count()}`;
+  $("pickBtn").textContent = slots[selected] ? "Remplacer la photo" : "Choisir une photo";
+  $("removeBtn").disabled = !slots[selected];
+  $("fitBtn").disabled = !slots[selected];
   const s = slots[selected];
   zoomInput.disabled = !s;
   rotInput.disabled = !s;
@@ -409,7 +412,14 @@ function refreshUI() {
   $("resetBtn").disabled = !s;
   zoomInput.value = s ? Math.round(s.zoom * 100) : 100;
   captionInput.disabled = !s || !captionsOn.checked;
-  captionInput.placeholder = captionsOn.checked ? "Texte sous la photo" : "Active « Légendes sous les photos »";
+  captionInput.placeholder = "Texte sous la photo";
+  const capMsg = !captionsOn.checked
+    ? "Active « Légende sous la photo » pour écrire une légende."
+    : !s
+    ? "Ajoute d'abord une photo dans cette case pour écrire sa légende."
+    : "";
+  $("capNote").textContent = capMsg;
+  $("capNote").hidden = !capMsg;
   const cap = s ? s.caption || "" : "";
   if (captionInput.value !== cap) captionInput.value = cap;
   capEditor.set(capStyleOf(s));
@@ -429,12 +439,28 @@ function refreshExifUI(s) {
       : exifLines(s).join(" · ") || "Aucun champ sélectionné."
     : "Aucune donnée EXIF dans cette photo.";
   setModeChips((k) => k === mode, !has);
+  const data = $("exifData");
+  data.innerHTML = "";
+  Object.keys(EXIF_FIELD_LABELS).forEach((k) => {
+    if (!exifAvailable(s, k)) return;
+    const row = document.createElement("div");
+    const v = k === "place" ? s.exif.place || (s.exif.placeState === "loading" ? "recherche…" : "—") : s.exif[k];
+    row.innerHTML = "<span></span><b></b>";
+    row.firstChild.textContent = EXIF_FIELD_LABELS[k];
+    row.lastChild.textContent = v;
+    data.appendChild(row);
+  });
+  $("exifStyleNote").hidden = mode !== "none";
   setFieldChips((k) => !!exifFieldsOf(s)[k] && exifAvailable(s, k), !has || mode === "none");
   const place = has && mode !== "none" && exifFieldsOf(s).place ? s.exif.placeState : null;
   if (place === "loading") $("exifNote").textContent = "Recherche du lieu…";
   if (place === "error") $("exifNote").textContent = "Lieu introuvable (hors ligne ?). Les coordonnées GPS restent disponibles.";
 
   setCornerChips((k) => k === (s && s.exifCorner ? s.exifCorner : "bl"), !has || mode !== "overlay");
+  exifCapEditor.set(capStyleOf(s));
+  exifCapEditor.setDisabled(!has || mode !== "caption");
+  $("exifCapAdv").hidden = mode !== "caption";
+  $("exifOvlAdv").hidden = mode !== "overlay";
   ovlEditor.set(ovlStyleOf(s));
   ovlEditor.setDisabled(!has || mode !== "overlay");
   $("exifApplyAll").disabled = !has;
@@ -442,6 +468,7 @@ function refreshExifUI(s) {
 
 function select(i) {
   selected = i;
+  if (currentTab() === "montage") showTab("photo");
   render();
 }
 
@@ -669,6 +696,19 @@ rotInput.addEventListener("input", () => {
 });
 $("rotLeftBtn").onclick = () => rotateBy(-90);
 $("rotRightBtn").onclick = () => rotateBy(90);
+$("pickBtn").onclick = () => pickFor(selected);
+$("removeBtn").onclick = () => {
+  slots[selected] = null;
+  render();
+};
+$("fitBtn").onclick = () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.zoom = 1;
+  s.ox = 0;
+  s.oy = 0;
+  render();
+};
 $("resetBtn").onclick = () => {
   const s = slots[selected];
   if (s) {
@@ -806,7 +846,8 @@ const titleEditor = createStyleEditor($("titleStyle"), {
 titleEditor.setDefaults(DEFAULT_TITLE);
 titleEditor.set(titleStyle);
 
-const capEditor = createStyleEditor($("capStyle"), {
+// Deux éditeurs pour le même style de légende : onglet Texte et onglet Infos (EXIF en légende)
+const capOpts = {
   min: 20, max: 80, sizeLabel: "Taille de la légende",
   onChange: (st) => {
     const s = slots[selected];
@@ -814,8 +855,11 @@ const capEditor = createStyleEditor($("capStyle"), {
     s.style = st;
     render();
   },
-});
+};
+const capEditor = createStyleEditor($("capStyle"), capOpts);
 capEditor.setDefaults(DEFAULT_CAP);
+const exifCapEditor = createStyleEditor($("exifCapStyle"), capOpts);
+exifCapEditor.setDefaults(DEFAULT_CAP);
 const ovlEditor = createStyleEditor($("exifStyle"), {
   min: 14, max: 60, sizeLabel: "Taille de l'overlay",
   onChange: (st) => {
@@ -930,6 +974,7 @@ captionInput.addEventListener("input", () => {
   render();
 });
 
+$("resetAllBtn2").onclick = () => $("resetAllBtn").click();
 $("resetAllBtn").onclick = () => {
   if (!confirm("Réinitialiser les réglages et retirer toutes les photos ?")) return;
   ratioSelect.value = "3:2";
@@ -1141,30 +1186,19 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
-// Cartes repliables, état mémorisé
-(function () {
-  let saved = {};
-  try { saved = JSON.parse(localStorage.getItem("montage-folds") || "{}"); } catch (e) {}
-  document.querySelectorAll("[data-fold]").forEach((card) => {
-    const key = card.dataset.fold;
-    const head = card.querySelector(":scope > h2");
-    const collapsed = key in saved ? saved[key] : card.hasAttribute("data-collapsed");
-    const apply = (c) => {
-      card.classList.toggle("collapsed", c);
-      head.setAttribute("aria-expanded", String(!c));
-    };
-    head.tabIndex = 0;
-    head.setAttribute("role", "button");
-    apply(collapsed);
-    const toggle = () => {
-      const c = !card.classList.contains("collapsed");
-      apply(c);
-      saved[key] = c;
-      try { localStorage.setItem("montage-folds", JSON.stringify(saved)); } catch (e) {}
-    };
-    head.addEventListener("click", toggle);
-    head.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
-    });
+// Onglets du panneau
+const tabBtns = Array.from(document.querySelectorAll(".tabs button"));
+function showTab(name) {
+  tabBtns.forEach((b) => {
+    b.classList.toggle("on", b.dataset.tab === name);
+    b.setAttribute("aria-selected", String(b.dataset.tab === name));
   });
-})();
+  document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
+  $("slotBar").hidden = name === "montage";
+  try { localStorage.setItem("montage-tab", name); } catch (e) {}
+}
+tabBtns.forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+const currentTab = () => (tabBtns.find((b) => b.classList.contains("on")) || {}).dataset.tab;
+let savedTab = "montage";
+try { savedTab = localStorage.getItem("montage-tab") || "montage"; } catch (e) {}
+showTab(savedTab);
