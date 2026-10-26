@@ -835,16 +835,24 @@ const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
   tip.setAttribute("aria-label", "Informations sur le lieu");
   tip.dataset.tip = "Le nom du lieu est cherché via OpenStreetMap : seules des coordonnées arrondies (~1 km) sont envoyées. Les coordonnées GPS exactes ne quittent jamais ton navigateur.";
   $("exifFields").appendChild(tip);
-  // l'infobulle est en position fixe : on la cale dans la fenêtre pour qu'elle ne soit jamais coupée
-  const place = () => {
+  // l'infobulle vit dans <body> (position fixe) pour ne jamais être coupée par le panneau
+  const bubble = document.createElement("div");
+  bubble.className = "tip-bubble";
+  bubble.textContent = tip.dataset.tip;
+  document.body.appendChild(bubble);
+  const show = () => {
     const r = tip.getBoundingClientRect();
     const w = Math.min(240, window.innerWidth - 16);
-    const left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
-    tip.style.setProperty("--tip-w", `${w}px`);
-    tip.style.setProperty("--tip-l", `${left}px`);
-    tip.style.setProperty("--tip-b", `${window.innerHeight - r.top + 8}px`);
+    bubble.style.width = `${w}px`;
+    bubble.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8))}px`;
+    bubble.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    bubble.classList.add("on");
   };
-  ["mouseenter", "focus", "click"].forEach((e) => tip.addEventListener(e, place));
+  const hide = () => bubble.classList.remove("on");
+  tip.addEventListener("mouseenter", show);
+  tip.addEventListener("mouseleave", hide);
+  tip.addEventListener("focus", show);
+  tip.addEventListener("blur", hide);
 })();
 $("exifApplyAll").onclick = () => {
   const src = slots[selected];

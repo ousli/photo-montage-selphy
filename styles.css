@@ -333,23 +333,16 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
   font-family: Georgia, serif;
 }
 .info-tip:hover, .info-tip:focus-visible { filter: none; background: #e4e9fb; color: var(--accent); outline: none; }
-.info-tip::after {
-  content: attr(data-tip);
+.tip-bubble {
   position: fixed;
-  bottom: var(--tip-b, 0);
-  left: var(--tip-l, 0);
-  width: var(--tip-w, 240px);
   padding: 8px 10px;
   border-radius: 8px;
   background: var(--text);
   color: #fff;
   font: 500 0.8rem/1.35 Inter, system-ui, sans-serif;
-  font-style: normal;
-  text-align: left;
-  white-space: normal;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s;
-  z-index: 10;
+  z-index: 100;
 }
-.info-tip:hover::after, .info-tip:focus::after { opacity: 1; }
+.tip-bubble.on { opacity: 1; }
