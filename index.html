@@ -10,26 +10,26 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=18" />
+  <link rel="stylesheet" href="./styles.css?v=26" />
 </head>
 <body>
   <header class="topbar">
-    <h1>📷 Montage photo</h1>
+    <h1>📷 Montage<b class="hide-sm" style="font-weight:inherit"> photo</b></h1>
     <div class="top-actions">
+      <div class="undo-bar">
+        <button type="button" id="undoBtn" class="round" aria-label="Annuler" title="Annuler (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+        <button type="button" id="redoBtn" class="round" aria-label="Rétablir" title="Rétablir (Ctrl+Maj+Z)" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
+      </div>
       <button id="resetAllBtn" type="button" class="ghost">Tout réinitialiser</button>
-      <button id="downloadBtn" type="button" class="secondary">Télécharger</button>
+      <button id="downloadBtn" type="button" class="secondary" aria-label="Télécharger">⬇<span class="lbl"> Télécharger</span></button>
       <button id="printBtn" type="button">🖨 Imprimer</button>
     </div>
   </header>
 
   <main class="layout">
-    <aside class="sidebar">
-      <nav class="tabs" role="tablist">
-        <button type="button" role="tab" data-tab="montage" class="on">Montage</button>
-        <button type="button" role="tab" data-tab="photo">Photo</button>
-        <button type="button" role="tab" data-tab="text">Texte</button>
-        <button type="button" role="tab" data-tab="info">Infos</button>
-      </nav>
+    <aside class="sidebar" id="sheet" data-sheet="mid">
+      <button type="button" class="sheet-handle" id="sheetHandle" aria-label="Agrandir ou réduire le panneau"><span></span></button>
+      <div class="sheet-body">
 
       <div class="card slot-bar" id="slotBar" hidden>
         <h2 id="editorTitle">Photo 1</h2>
@@ -38,11 +38,14 @@
 
       <section class="card tab-panel" data-panel="montage">
         <h2>Format</h2>
+        <button id="multiBtn" type="button" class="secondary">📷 Ajouter plusieurs photos</button>
+        <input id="multiInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" multiple hidden />
         <label>Nombre de photos
           <select id="photoCount">
             <option value="2">2</option>
             <option value="4">4</option>
             <option value="6">6</option>
+            <option value="8">8</option>
           </select>
         </label>
         <label>Ratio
@@ -58,12 +61,50 @@
             <option value="portrait">Portrait</option>
           </select>
         </label>
-        <label>Marge entre les photos <b><span id="gapValue">14</span> px</b>
-          <span class="row">
-            <input id="gap" type="range" min="0" max="60" value="14" />
-            <button id="gapReset" type="button" class="ghost small">Reset</button>
-          </span>
+        <h2>Mise en page</h2>
+        <div id="layoutChips" class="fonts"></div>
+        <h2>Marges</h2>
+        <div id="gapChips" class="fonts"></div>
+        <label>Entre les photos <b><span id="gapValue">14</span> px</b>
+          <input id="gap" type="range" min="0" max="60" value="14" />
         </label>
+        <label class="check switch">
+          <input id="gapLink" type="checkbox" checked />
+          <span>Même marge autour du montage</span>
+        </label>
+        <label id="outerWrap" hidden>Autour du montage <b><span id="outerValue">14</span> px</b>
+          <input id="outerGap" type="range" min="0" max="120" value="14" />
+        </label>
+        <details class="adv"><summary>Apparence : fond, coins, cadre</summary>
+          <div class="style-box">
+            <div class="color-field">
+              <span class="color-head">Fond <b id="bgHex"></b></span>
+              <div id="bgPicker"></div>
+            </div>
+            <label>Coins arrondis <b><span id="radiusValue">0</span></b>
+              <input id="radius" type="range" min="0" max="120" value="0" />
+            </label>
+            <label class="check switch">
+              <input id="frameOn" type="checkbox" />
+              <span>Cadre autour des photos</span>
+            </label>
+            <div id="frameBox" class="style-box" hidden>
+              <label>Épaisseur du cadre <b><span id="frameWValue">8</span></b>
+                <input id="frameW" type="range" min="2" max="40" value="8" />
+              </label>
+              <div class="color-field">
+                <span class="color-head">Couleur du cadre <b id="frameHex"></b></span>
+                <div id="framePicker"></div>
+              </div>
+            </div>
+          </div>
+        </details>
+        <h2>Impression</h2>
+        <label class="check switch">
+          <input id="guides" type="checkbox" checked />
+          <span>Zone imprimable Selphy</span>
+        </label>
+        <p id="paperNote" class="exif-note"></p>
         <hr />
         <details class="adv"><summary>Préréglages</summary>
           <div id="presetList" class="presets"></div>
@@ -94,16 +135,22 @@
           <button id="fitBtn" type="button" class="secondary small">Ajuster à la case</button>
         </div>
         <button id="resetBtn" type="button" class="ghost small">Réinitialiser le cadrage</button>
-        <input id="fileInput" type="file" accept="image/*" hidden />
+        <p class="exif-note">Formats acceptés : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF. Les très grandes photos sont réduites automatiquement.</p>
+        <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" hidden />
       </section>
 
       <section class="card tab-panel" data-panel="text" hidden>
         <h2>Titre</h2>
         <label class="check switch">
           <input id="titleOn" type="checkbox" />
-          <span>Titre en haut du montage</span>
+          <span>Ajouter un titre</span>
         </label>
         <input id="titleText" type="text" maxlength="80" placeholder="Titre du montage" disabled />
+        <div id="titlePos" class="fonts"></div>
+        <label class="check switch">
+          <input id="titleDate" type="checkbox" />
+          <span>Ajouter la date du jour</span>
+        </label>
         <details class="adv"><summary>Style du titre</summary>
           <div id="titleStyle" class="style-box"></div>
         </details>
@@ -111,13 +158,14 @@
         <h2>Légendes</h2>
         <label class="check switch">
           <input id="captionsOn" type="checkbox" />
-          <span>Légende sous la photo</span>
+          <span>Légende sous cette photo</span>
         </label>
         <input id="caption" type="text" maxlength="60" placeholder="Texte sous la photo" disabled />
         <p id="capNote" class="exif-note" hidden></p>
         <details class="adv"><summary>Style de la légende</summary>
           <div id="capStyle" class="style-box"></div>
         </details>
+        <button id="capAllOn" type="button" class="ghost small">Activer la légende sur toutes les photos</button>
         <button id="capApplyAll" type="button" class="ghost small">Appliquer ce style à toutes les légendes</button>
       </section>
 
@@ -142,6 +190,13 @@
       </section>
 
       <p id="message" class="message"></p>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="montage" class="on">Montage</button>
+        <button type="button" role="tab" data-tab="photo">Photo</button>
+        <button type="button" role="tab" data-tab="text">Texte</button>
+        <button type="button" role="tab" data-tab="info">Infos</button>
+      </nav>
     </aside>
 
     <section class="stage">
@@ -154,6 +209,7 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./script.js?v=17"></script>
+  <script src="./script.js?v=24"></script>
+  <script src="./extras.js?v=1"></script>
 </body>
 </html>
