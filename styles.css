@@ -493,3 +493,7 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .printer-list .printer-item { display: block; height: auto; min-height: 0; flex: none; padding: 10px 12px; white-space: normal; line-height: 1.3; }
 .printer-list .printer-item strong { display: block; }
 .printer-list .printer-item small { display: block; margin-top: 3px; line-height: 1.35; overflow-wrap: anywhere; }
+
+/* Bouton d'import multiple : un peu plus visible parmi les réglages */
+#multiBtn { background: #d6e0ff; border: 1.5px solid var(--accent); color: #1a3590; font-weight: 700; box-shadow: 0 1px 4px rgba(51, 102, 255, 0.25); }
+#multiBtn:hover:not(:disabled) { background: #c8d6ff; }
