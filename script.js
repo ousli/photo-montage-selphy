@@ -132,13 +132,17 @@ const hasExifCaption = (s) => exifModeOf(s) === "caption" && exifLines(s).length
 // texte sous la photo : légende manuelle et/ou infos EXIF
 function captionTextOf(s) {
   const parts = [];
-  if (captionsOn.checked && s.caption) parts.push(s.caption);
+  if (s.capOn && s.caption) parts.push(s.caption);
   if (hasExifCaption(s)) parts.push(exifLines(s).join(" · "));
   return parts.join(" · ");
 }
-const bandOn = () => captionsOn.checked || slots.slice(0, count()).some(hasExifCaption);
+const hasBand = (s) => !!s && (!!s.capOn || hasExifCaption(s));
 
-const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
+const titleDate = $("titleDate");
+let titlePosKey = "top";
+const todayFr = () => new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const titleString = () => [titleText.value.trim(), titleDate.checked ? todayFr() : ""].filter(Boolean).join(" · ");
+const titleActive = () => titleOn.checked && titleString() !== "";
 const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
 const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
@@ -168,22 +172,47 @@ function gridFor(n) {
   return land ? [2, 3] : [3, 2];
 }
 
+// Mises en page : grille régulière ou une grande photo + des petites (cellules en unités [col, ligne, largeur, hauteur])
+const HERO = {
+  2: { cols: 3, rows: 1, cells: [[0, 0, 2, 1], [2, 0, 1, 1]] },
+  4: { cols: 3, rows: 3, cells: [[0, 0, 2, 3], [2, 0, 1, 1], [2, 1, 1, 1], [2, 2, 1, 1]] },
+  6: { cols: 3, rows: 3, cells: [[0, 0, 2, 2], [2, 0, 1, 1], [2, 1, 1, 1], [0, 2, 1, 1], [1, 2, 1, 1], [2, 2, 1, 1]] },
+  8: { cols: 4, rows: 4, cells: [[0, 0, 3, 3], [3, 0, 1, 1], [3, 1, 1, 1], [3, 2, 1, 1], [0, 3, 1, 1], [1, 3, 1, 1], [2, 3, 1, 1], [3, 3, 1, 1]] },
+};
+let layoutKey = "grid";
+function currentLayout() {
+  const n = count();
+  const land = isLandscape();
+  let L;
+  if (layoutKey === "hero" && HERO[n]) {
+    L = HERO[n];
+    if (!land) L = { cols: L.rows, rows: L.cols, cells: L.cells.map(([c, r, sw, sh]) => [r, c, sh, sw]) };
+  } else {
+    const [rows, cols] = gridFor(n);
+    L = { cols, rows, cells: Array.from({ length: n }, (_, i) => [i % cols, Math.floor(i / cols), 1, 1]) };
+  }
+  return L;
+}
+const gapV = () => Number(gapInput.value);
+const outerV = () => ($("gapLink").checked ? gapV() : Number($("outerGap").value));
+const radiusV = () => Number($("radius").value);
+const frameV = () => ($("frameOn").checked ? Number($("frameW").value) : 0);
+
 function computeCells() {
   const [w, h] = canvasSize();
-  const [rows, cols] = gridFor(count());
-  const gap = Number(gapInput.value);
-  const cw = (w - gap * (cols + 1)) / cols;
-  const top = titleH();
-  const ch = (h - top - gap * (rows + 1)) / rows;
-  cells = [];
-  for (let i = 0; i < count(); i++) {
-    cells.push({
-      x: gap + (i % cols) * (cw + gap),
-      y: top + gap + Math.floor(i / cols) * (ch + gap),
-      w: cw,
-      h: ch,
-    });
-  }
+  const L = currentLayout();
+  const g = gapV();
+  const m = outerV();
+  const top = titlePosKey === "top" ? titleH() : 0;
+  const bottom = titlePosKey === "bottom" ? titleH() : 0;
+  const cw = (w - 2 * m - g * (L.cols - 1)) / L.cols;
+  const ch = (h - top - bottom - 2 * m - g * (L.rows - 1)) / L.rows;
+  cells = L.cells.map(([c, r, sw, sh]) => ({
+    x: m + c * (cw + g),
+    y: top + m + r * (ch + g),
+    w: sw * cw + (sw - 1) * g,
+    h: sh * ch + (sh - 1) * g,
+  }));
 }
 
 function clampOffset(s) {
@@ -193,8 +222,20 @@ function clampOffset(s) {
 }
 
 // Zone occupée par la photo : la cellule moins la bande de légende
-function photoRect(c) {
-  return bandOn() ? { ...c, h: c.h - captionH() } : c;
+function photoRect(c, s) {
+  return hasBand(s) ? { ...c, h: c.h - captionH() } : c;
+}
+
+// Chemin rectangulaire à coins arrondis
+function roundRectPath(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
 }
 
 const fontSpec = (st, size) =>
@@ -236,7 +277,8 @@ function drawTitle(w) {
   ctx.fillStyle = titleStyle.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  drawText(titleText.value.trim(), w / 2, titleH() / 2 + 6, titleStyle, w - 80);
+  const y = titlePosKey === "bottom" ? canvas.height - titleH() / 2 - 6 : titleH() / 2 + 6;
+  drawText(titleString(), w / 2, y, titleStyle, w - 80);
   ctx.restore();
 }
 
@@ -290,7 +332,7 @@ function render(forExport = false) {
   canvas.width = w;
   canvas.height = h;
   computeCells();
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = bgPicker.get();
   ctx.fillRect(0, 0, w, h);
 
   // pendant un échange, la case survolée montre déjà le résultat
@@ -305,7 +347,8 @@ function render(forExport = false) {
     if (!s) {
       if (!forExport) {
         ctx.fillStyle = "#eef1f8";
-        ctx.fillRect(c.x, c.y, c.w, c.h);
+        roundRectPath(c.x, c.y, c.w, c.h, radiusV());
+        ctx.fill();
         ctx.fillStyle = "#8b94ab";
         ctx.font = "48px sans-serif";
         ctx.textAlign = "center";
@@ -313,26 +356,59 @@ function render(forExport = false) {
       }
       return;
     }
-    const pr = photoRect(c);
+    const pr = photoRect(c, s);
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(pr.x, pr.y, pr.w, pr.h);
+    roundRectPath(pr.x, pr.y, pr.w, pr.h, radiusV());
     ctx.clip();
     drawSlot(s, pr);
     ctx.restore();
+    const fw = frameV();
+    if (fw) {
+      ctx.save();
+      ctx.strokeStyle = framePicker.get();
+      ctx.lineWidth = fw;
+      roundRectPath(pr.x + fw / 2, pr.y + fw / 2, pr.w - fw, pr.h - fw, radiusV() - fw / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     const txt = captionTextOf(s);
     if (txt) drawCaption(txt, c, capStyleOf(s));
     if (exifModeOf(s) === "overlay") drawOverlay(s, pr);
   });
 
+  if (!forExport) drawGuides(w, h);
+
   if (!forExport && cells[selected]) {
     const c = cells[selected];
     ctx.strokeStyle = "#3366ff";
     ctx.lineWidth = 8;
-    ctx.strokeRect(c.x + 4, c.y + 4, c.w - 8, c.h - 8);
+    roundRectPath(c.x + 4, c.y + 4, c.w - 8, c.h - 8, radiusV());
+    ctx.stroke();
   }
   if (!forExport && swap) drawSwapOverlay();
   refreshUI();
+}
+
+// Papier Selphy [grand côté, petit côté] en mm ; la Selphy rogne légèrement les bords en impression sans marge
+const PAPER = { "3:2": [148, 100], "4:3": [119, 89] };
+const SAFE_MM = 3;
+function drawGuides(w, h) {
+  if (!$("guides").checked) return;
+  const paper = PAPER[ratioSelect.value];
+  if (!paper) return;
+  const pxPerMm = Math.max(w, h) / paper[0];
+  const d = SAFE_MM * pxPerMm;
+  ctx.save();
+  ctx.fillStyle = "rgba(20, 30, 70, 0.16)";
+  ctx.fillRect(0, 0, w, d);
+  ctx.fillRect(0, h - d, w, d);
+  ctx.fillRect(0, d, d, h - 2 * d);
+  ctx.fillRect(w - d, d, d, h - 2 * d);
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 3;
+  ctx.setLineDash([18, 12]);
+  ctx.strokeRect(d, d, w - 2 * d, h - 2 * d);
+  ctx.restore();
 }
 
 function swapTarget() {
@@ -412,20 +488,24 @@ function refreshUI() {
   rotInput.value = s ? s.rot : 0;
   $("resetBtn").disabled = !s;
   zoomInput.value = s ? Math.round(s.zoom * 100) : 100;
-  captionInput.disabled = !s || !captionsOn.checked;
+  captionsOn.checked = !!(s && s.capOn);
+  captionsOn.disabled = !s;
+  captionInput.disabled = !s || !s.capOn;
   captionInput.placeholder = "Texte sous la photo";
-  const capMsg = !captionsOn.checked
-    ? "Active « Légende sous la photo » pour écrire une légende."
-    : !s
+  const capMsg = !s
     ? "Ajoute d'abord une photo dans cette case pour écrire sa légende."
+    : !s.capOn
+    ? "Active « Légende sous cette photo » pour écrire une légende."
     : "";
   $("capNote").textContent = capMsg;
   $("capNote").hidden = !capMsg;
   const cap = s ? s.caption || "" : "";
   if (captionInput.value !== cap) captionInput.value = cap;
   capEditor.set(capStyleOf(s));
-  capEditor.setDisabled(!s || !bandOn());
-  $("capApplyAll").disabled = !s || !bandOn();
+  capEditor.setDisabled(!s || !hasBand(s));
+  $("capApplyAll").disabled = !s || !hasBand(s);
+  $("capAllOn").disabled = !slots.slice(0, count()).some(Boolean);
+  refreshMontageUI();
   refreshExifUI(s);
 }
 
@@ -473,31 +553,61 @@ function select(i) {
   render();
 }
 
+const FORMAT_EXT = /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i;
+const FORMAT_MIME = /^image\/(jpeg|png|webp|heic|heif|avif|gif)$/i;
+const MAX_FILE_MB = 60;
+const MAX_PX = 3600; // au-delà, la photo est réduite (la sortie fait 1800 px)
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// Réduit une grande photo et la ré-encode en JPEG pour alléger la mémoire
+async function shrinkIfNeeded(img, file) {
+  const long = Math.max(img.width, img.height);
+  if (long <= MAX_PX && file.size <= 8 * 1024 * 1024) return { img, blob: file, shrunk: false };
+  const k = Math.min(1, MAX_PX / long);
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width * k);
+  c.height = Math.round(img.height * k);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  const blob = await new Promise((res) => c.toBlob(res, "image/jpeg", 0.92));
+  return { img: c, blob: blob || file, shrunk: true };
+}
+
 function loadFile(file, index) {
-  if (!file || !file.type.startsWith("image/")) {
-    return setMessage("Fichier non valide (image attendue).", true);
+  if (!file) return Promise.resolve();
+  if (!FORMAT_MIME.test(file.type) && !FORMAT_EXT.test(file.name || "")) {
+    setMessage(`Format non pris en charge : ${file.name || "fichier"}. Formats acceptés : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF.`, true);
+    return Promise.resolve();
+  }
+  if (file.size > MAX_FILE_MB * 1024 * 1024) {
+    setMessage(`Fichier trop lourd (${Math.round(file.size / 1048576)} Mo, maximum ${MAX_FILE_MB} Mo) : ${file.name}`, true);
+    return Promise.resolve();
   }
   const img = new Image();
   const url = URL.createObjectURL(file);
   const exifP = readExif(file);
   return new Promise((done) => {
-  img.onerror = () => { setMessage(`Image illisible : ${file.name}`, true); done(); };
-  img.onload = () => {
-    const prev = slots[index];
-    const slot = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
-    slots[index] = slot;
-    if (prev) {
-      ["caption", "style", "exifMode", "exifFields", "exifCorner", "exifStyle"].forEach((k) => (slot[k] = prev[k]));
-    }
-    exifP.then((ex) => {
-      slot.exif = ex;
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      setMessage(`Image illisible : ${file.name}. ${/hei[cf]$/i.test(file.name) ? "Ce navigateur ne lit pas le HEIC : exporte-la en JPEG." : ""}`, true);
+      done();
+    };
+    img.onload = async () => {
+      const out = await shrinkIfNeeded(img, file);
+      const prev = slots[index];
+      const slot = { uid: uid(), img: out.img, blob: out.blob, zoom: 1, rot: 0, ox: 0, oy: 0 };
+      slots[index] = slot;
+      if (prev) {
+        ["caption", "capOn", "style", "exifMode", "exifFields", "exifCorner", "exifStyle"].forEach((k) => (slot[k] = prev[k]));
+      }
+      exifP.then((ex) => {
+        slot.exif = ex;
+        render();
+      });
+      setMessage(`Photo ${index + 1} : ${file.name}${out.shrunk ? " (réduite pour alléger la mémoire)" : ""}`);
       render();
-    });
-    setMessage(`Photo ${index + 1} : ${file.name}`);
-    render();
-    done();
-  };
-  img.src = url;
+      done();
+    };
+    img.src = url;
   });
 }
 
@@ -601,7 +711,7 @@ canvas.addEventListener("pointermove", (ev) => {
     const mx = (a.x + b.x) / 2;
     const my = (a.y + b.y) / 2;
     const r = canvas.getBoundingClientRect();
-    const c = photoRect(cells[selected]);
+    const c = photoRect(cells[selected], slots[selected]);
     s.ox += (((mx - pinch.mx) * canvas.width) / r.width) / c.w;
     s.oy += (((my - pinch.my) * canvas.width) / r.width) / c.h;
     pinch.mx = mx;
@@ -622,7 +732,7 @@ canvas.addEventListener("pointermove", (ev) => {
   }
   const r = canvas.getBoundingClientRect();
   const k = canvas.width / r.width;
-  const c = photoRect(cells[selected]);
+  const c = photoRect(cells[selected], slots[selected]);
   s.ox += ((ev.clientX - drag.x) * k) / c.w;
   s.oy += ((ev.clientY - drag.y) * k) / c.h;
   clampOffset(s);
@@ -777,13 +887,11 @@ multiInput.addEventListener("change", () => {
 });
 
 
-const DEFAULT_GAP = 14;
-gapInput.addEventListener("input", () => ($("gapValue").textContent = gapInput.value));
-$("gapReset").onclick = () => {
-  gapInput.value = DEFAULT_GAP;
-  $("gapValue").textContent = DEFAULT_GAP;
+const setGapChips = chipGroup($("gapChips"), { 0: "Aucune", 6: "Fines", 14: "Normales", 30: "Larges" }, (k) => {
+  gapInput.value = k;
+  $("outerGap").value = k;
   render();
-};
+});
 
 // Éditeur de style (police, couleur, taille) réutilisable pour le titre et les légendes
 function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
@@ -927,6 +1035,108 @@ const ovlEditor = createStyleEditor($("exifStyle"), {
 });
 ovlEditor.setDefaults(DEFAULT_OVL);
 
+// Sélecteur de couleur simple (pastilles + couleur personnalisée), utilisé pour le fond et le cadre
+const BG_PALETTE = ["#ffffff", "#000000", "#f3ead9", "#1f2430", "#fde68a", "#fbcfe8", "#bfdbfe", "#bbf7d0"];
+function createColorPicker(box, hexEl, initial) {
+  box.classList.add("color-row");
+  box.innerHTML = '<div class="swatches"></div><input class="swatch custom" type="color" title="Couleur personnalisée" aria-label="Couleur personnalisée" />';
+  const custom = box.querySelector("input");
+  const sw = box.querySelector(".swatches");
+  custom.value = initial;
+  const buttons = BG_PALETTE.map((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.dataset.color = c;
+    b.style.setProperty("--c", c);
+    b.setAttribute("aria-label", c);
+    b.onclick = () => {
+      custom.value = c;
+      changed();
+    };
+    sw.appendChild(b);
+    return b;
+  });
+  const refresh = () => {
+    const cur = custom.value.toLowerCase();
+    hexEl.textContent = cur;
+    buttons.forEach((b) => b.classList.toggle("on", b.dataset.color === cur));
+    custom.classList.toggle("on", !BG_PALETTE.includes(cur));
+  };
+  const changed = () => {
+    refresh();
+    render();
+  };
+  custom.addEventListener("input", changed);
+  refresh();
+  return { get: () => custom.value, set: (c) => { custom.value = c; refresh(); } };
+}
+const bgPicker = createColorPicker($("bgPicker"), $("bgHex"), "#ffffff");
+const framePicker = createColorPicker($("framePicker"), $("frameHex"), "#ffffff");
+
+const setLayoutChips = chipGroup($("layoutChips"), { grid: "Grille", hero: "Une grande photo" }, (k) => {
+  layoutKey = k;
+  render();
+});
+
+function refreshMontageUI() {
+  setLayoutChips((k) => k === layoutKey, false);
+  $("outerWrap").hidden = $("gapLink").checked;
+  setGapChips((v) => Number(v) === gapV() && ($("gapLink").checked || Number($("outerGap").value) === gapV()), false);
+  $("gapValue").textContent = gapInput.value;
+  $("outerValue").textContent = $("outerGap").value;
+  $("radiusValue").textContent = $("radius").value;
+  $("frameWValue").textContent = $("frameW").value;
+  $("frameBox").hidden = !$("frameOn").checked;
+  const paper = PAPER[ratioSelect.value];
+  const [pl, ps] = paper || [];
+  $("paperNote").textContent = paper
+    ? $("guides").checked
+      ? `Papier ${isLandscape() ? pl : ps} × ${isLandscape() ? ps : pl} mm. La partie grisée (environ ${SAFE_MM} mm) peut être rognée à l'impression.`
+      : `Papier ${isLandscape() ? pl : ps} × ${isLandscape() ? ps : pl} mm.`
+    : "Pas de papier Selphy pour ce ratio : la zone imprimable n'est pas affichée.";
+}
+
+const DEFAULT_GAP = 14;
+const DEFAULT_SETTINGS = {
+  ratio: "3:2", orientation: "landscape", count: "2", gap: DEFAULT_GAP, outerSep: false, outer: DEFAULT_GAP,
+  layout: "grid", bg: "#ffffff", radius: 0, frameOn: false, frameW: 8, frameColor: "#ffffff",
+  titleOn: false, titleText: "", titleDate: false, titleStyle: DEFAULT_TITLE, titlePos: "top",
+};
+function getSettings() {
+  return {
+    ratio: ratioSelect.value, orientation: orientationSelect.value, count: countSelect.value,
+    gap: gapV(), outerSep: !$("gapLink").checked, outer: Number($("outerGap").value),
+    layout: layoutKey, bg: bgPicker.get(), radius: radiusV(), frameOn: $("frameOn").checked,
+    frameW: Number($("frameW").value), frameColor: framePicker.get(),
+    titleOn: titleOn.checked, titleText: titleText.value, titleDate: titleDate.checked,
+    titleStyle: { ...titleStyle }, titlePos: titlePosKey,
+  };
+}
+function setSettings(o) {
+  ratioSelect.value = o.ratio;
+  orientationSelect.value = o.orientation;
+  countSelect.value = o.count;
+  gapInput.value = o.gap;
+  $("gapLink").checked = !o.outerSep;
+  $("outerGap").value = o.outer;
+  layoutKey = o.layout;
+  bgPicker.set(o.bg);
+  $("radius").value = o.radius;
+  $("frameOn").checked = o.frameOn;
+  $("frameW").value = o.frameW;
+  framePicker.set(o.frameColor);
+  titleOn.checked = o.titleOn;
+  titleText.value = o.titleText;
+  titleDate.checked = o.titleDate;
+  titleStyle = { ...o.titleStyle };
+  titleEditor.set(titleStyle);
+  titlePosKey = o.titlePos;
+  syncTextUI();
+  syncSegs.forEach((f) => f());
+  selected = Math.min(selected, count() - 1);
+}
+
 function chipGroup(box, entries, onPick) {
   const btns = Object.entries(entries).map(([k, label]) => {
     const b = document.createElement("button");
@@ -1012,16 +1222,33 @@ $("capApplyAll").onclick = () => {
   setMessage("Style appliqué à toutes les légendes.");
 };
 
+const setTitlePosChips = chipGroup($("titlePos"), { top: "Titre en haut", bottom: "Titre en bas" }, (k) => {
+  titlePosKey = k;
+  render();
+});
 const syncTextUI = () => {
   titleText.disabled = !titleOn.checked;
+  titleDate.disabled = !titleOn.checked;
+  setTitlePosChips((k) => k === titlePosKey, !titleOn.checked);
   titleEditor.setDisabled(!titleOn.checked);
 };
-[captionsOn, titleOn, titleText].forEach((el) =>
+[titleOn, titleText, titleDate].forEach((el) =>
   el.addEventListener("input", () => {
     syncTextUI();
     render();
   })
 );
+captionsOn.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.capOn = captionsOn.checked;
+  render();
+});
+$("capAllOn").onclick = () => {
+  slots.slice(0, count()).forEach((s) => s && (s.capOn = true));
+  render();
+  setMessage("Légende activée sur toutes les photos.");
+};
 syncTextUI();
 captionInput.addEventListener("input", () => {
   const s = slots[selected];
@@ -1033,24 +1260,14 @@ captionInput.addEventListener("input", () => {
 $("resetAllBtn2").onclick = () => $("resetAllBtn").click();
 $("resetAllBtn").onclick = () => {
   if (!confirm("Réinitialiser les réglages et retirer toutes les photos ?")) return;
-  ratioSelect.value = "3:2";
-  orientationSelect.value = "landscape";
-  countSelect.value = "2";
-  gapInput.value = DEFAULT_GAP;
-  $("gapValue").textContent = DEFAULT_GAP;
   slots.fill(null);
-  captionsOn.checked = false;
-  titleOn.checked = false;
-  titleText.value = "";
-  titleStyle = { ...DEFAULT_TITLE };
-  titleEditor.set(titleStyle);
-  syncTextUI();
+  setSettings(DEFAULT_SETTINGS);
   selected = 0;
   render();
   setMessage("Tout a été réinitialisé.");
 };
 
-[ratioSelect, orientationSelect, gapInput].forEach((el) =>
+[ratioSelect, orientationSelect, gapInput, $("outerGap"), $("radius"), $("frameW"), $("frameOn"), $("gapLink"), $("guides")].forEach((el) =>
   el.addEventListener("input", () => render())
 );
 countSelect.addEventListener("change", () => {
