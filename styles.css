@@ -514,3 +514,9 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
   .top-actions { gap: 6px; flex-wrap: nowrap; }
   .top-actions button { padding-left: 10px; padding-right: 10px; }
 }
+.modal-card { gap: 16px; }
+.modal-section { display: flex; flex-direction: column; gap: 8px; }
+.modal-label { margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.hint-left { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.hint-left.warn { color: #b25e00; font-weight: 600; }
+.modal-head button.round { flex: none; }

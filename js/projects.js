@@ -6,6 +6,7 @@
   const list = $("projectsList");
   const nameInput = $("projectName");
   let currentId = null;
+  let savedSig = null; // signature du montage au dernier enregistrement ou à la dernière ouverture
 
   const newId = () => "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const store = (mode, fn) => idb("projects", mode, fn);
@@ -33,10 +34,34 @@
     };
   }
 
+  const sigOf = () =>
+    JSON.stringify(plainState(), (k, v) => (k === "img" || k === "blob" || k === "exif" || k === "selected" ? undefined : v));
+  const hasWork = () => slots.some(Boolean);
+  const isDirty = () => (currentId ? sigOf() !== savedSig : hasWork());
+  const currentName = () => (currentId ? nameInput.dataset.saved || "" : "");
+
+  // avertit avant de quitter un montage modifié et non enregistré
+  const confirmLeave = () =>
+    !isDirty() ||
+    confirm(
+      currentId
+        ? `Le projet « ${currentName()} » a des modifications non enregistrées. Les abandonner ?`
+        : "Le montage en cours n'est pas enregistré. L'abandonner ?"
+    );
+
+  function updateStatus() {
+    const s = $("projectStatus");
+    if (currentId) s.textContent = isDirty() ? `Projet « ${currentName()} » : modifications non enregistrées` : `Projet « ${currentName()} » : enregistré`;
+    else s.textContent = hasWork() ? "Montage non enregistré" : "Montage vide";
+    s.classList.toggle("warn", isDirty());
+  }
+
   async function saveProject(id, name) {
     const rec = { id, name, updated: Date.now(), thumb: thumbOf(), ...plainState() };
     await store("readwrite", (o) => o.put(rec, id));
     currentId = id;
+    nameInput.dataset.saved = name;
+    savedSig = sigOf();
     return rec;
   }
 
@@ -51,6 +76,7 @@
     });
 
   async function openProject(rec) {
+    if (rec.id !== currentId || isDirty()) if (!confirmLeave()) return;
     const slots = await Promise.all(
       rec.slots.map(async (x) => {
         if (!x) return null;
@@ -60,7 +86,8 @@
     );
     loadState({ settings: { ...DEFAULT_SETTINGS, ...rec.settings }, slots, selected: rec.selected });
     currentId = rec.id;
-    nameInput.value = rec.name;
+    nameInput.value = nameInput.dataset.saved = rec.name;
+    savedSig = sigOf();
     closePanel();
     setMessage(`Projet « ${rec.name} » ouvert.`);
   }
@@ -119,7 +146,7 @@
           const name = (prompt("Nouveau nom :", rec.name) || "").trim();
           if (!name) return;
           await store("readwrite", (o) => o.put({ ...rec, name }, rec.id));
-          if (rec.id === currentId) nameInput.value = name;
+          if (rec.id === currentId) nameInput.value = nameInput.dataset.saved = name;
           refresh();
         }, "ghost"),
         mk("Dupliquer", async () => {
@@ -141,6 +168,8 @@
 
   function openPanel() {
     panel.hidden = false;
+    if (!nameInput.value && currentId) nameInput.value = currentName();
+    updateStatus();
     refresh();
   }
   function closePanel() {
@@ -165,6 +194,7 @@
       const id = same ? same.id : newId();
       await saveProject(id, name);
       setMessage(same ? `Projet « ${name} » mis à jour.` : `Projet « ${name} » enregistré.`);
+      updateStatus();
       refresh();
     } catch (e) {
       setMessage("Enregistrement impossible : " + (e.message || e), true);
@@ -172,10 +202,11 @@
   };
 
   $("projectNew").onclick = () => {
-    if (slots.some(Boolean) && !confirm("Commencer un nouveau montage ? Le montage actuel n'est conservé que s'il est enregistré comme projet.")) return;
+    if (!confirmLeave()) return;
     loadState({ settings: { ...DEFAULT_SETTINGS }, slots: [], selected: 0 });
     currentId = null;
-    nameInput.value = "";
+    savedSig = null;
+    nameInput.value = nameInput.dataset.saved = "";
     closePanel();
     setMessage("Nouveau montage.");
   };

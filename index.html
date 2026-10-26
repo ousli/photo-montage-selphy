@@ -10,18 +10,28 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=42" />
+  <link rel="stylesheet" href="./styles.css?v=43" />
 </head>
 <body>
   <div id="projectsPanel" class="modal" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="projectsTitle">
-      <div class="modal-head"><h2 id="projectsTitle">Projets</h2><button type="button" id="projectsClose" class="ghost">Fermer</button></div>
-      <div class="project-save">
-        <input id="projectName" type="text" maxlength="60" placeholder="Nom du projet" autocomplete="off" />
-        <button type="button" id="projectSave">Enregistrer</button>
+      <div class="modal-head">
+        <h2 id="projectsTitle">Projets</h2>
+        <button type="button" id="projectsClose" class="round" aria-label="Fermer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
-      <div id="projectsList" class="projects-list"></div>
-      <button type="button" id="projectNew" class="ghost">Nouveau montage</button>
+      <section class="modal-section">
+        <label for="projectName" class="modal-label">Montage en cours</label>
+        <p id="projectStatus" class="hint-left"></p>
+        <div class="project-save">
+          <input id="projectName" type="text" maxlength="60" placeholder="Nom du projet" autocomplete="off" />
+          <button type="button" id="projectSave">Enregistrer</button>
+        </div>
+      </section>
+      <section class="modal-section">
+        <div class="modal-label">Mes projets</div>
+        <div id="projectsList" class="projects-list"></div>
+      </section>
+      <button type="button" id="projectNew" class="ghost">Nouveau montage vide</button>
     </div>
   </div>
 
@@ -256,28 +266,28 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=45"></script>
-  <script src="./js/exif.js?v=45"></script>
-  <script src="./js/layout.js?v=45"></script>
-  <script src="./js/render.js?v=45"></script>
-  <script src="./js/printers-data.js?v=45"></script>
-  <script src="./js/printers.js?v=45"></script>
-  <script src="./js/selection.js?v=45"></script>
-  <script src="./js/import.js?v=45"></script>
-  <script src="./js/cell-menu.js?v=45"></script>
-  <script src="./js/interactions.js?v=45"></script>
-  <script src="./js/editors.js?v=45"></script>
-  <script src="./js/pickers.js?v=45"></script>
-  <script src="./js/montage-ui.js?v=45"></script>
-  <script src="./js/settings.js?v=45"></script>
-  <script src="./js/controls.js?v=45"></script>
-  <script src="./js/export.js?v=45"></script>
-  <script src="./js/segmented.js?v=45"></script>
-  <script src="./js/presets.js?v=45"></script>
-  <script src="./js/pwa.js?v=45"></script>
-  <script src="./js/tabs.js?v=45"></script>
-  <script src="./js/main.js?v=45"></script>
-  <script src="./js/history.js?v=45"></script>
-  <script src="./js/projects.js?v=45"></script>
+  <script src="./js/core.js?v=46"></script>
+  <script src="./js/exif.js?v=46"></script>
+  <script src="./js/layout.js?v=46"></script>
+  <script src="./js/render.js?v=46"></script>
+  <script src="./js/printers-data.js?v=46"></script>
+  <script src="./js/printers.js?v=46"></script>
+  <script src="./js/selection.js?v=46"></script>
+  <script src="./js/import.js?v=46"></script>
+  <script src="./js/cell-menu.js?v=46"></script>
+  <script src="./js/interactions.js?v=46"></script>
+  <script src="./js/editors.js?v=46"></script>
+  <script src="./js/pickers.js?v=46"></script>
+  <script src="./js/montage-ui.js?v=46"></script>
+  <script src="./js/settings.js?v=46"></script>
+  <script src="./js/controls.js?v=46"></script>
+  <script src="./js/export.js?v=46"></script>
+  <script src="./js/segmented.js?v=46"></script>
+  <script src="./js/presets.js?v=46"></script>
+  <script src="./js/pwa.js?v=46"></script>
+  <script src="./js/tabs.js?v=46"></script>
+  <script src="./js/main.js?v=46"></script>
+  <script src="./js/history.js?v=46"></script>
+  <script src="./js/projects.js?v=46"></script>
 </body>
 </html>
