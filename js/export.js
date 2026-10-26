@@ -52,18 +52,17 @@ function downloadFile(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-$("printBtn").onclick = async () => {
-  // Sur mobile, la feuille de partage donne accès à Imprimer / AirPrint
-  if (matchMedia("(pointer: coarse)").matches && navigator.canShare) {
-    const blob = await exportBlob();
-    const file = new File([blob], "montage.jpg", { type: "image/jpeg" });
-    if (navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] });
-      } catch {}
-      return;
-    }
+// Sur mobile avec partage de fichiers, un seul bouton (« Télécharger ») : la feuille de partage propose déjà Imprimer
+const canShareFiles = () => {
+  try {
+    return matchMedia("(pointer: coarse)").matches && !!navigator.canShare && navigator.canShare({ files: [new File([""], "a.jpg", { type: "image/jpeg" })] });
+  } catch {
+    return false;
   }
+};
+if (canShareFiles()) $("printBtn").hidden = true;
+
+$("printBtn").onclick = () => {
   const w = window.open("", "_blank");
   if (!w) return setMessage("Popup bloquée : autorise-la pour imprimer.", true);
   const url = exportDataUrl();
