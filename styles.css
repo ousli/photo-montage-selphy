@@ -88,6 +88,7 @@ label b { font-weight: 500; color: var(--muted); margin-left: 4px; }
 label:has(> input[type="range"]) { display: grid; grid-template-columns: 1fr auto; align-items: center; row-gap: 4px; }
 label:has(> input[type="range"]) > input { grid-column: 1 / -1; }
 label:has(> input[type="range"]) > b { margin: 0; font-variant-numeric: tabular-nums; }
+.pill { align-self: center; padding: 4px 10px; border-radius: 999px; background: #fff3d6; color: #8a5a00; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
 .ic { width: 1.15em; height: 1.15em; flex: none; }
 button:has(> .ic) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 h1 { display: flex; align-items: center; gap: 8px; }

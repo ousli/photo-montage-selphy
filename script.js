@@ -143,7 +143,8 @@ let titlePosKey = "top";
 const todayFr = () => new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const titleString = () => [titleText.value.trim(), titleDate.checked ? todayFr() : ""].filter(Boolean).join(" · ");
 const titleActive = () => titleOn.checked && titleString() !== "";
-const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
+const titleBase = () => Math.round(titleStyle.size * 1.8);
+const titleH = () => (titleActive() ? titleBase() + safeInsetPx(...canvasSize()) : 0);
 const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
 const slots = Array.from({ length: 8 }, () => null);
@@ -221,9 +222,14 @@ function clampOffset(s) {
   s.oy = Math.max(-lim, Math.min(lim, s.oy));
 }
 
+// Quand la case touche le bas du montage, la bande de légende descend dans la zone rognée par la Selphy : on l'agrandit d'autant
+function bandExtra(c) {
+  return Math.max(0, c.y + c.h - (canvas.height - safeInsetPx(canvas.width, canvas.height)));
+}
+
 // Zone occupée par la photo : la cellule moins la bande de légende
 function photoRect(c, s) {
-  return hasBand(s) ? { ...c, h: c.h - captionH() } : c;
+  return hasBand(s) ? { ...c, h: c.h - captionH() - bandExtra(c) } : c;
 }
 
 // Chemin rectangulaire à coins arrondis
@@ -268,7 +274,10 @@ function drawCaption(text, c, st) {
   ctx.fillStyle = st.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  drawText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2, st, c.w - 32);
+  const d = safeInsetPx(canvas.width, canvas.height);
+  const left = Math.max(c.x, d);
+  const right = Math.min(c.x + c.w, canvas.width - d);
+  drawText(text, (left + right) / 2, c.y + c.h - bandExtra(c) - captionH() / 2, st, right - left - 32);
   ctx.restore();
 }
 
@@ -277,8 +286,9 @@ function drawTitle(w) {
   ctx.fillStyle = titleStyle.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const y = titlePosKey === "bottom" ? canvas.height - titleH() / 2 - 6 : titleH() / 2 + 6;
-  drawText(titleString(), w / 2, y, titleStyle, w - 80);
+  const d = safeInsetPx(canvas.width, canvas.height);
+  const y = titlePosKey === "bottom" ? canvas.height - d - titleBase() / 2 - 6 : d + titleBase() / 2 + 6;
+  drawText(titleString(), w / 2, y, titleStyle, w - 2 * d - 80);
   ctx.restore();
 }
 
@@ -1480,7 +1490,31 @@ renderPresets();
 // PWA : le service worker n'est disponible qu'en https (ou localhost)
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
+  navigator.serviceWorker.ready.then(() => {
+    if (localStorage.getItem("offlineReady")) return;
+    localStorage.setItem("offlineReady", "1");
+    setMessage("Installé : l'outil fonctionne maintenant sans connexion.");
+  });
 }
+
+// Mode hors ligne : pastille dans la barre du haut, et nouvelle tentative du lieu EXIF au retour du réseau
+const offlinePill = $("offlinePill");
+function syncOnline() {
+  offlinePill.hidden = navigator.onLine;
+}
+addEventListener("offline", () => {
+  syncOnline();
+  setMessage("Hors ligne : tout fonctionne, sauf la recherche du nom de lieu.");
+});
+addEventListener("online", () => {
+  syncOnline();
+  setMessage("");
+  slots.forEach((s) => {
+    if (s && s.exif && s.exif.placeState === "error") delete s.exif.placeState;
+  });
+  render();
+});
+syncOnline();
 
 // Onglets du panneau
 const tabBtns = Array.from(document.querySelectorAll(".tabs button"));

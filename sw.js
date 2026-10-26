@@ -1,5 +1,5 @@
 // Incrémente la version pour forcer la mise à jour du cache
-const CACHE = "montage-photo-v8";
+const CACHE = "montage-photo-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,7 +32,8 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   event.respondWith(
-    fetch(req)
+    // si le réseau ne répond pas en 4 s (connexion très faible), on sert le cache
+    Promise.race([fetch(req), new Promise((_, rej) => setTimeout(rej, 4000))])
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();

@@ -10,12 +10,13 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=29" />
+  <link rel="stylesheet" href="./styles.css?v=30" />
 </head>
 <body>
   <header class="topbar">
     <h1><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L8 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Montage<b class="hide-sm"> photo</b></span></h1>
     <div class="top-actions">
+      <span id="offlinePill" class="pill" hidden>Hors ligne</span>
       <div class="undo-bar">
         <button type="button" id="undoBtn" class="round" aria-label="Annuler" title="Annuler (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
         <button type="button" id="redoBtn" class="round" aria-label="Rétablir" title="Rétablir (Ctrl+Maj+Z)" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
@@ -206,7 +207,7 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./script.js?v=27"></script>
+  <script src="./script.js?v=29"></script>
   <script src="./extras.js?v=1"></script>
 </body>
 </html>

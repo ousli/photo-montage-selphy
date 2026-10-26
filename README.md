@@ -19,6 +19,10 @@ Ouvre `index.html` dans ton navigateur.
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
 - **Sortie :** Télécharger (JPG) ou Imprimer.
 
+## Hors ligne
+
+En https (GitHub Pages, NAS), après une première visite, l'outil fonctionne sans connexion sur ordinateur comme sur téléphone, y compris installé sur l'écran d'accueil : montage, import, export, impression, sauvegarde automatique. Seule la recherche du nom de lieu (EXIF) a besoin du réseau. Une pastille « Hors ligne » s'affiche en haut quand la connexion est coupée.
+
 ## Installation (PWA)
 
 En https (par exemple GitHub Pages), l'app est installable : « Ajouter à l'écran d'accueil » sur téléphone, ou l'icône d'installation dans la barre d'adresse sur ordinateur. Une fois installée, elle s'ouvre en plein écran et fonctionne hors ligne. Incrémente `CACHE` dans `sw.js` quand tu publies une nouvelle version.
