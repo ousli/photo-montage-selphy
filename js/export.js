@@ -7,21 +7,55 @@ function exportDataUrl() {
   return url;
 }
 
-$("downloadBtn").onclick = () => {
-  const a = document.createElement("a");
+function exportBlob() {
+  return new Promise((res) => {
+    render(true);
+    canvas.toBlob((b) => {
+      render();
+      res(b);
+    }, "image/jpeg", 0.95);
+  });
+}
+
+function exportName() {
   const pi = paperInfo();
-  a.download = `montage-${pi ? `${pi.w}x${pi.h}mm` : ratioSelect.value.replace(":", "x")}-${orientationSelect.value}.jpg`;
+  return `montage-${pi ? `${pi.w}x${pi.h}mm` : ratioSelect.value.replace(":", "x")}-${orientationSelect.value}.jpg`;
+}
+
+// Sur mobile, « Télécharger » ouvre la feuille de partage (Photos, Fichiers, app d'impression…) ; sinon, téléchargement classique
+$("downloadBtn").onclick = async () => {
+  const name = exportName();
+  if (matchMedia("(pointer: coarse)").matches && navigator.canShare) {
+    const blob = await exportBlob();
+    const file = new File([blob], name, { type: "image/jpeg" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+      } catch (e) {
+        // fermer la feuille de partage n'est pas une erreur ; sinon on retombe sur le téléchargement
+        if (e && e.name !== "AbortError") downloadFile(blob, name);
+      }
+      return;
+    }
+  }
+  const a = document.createElement("a");
+  a.download = name;
   a.href = exportDataUrl();
   a.click();
 };
 
+function downloadFile(blob, name) {
+  const a = document.createElement("a");
+  a.download = name;
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
 $("printBtn").onclick = async () => {
   // Sur mobile, la feuille de partage donne accès à Imprimer / AirPrint
   if (matchMedia("(pointer: coarse)").matches && navigator.canShare) {
-    const blob = await new Promise((res) => {
-      render(true);
-      canvas.toBlob((b) => { render(); res(b); }, "image/jpeg", 0.95);
-    });
+    const blob = await exportBlob();
     const file = new File([blob], "montage.jpg", { type: "image/jpeg" });
     if (navigator.canShare({ files: [file] })) {
       try {

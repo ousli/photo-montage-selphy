@@ -21,7 +21,7 @@ Ouvre `index.html` dans ton navigateur.
 - **Préréglages :** un préréglage fourni par format de l'imprimante choisie ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
 - **Thème :** clair ou sombre, qui suit le réglage de l'appareil ; le bouton soleil/lune de l'en-tête force l'un ou l'autre (choix mémorisé dans le navigateur).
-- **Sortie :** Télécharger (JPG) ou Imprimer.
+- **Sortie :** Télécharger (JPG) ou Imprimer. Sur mobile, « Télécharger » ouvre la feuille de partage (Photos, Fichiers, app d'impression…) ; sur ordinateur, il télécharge le fichier.
 
 ## Hors ligne
 
