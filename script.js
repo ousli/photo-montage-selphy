@@ -741,3 +741,31 @@ renderPresets();
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+
+// Cartes repliables, état mémorisé
+(function () {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("montage-folds") || "{}"); } catch (e) {}
+  document.querySelectorAll("[data-fold]").forEach((card) => {
+    const key = card.dataset.fold;
+    const head = card.querySelector(":scope > h2");
+    const collapsed = key in saved ? saved[key] : card.hasAttribute("data-collapsed");
+    const apply = (c) => {
+      card.classList.toggle("collapsed", c);
+      head.setAttribute("aria-expanded", String(!c));
+    };
+    head.tabIndex = 0;
+    head.setAttribute("role", "button");
+    apply(collapsed);
+    const toggle = () => {
+      const c = !card.classList.contains("collapsed");
+      apply(c);
+      saved[key] = c;
+      try { localStorage.setItem("montage-folds", JSON.stringify(saved)); } catch (e) {}
+    };
+    head.addEventListener("click", toggle);
+    head.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
+  });
+})();

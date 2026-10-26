@@ -46,7 +46,9 @@ h2 { margin: 0 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spaci
   align-items: start;
 }
 
-.sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 84px; }
+.sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 84px;
+  max-height: calc(100vh - 104px); overflow-y: auto; overscroll-behavior: contain;
+  padding-right: 4px; scrollbar-width: thin; }
 
 .card {
   display: flex;
@@ -57,6 +59,24 @@ h2 { margin: 0 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spaci
   border-radius: 14px;
   padding: 20px;
 }
+
+[data-fold] > h2 {
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+[data-fold] > h2::after {
+  content: "";
+  width: 8px; height: 8px;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+[data-fold].collapsed { gap: 0; }
+[data-fold].collapsed > h2::after { transform: rotate(-45deg); }
+[data-fold].collapsed > :not(h2) { display: none; }
 
 label {
   display: flex;
@@ -151,7 +171,7 @@ canvas {
 
 @media (max-width: 860px) {
   .layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; }
+  .sidebar { position: static; max-height: none; overflow: visible; padding-right: 0; }
   canvas { max-height: none; }
 }
 
