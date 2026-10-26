@@ -10,7 +10,7 @@ Ouvre `index.html` dans ton navigateur.
 
 - **Format :** ratio (3:2, 4:3, 16:9), orientation, nombre de photos (2/4/6) et marge entre les photos.
 - **Photos :** clique une case pour choisir, remplacer ou supprimer sa photo (ou dépose un fichier dessus).
-- **Texte :** dans la carte « Texte », ajoute un titre en haut du montage et/ou des légendes sous les photos (le texte de chaque légende se tape dans la carte de la photo sélectionnée). Police, couleur et tailles sont réglables ; le texte rétrécit automatiquement s'il est trop long. Tout est inclus dans l'export et l'impression.
+- **Titre et légendes :** la carte « Titre » ajoute un titre en haut du montage ; la case « Légendes sous les photos » de la carte de la photo active les légendes (le texte de chaque légende se tape dans cette même carte). Police, couleur et taille sont réglables séparément pour le titre et pour chaque légende (dans la carte de la photo, avec un bouton pour appliquer le style à toutes) ; le texte rétrécit automatiquement s'il est trop long. Tout est inclus dans l'export et l'impression.
 - **Échange :** appui long sur une photo, puis glisse-la sur une autre case pour permuter les deux (ou la déplacer vers une case vide).
 - **Cadrage :** glisse pour déplacer, molette / pincement / curseur pour zoomer, curseur et boutons 90° pour pivoter.
 - **Préréglages :** trois préréglages Selphy fournis ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).

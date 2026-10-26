@@ -15,11 +15,8 @@ const LONG_EDGE_PX = 1800;
 const captionsOn = $("captionsOn");
 const titleOn = $("titleOn");
 const titleText = $("titleText");
-const fontSel = $("fontSel");
-const textColor = $("textColor");
-const titleSize = $("titleSize");
-const capSize = $("capSize");
-const DEFAULT_TEXT = { font: "sans", color: "#1f2430", title: 72, cap: 40 };
+const DEFAULT_TITLE = { font: "sans", color: "#1f2430", size: 72 };
+const DEFAULT_CAP = { font: "sans", color: "#1f2430", size: 40 };
 const FONTS = {
   sans: '"Helvetica Neue", Helvetica, Arial, sans-serif',
   serif: 'Georgia, "Times New Roman", serif',
@@ -27,11 +24,17 @@ const FONTS = {
   script: '"Snell Roundhand", "Brush Script MT", "Segoe Script", cursive',
   mono: '"Courier New", Courier, monospace',
 };
-const fontFamily = () => FONTS[fontSel.value] || FONTS.sans;
-// les bandes de texte grandissent avec la taille choisie
-const captionH = () => Math.round(Number(capSize.value) * 1.9);
+const FONT_LABELS = { sans: "Sans-serif", serif: "Serif", rounded: "Arrondie", script: "Manuscrite", mono: "Machine à écrire" };
+const PALETTE = ["#1f2430", "#ffffff", "#c0392b", "#e67e22", "#f1c40f", "#27ae60", "#2980b9", "#8e44ad"];
+let titleStyle = { ...DEFAULT_TITLE };
+const capStyleOf = (s) => (s && s.style) || DEFAULT_CAP;
+// la bande de légende est la même pour toutes les cases : elle suit la plus grande taille choisie
+const captionH = () => {
+  const sizes = slots.slice(0, count()).filter(Boolean).map((s) => capStyleOf(s).size);
+  return Math.round((sizes.length ? Math.max(...sizes) : DEFAULT_CAP.size) * 1.9);
+};
 const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
-const titleH = () => (titleActive() ? Math.round(Number(titleSize.value) * 1.8) : 0);
+const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
 const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
 const slots = Array.from({ length: 6 }, () => null);
@@ -88,9 +91,9 @@ function photoRect(c) {
   return captionsOn.checked ? { ...c, h: c.h - captionH() } : c;
 }
 
-function fitText(text, base, maxW) {
-  let size = base;
-  const fam = fontFamily();
+function fitText(text, st, maxW) {
+  let size = st.size;
+  const fam = FONTS[st.font] || FONTS.sans;
   ctx.font = `${size}px ${fam}`;
   while (size > 14 && ctx.measureText(text).width > maxW) {
     size -= 2;
@@ -98,10 +101,10 @@ function fitText(text, base, maxW) {
   }
 }
 
-function drawCaption(text, c) {
+function drawCaption(text, c, st) {
   ctx.save();
-  fitText(text, Number(capSize.value), c.w - 32);
-  ctx.fillStyle = textColor.value;
+  fitText(text, st, c.w - 32);
+  ctx.fillStyle = st.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2);
@@ -110,8 +113,8 @@ function drawCaption(text, c) {
 
 function drawTitle(w) {
   ctx.save();
-  fitText(titleText.value.trim(), Number(titleSize.value), w - 80);
-  ctx.fillStyle = textColor.value;
+  fitText(titleText.value.trim(), titleStyle, w - 80);
+  ctx.fillStyle = titleStyle.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(titleText.value.trim(), w / 2, titleH() / 2 + 6);
@@ -170,7 +173,7 @@ function render(forExport = false) {
     ctx.clip();
     drawSlot(s, pr);
     ctx.restore();
-    if (captionsOn.checked && s.caption) drawCaption(s.caption, c);
+    if (captionsOn.checked && s.caption) drawCaption(s.caption, c, capStyleOf(s));
   });
 
   if (!forExport && cells[selected]) {
@@ -261,6 +264,9 @@ function refreshUI() {
   captionInput.placeholder = captionsOn.checked ? "Texte sous la photo" : "Active « Légendes sous les photos »";
   const cap = s ? s.caption || "" : "";
   if (captionInput.value !== cap) captionInput.value = cap;
+  capEditor.set(capStyleOf(s));
+  capEditor.setDisabled(!s || !captionsOn.checked);
+  $("capApplyAll").disabled = !s || !captionsOn.checked;
 }
 
 function select(i) {
@@ -275,7 +281,12 @@ function loadFile(file, index) {
   const img = new Image();
   const url = URL.createObjectURL(file);
   img.onload = () => {
+    const prev = slots[index];
     slots[index] = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
+    if (prev) {
+      slots[index].caption = prev.caption;
+      slots[index].style = prev.style;
+    }
     setMessage(`Photo ${index + 1} : ${file.name}`);
     render();
   };
@@ -502,25 +513,129 @@ $("gapReset").onclick = () => {
   render();
 };
 
+// Éditeur de style (police, couleur, taille) réutilisable pour le titre et les légendes
+function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
+  box.innerHTML = `
+    <div class="color-field">
+      <span class="color-head">Police</span>
+      <div class="fonts"></div>
+    </div>
+    <div class="color-field">
+      <span class="color-head">Couleur <b class="se-hex"></b></span>
+      <div class="color-row">
+        <div class="swatches"></div>
+        <input class="swatch custom se-color" type="color" title="Couleur personnalisée" aria-label="Couleur personnalisée" />
+      </div>
+    </div>
+    <label>${sizeLabel} <b class="se-sizeval"></b>
+      <input class="se-size" type="range" min="${min}" max="${max}" />
+    </label>
+    <button type="button" class="ghost small se-reset">Reset</button>`;
+  const q = (c) => box.querySelector(c);
+  const color = q(".se-color"), size = q(".se-size"), sw = q(".swatches");
+  let defaults = null;
+  let fontKey = "sans";
+  const fontBtns = Object.entries(FONT_LABELS).map(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "font-chip";
+    b.textContent = label;
+    b.style.fontFamily = FONTS[k];
+    b.onclick = () => {
+      fontKey = k;
+      changed();
+    };
+    q(".fonts").appendChild(b);
+    return [k, b];
+  });
+  const buttons = PALETTE.map((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.dataset.color = c;
+    b.style.setProperty("--c", c);
+    b.setAttribute("aria-label", c);
+    b.onclick = () => {
+      color.value = c;
+      changed();
+    };
+    sw.appendChild(b);
+    return b;
+  });
+  const read = () => ({ font: fontKey, color: color.value, size: Number(size.value) });
+  const refresh = () => {
+    fontBtns.forEach(([k, b]) => b.classList.toggle("on", k === fontKey));
+    q(".se-hex").textContent = color.value;
+    q(".se-sizeval").textContent = size.value;
+    const cur = color.value.toLowerCase();
+    buttons.forEach((b) => b.classList.toggle("on", b.dataset.color === cur));
+    color.classList.toggle("on", !PALETTE.includes(cur));
+  };
+  const changed = () => {
+    refresh();
+    onChange(read());
+  };
+  [color, size].forEach((el) => el.addEventListener("input", changed));
+  q(".se-reset").onclick = () => {
+    if (!defaults) return;
+    api.set(defaults);
+    onChange(read());
+  };
+  const api = {
+    set(st) {
+      fontKey = st.font;
+      color.value = st.color;
+      size.value = st.size;
+      refresh();
+    },
+    setDefaults(d) { defaults = d; },
+    setDisabled(d) {
+      box.classList.toggle("disabled", d);
+      box.querySelectorAll("select, input, button").forEach((el) => (el.disabled = d));
+    },
+  };
+  return api;
+}
+
+const titleEditor = createStyleEditor($("titleStyle"), {
+  min: 30, max: 140, sizeLabel: "Taille du titre",
+  onChange: (st) => {
+    titleStyle = st;
+    render();
+  },
+});
+titleEditor.setDefaults(DEFAULT_TITLE);
+titleEditor.set(titleStyle);
+
+const capEditor = createStyleEditor($("capStyle"), {
+  min: 20, max: 80, sizeLabel: "Taille de la légende",
+  onChange: (st) => {
+    const s = slots[selected];
+    if (!s) return;
+    s.style = st;
+    render();
+  },
+});
+capEditor.setDefaults(DEFAULT_CAP);
+$("capApplyAll").onclick = () => {
+  const src = slots[selected];
+  if (!src) return;
+  const st = { ...capStyleOf(src) };
+  slots.forEach((s) => s && (s.style = { ...st }));
+  render();
+  setMessage("Style appliqué à toutes les légendes.");
+};
+
 const syncTextUI = () => {
   titleText.disabled = !titleOn.checked;
-  $("titleSizeVal").textContent = titleSize.value;
-  $("capSizeVal").textContent = capSize.value;
+  titleEditor.setDisabled(!titleOn.checked);
 };
-[captionsOn, titleOn, titleText, fontSel, textColor, titleSize, capSize].forEach((el) =>
+[captionsOn, titleOn, titleText].forEach((el) =>
   el.addEventListener("input", () => {
     syncTextUI();
     render();
   })
 );
-$("textReset").onclick = () => {
-  fontSel.value = DEFAULT_TEXT.font;
-  textColor.value = DEFAULT_TEXT.color;
-  titleSize.value = DEFAULT_TEXT.title;
-  capSize.value = DEFAULT_TEXT.cap;
-  syncTextUI();
-  render();
-};
 syncTextUI();
 captionInput.addEventListener("input", () => {
   const s = slots[selected];
@@ -540,10 +655,8 @@ $("resetAllBtn").onclick = () => {
   captionsOn.checked = false;
   titleOn.checked = false;
   titleText.value = "";
-  fontSel.value = DEFAULT_TEXT.font;
-  textColor.value = DEFAULT_TEXT.color;
-  titleSize.value = DEFAULT_TEXT.title;
-  capSize.value = DEFAULT_TEXT.cap;
+  titleStyle = { ...DEFAULT_TITLE };
+  titleEditor.set(titleStyle);
   syncTextUI();
   selected = 0;
   render();
