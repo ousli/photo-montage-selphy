@@ -142,7 +142,7 @@ const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
 const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
 const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
-const slots = Array.from({ length: 6 }, () => null);
+const slots = Array.from({ length: 8 }, () => null);
 let selected = 0;
 let cells = [];
 
@@ -164,6 +164,7 @@ function gridFor(n) {
   const land = isLandscape();
   if (n === 2) return land ? [1, 2] : [2, 1];
   if (n === 4) return [2, 2];
+  if (n === 8) return land ? [2, 4] : [4, 2];
   return land ? [2, 3] : [3, 2];
 }
 
@@ -479,6 +480,8 @@ function loadFile(file, index) {
   const img = new Image();
   const url = URL.createObjectURL(file);
   const exifP = readExif(file);
+  return new Promise((done) => {
+  img.onerror = () => { setMessage(`Image illisible : ${file.name}`, true); done(); };
   img.onload = () => {
     const prev = slots[index];
     const slot = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
@@ -492,9 +495,10 @@ function loadFile(file, index) {
     });
     setMessage(`Photo ${index + 1} : ${file.name}`);
     render();
+    done();
   };
-  img.onerror = () => setMessage(`Image illisible : ${file.name}`, true);
   img.src = url;
+  });
 }
 
 const menuEl = $("cellMenu");
@@ -553,7 +557,7 @@ canvas.addEventListener("pointerdown", (ev) => {
   if (pointers.size === 2) {
     // deuxième doigt : pincement pour zoomer la photo de la case sélectionnée
     const [a, b] = [...pointers.values()];
-    pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y) };
+    pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
     drag = null;
     return;
   }
@@ -586,6 +590,23 @@ canvas.addEventListener("pointermove", (ev) => {
     const dist = Math.hypot(a.x - b.x, a.y - b.y);
     if (pinch.dist > 0) s.zoom = Math.max(0.2, Math.min(4, s.zoom * (dist / pinch.dist)));
     pinch.dist = dist;
+    // deux doigts : rotation selon l'angle entre les doigts
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    let da = ang - pinch.ang;
+    if (da > Math.PI) da -= 2 * Math.PI;
+    if (da < -Math.PI) da += 2 * Math.PI;
+    s.rot = ((((s.rot + (da * 180) / Math.PI + 180) % 360) + 360) % 360) - 180;
+    pinch.ang = ang;
+    // et déplacement du milieu des deux doigts
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const r = canvas.getBoundingClientRect();
+    const c = photoRect(cells[selected]);
+    s.ox += (((mx - pinch.mx) * canvas.width) / r.width) / c.w;
+    s.oy += (((my - pinch.my) * canvas.width) / r.width) / c.h;
+    pinch.mx = mx;
+    pinch.my = my;
+    clampOffset(s);
     render();
     return;
   }
@@ -720,6 +741,41 @@ $("resetBtn").onclick = () => {
   }
 };
 fileInput.addEventListener("change", () => loadFile(fileInput.files[0], selected));
+
+// Import de plusieurs photos : remplit les cases vides dans l'ordre
+const multiInput = $("multiInput");
+$("multiBtn").onclick = () => {
+  multiInput.value = "";
+  multiInput.click();
+};
+multiInput.addEventListener("change", () => {
+  const files = Array.from(multiInput.files).filter((f) => f.type.startsWith("image/"));
+  if (!files.length) return;
+  let n = Number(countSelect.value);
+  let free = [];
+  for (let k = 0; k < n; k++) if (!slots[k]) free.push(k);
+  if (files.length > (free.length || n)) {
+    // plus de photos que de cases : propose le nombre de cases le plus proche
+    const needed = (free.length ? n - free.length : 0) + files.length;
+    const best = [2, 4, 6, 8].find((v) => v >= needed) || 8;
+    if (best > n && confirm(`Tu as choisi ${files.length} photos pour ${n} cases.\nPasser à ${best} cases ?`)) {
+      countSelect.value = String(best);
+      countSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      n = best;
+      free = [];
+      for (let k = 0; k < n; k++) if (!slots[k]) free.push(k);
+    }
+  }
+  // s'il n'y a plus de case vide, on remplace depuis la première
+  const targets = free.length ? free : Array.from({ length: n }, (_, k) => k);
+  selected = targets[0];
+  Promise.all(files.slice(0, targets.length).map((f, k) => loadFile(f, targets[k]))).then(() => {
+    const extra = files.length - targets.length;
+    setMessage(extra > 0 ? `${targets.length} photos importées, ${extra} ignorée(s) : pas assez de cases.` : `${files.length} photo(s) importée(s).`, extra > 0);
+    render();
+  });
+});
+
 
 const DEFAULT_GAP = 14;
 gapInput.addEventListener("input", () => ($("gapValue").textContent = gapInput.value));
@@ -1197,7 +1253,42 @@ function showTab(name) {
   $("slotBar").hidden = name === "montage";
   try { localStorage.setItem("montage-tab", name); } catch (e) {}
 }
-tabBtns.forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+tabBtns.forEach((b) => b.addEventListener("click", () => {
+  showTab(b.dataset.tab);
+  if (isMobile() && sheetState === "min") setSheet("mid");
+}));
+
+// Feuille basse (mobile) : min = onglets seuls, mid = réglages, max = grand panneau
+const sheet = $("sheet");
+const SHEET_STEPS = ["min", "mid", "max"];
+const isMobile = () => matchMedia("(max-width: 860px)").matches;
+let sheetState = "mid";
+try { sheetState = localStorage.getItem("montage-sheet") || "mid"; } catch (e) {}
+if (!SHEET_STEPS.includes(sheetState)) sheetState = "mid";
+function setSheet(state) {
+  sheetState = state;
+  sheet.dataset.sheet = state;
+  document.body.classList.toggle("sheet-min", state === "min");
+  document.body.classList.toggle("sheet-max", state === "max");
+  try { localStorage.setItem("montage-sheet", state); } catch (e) {}
+}
+setSheet(sheetState);
+let handleDrag = null;
+const handle = $("sheetHandle");
+handle.addEventListener("pointerdown", (ev) => {
+  handle.setPointerCapture(ev.pointerId);
+  handleDrag = { y: ev.clientY };
+});
+handle.addEventListener("pointerup", (ev) => {
+  if (!handleDrag) return;
+  const dy = ev.clientY - handleDrag.y;
+  handleDrag = null;
+  const i = SHEET_STEPS.indexOf(sheetState);
+  if (dy < -25) setSheet(SHEET_STEPS[Math.min(2, i + 1)]);
+  else if (dy > 25) setSheet(SHEET_STEPS[Math.max(0, i - 1)]);
+  else setSheet(sheetState === "min" ? "mid" : sheetState === "max" ? "mid" : "min");
+});
+handle.addEventListener("pointercancel", () => (handleDrag = null));
 const currentTab = () => (tabBtns.find((b) => b.classList.contains("on")) || {}).dataset.tab;
 let savedTab = "montage";
 try { savedTab = localStorage.getItem("montage-tab") || "montage"; } catch (e) {}

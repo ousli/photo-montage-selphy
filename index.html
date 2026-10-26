@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=18" />
+  <link rel="stylesheet" href="./styles.css?v=20" />
 </head>
 <body>
   <header class="topbar">
@@ -23,13 +23,9 @@
   </header>
 
   <main class="layout">
-    <aside class="sidebar">
-      <nav class="tabs" role="tablist">
-        <button type="button" role="tab" data-tab="montage" class="on">Montage</button>
-        <button type="button" role="tab" data-tab="photo">Photo</button>
-        <button type="button" role="tab" data-tab="text">Texte</button>
-        <button type="button" role="tab" data-tab="info">Infos</button>
-      </nav>
+    <aside class="sidebar" id="sheet" data-sheet="mid">
+      <button type="button" class="sheet-handle" id="sheetHandle" aria-label="Agrandir ou réduire le panneau"><span></span></button>
+      <div class="sheet-body">
 
       <div class="card slot-bar" id="slotBar" hidden>
         <h2 id="editorTitle">Photo 1</h2>
@@ -38,11 +34,14 @@
 
       <section class="card tab-panel" data-panel="montage">
         <h2>Format</h2>
+        <button id="multiBtn" type="button" class="secondary">📷 Ajouter plusieurs photos</button>
+        <input id="multiInput" type="file" accept="image/*" multiple hidden />
         <label>Nombre de photos
           <select id="photoCount">
             <option value="2">2</option>
             <option value="4">4</option>
             <option value="6">6</option>
+            <option value="8">8</option>
           </select>
         </label>
         <label>Ratio
@@ -142,6 +141,13 @@
       </section>
 
       <p id="message" class="message"></p>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="montage" class="on">Montage</button>
+        <button type="button" role="tab" data-tab="photo">Photo</button>
+        <button type="button" role="tab" data-tab="text">Texte</button>
+        <button type="button" role="tab" data-tab="info">Infos</button>
+      </nav>
     </aside>
 
     <section class="stage">
@@ -154,6 +160,6 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./script.js?v=17"></script>
+  <script src="./script.js?v=20"></script>
 </body>
 </html>

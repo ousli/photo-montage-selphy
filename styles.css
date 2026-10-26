@@ -169,11 +169,6 @@ canvas {
 .cell-menu button { text-align: left; background: transparent; color: var(--text); font-weight: 500; }
 .cell-menu button:hover { background: #eef1f8; filter: none; }
 
-@media (max-width: 860px) {
-  .layout { grid-template-columns: 1fr; }
-  .sidebar { position: static; max-height: none; overflow: visible; padding-right: 0; }
-  canvas { max-height: none; }
-}
 
 .seg { position: relative; display: flex; gap: 4px; padding: 4px; background: #eef1f8; border-radius: 10px; }
 .seg button { flex: 1; background: transparent; color: var(--muted); padding: 8px 6px; font-weight: 600; }
@@ -375,3 +370,68 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 .exif-data span { color: var(--muted); }
 .exif-data b { font-weight: 600; text-align: right; }
 .sidebar .card > h2:not(:first-child) { margin-top: 6px; }
+
+/* Desktop : onglets en haut, poignée de la feuille masquée */
+.sheet-handle { display: none; }
+.sheet-body { display: contents; }
+.sidebar .tabs { order: -1; }
+#multiBtn { align-self: stretch; }
+
+/* Mobile : aperçu fixe en haut, réglages dans une feuille basse, onglets en bas */
+@media (max-width: 860px) {
+  :root { --top-h: 52px; --tabs-h: 64px; --handle-h: 22px; --mid-h: 38dvh; --max-h: 78dvh; --safe-b: env(safe-area-inset-bottom, 0px); }
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  body { min-height: 0; }
+  .topbar { flex-wrap: nowrap; height: var(--top-h); padding: 6px 10px; gap: 8px; }
+  .topbar h1 { font-size: 1rem; white-space: nowrap; }
+  .top-actions { width: auto; flex-wrap: nowrap; }
+  .top-actions button { flex: none; padding: 8px 12px; font-size: 0.9rem; min-height: 40px; }
+  #resetAllBtn { display: none; }
+  .layout { display: block; padding: 0; }
+  .stage { position: fixed; top: var(--top-h); left: 0; right: 0;
+    bottom: calc(var(--reserve) + var(--safe-b)); display: flex; transition: bottom 0.3s ease; }
+  .preview { flex: 1; min-height: 0; padding: 6px; border: 0; border-radius: 0; }
+  canvas { max-width: 100%; max-height: 100%; }
+  .hint { display: none; }
+  body { --reserve: calc(var(--handle-h) + var(--tabs-h) + var(--mid-h)); }
+  body.sheet-min { --reserve: calc(var(--handle-h) + var(--tabs-h)); }
+  body.sheet-max { --reserve: calc(var(--handle-h) + var(--tabs-h) + var(--mid-h)); }
+
+  .sidebar { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 10;
+    display: flex; flex-direction: column; gap: 0; padding: 0 0 var(--safe-b); max-height: none; overflow: hidden;
+    background: var(--card); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0;
+    box-shadow: 0 -6px 24px rgba(20, 30, 70, 0.15); height: calc(var(--handle-h) + var(--tabs-h) + var(--mid-h) + var(--safe-b));
+    transition: height 0.3s ease; }
+  .sidebar[data-sheet="min"] { height: calc(var(--handle-h) + var(--tabs-h) + var(--safe-b)); }
+  .sidebar[data-sheet="max"] { height: calc(var(--handle-h) + var(--tabs-h) + var(--max-h) + var(--safe-b)); }
+  .sheet-handle { display: flex; justify-content: center; align-items: center; flex: none; height: var(--handle-h);
+    width: 100%; min-height: 0; padding: 0; background: transparent; border-radius: 18px 18px 0 0; }
+  .sheet-handle span { width: 40px; height: 5px; border-radius: 3px; background: #c4cbe0; }
+  .sheet-handle:hover:not(:disabled) { transform: none; }
+  .sheet-body { display: flex; flex-direction: column; gap: 12px; order: 1; flex: 1; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain; padding: 4px 12px 12px; -webkit-overflow-scrolling: touch; }
+  .sidebar[data-sheet="min"] .sheet-body { display: none; }
+  .sidebar .tabs { order: 2; flex: none; height: calc(var(--tabs-h) - 10px); margin: 0 10px 10px; border-radius: 14px;
+    padding: 5px; gap: 4px; background: #e9ecf6; border: 0; }
+  .sheet-body { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); }
+  .sidebar .tabs button { min-height: 0; font-size: 0.85rem; }
+  .sheet-body .card { box-shadow: none; padding: 14px; animation: none; }
+  .slot-bar { padding: 10px 14px; }
+  .cell-menu { z-index: 30; }
+
+  /* Cibles tactiles */
+  .swatch { width: 38px; height: 38px; }
+  .swatches { gap: 10px; }
+  .font-chip { padding: 10px 14px; min-height: 44px; }
+  .flag { min-width: 48px; }
+  .slots button { min-height: 44px; min-width: 52px; }
+  .check input { width: 24px; height: 24px; }
+  .switch input { width: 48px; height: 28px; }
+  .switch input::after { width: 22px; height: 22px; }
+  .switch input:checked::after { transform: translateX(20px); }
+  .info-tip { width: 32px; height: 32px; min-height: 0; }
+  button.small { min-height: 44px; }
+  input[type="range"] { height: 40px; }
+  .adv summary { padding: 10px 0; }
+}
