@@ -33,13 +33,39 @@
 
   apply();
   mq.addEventListener && mq.addEventListener("change", apply);
-  document.addEventListener("DOMContentLoaded", () => {
-    apply();
-    document.getElementById("themeBtn").onclick = () => {
+  function toggle() {
+    const btn = document.getElementById("themeBtn");
+    const next = effective() === "dark" ? "light" : "dark";
+    const change = () => {
       try {
-        localStorage.setItem(KEY, effective() === "dark" ? "light" : "dark");
+        localStorage.setItem(KEY, next);
       } catch (e) {}
       apply();
+      const svg = btn.querySelector("svg");
+      if (svg) svg.classList.add("theme-spin");
     };
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!document.startViewTransition || reduce) return change();
+    // le nouveau thème se propage en cercle depuis le bouton
+    const r = btn.getBoundingClientRect();
+    const x = r.left + r.width / 2;
+    const y = r.top + r.height / 2;
+    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    root.classList.add("theme-anim");
+    const t = document.startViewTransition(change);
+    t.ready
+      .then(() =>
+        root.animate(
+          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+          { duration: 550, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" }
+        )
+      )
+      .catch(() => {});
+    t.finished.finally(() => root.classList.remove("theme-anim"));
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    apply();
+    document.getElementById("themeBtn").onclick = toggle;
   });
 })();

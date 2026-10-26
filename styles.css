@@ -537,3 +537,12 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
   .topbar { padding-left: 12px; padding-right: 12px; }
   .topbar h1 span { display: none; }
 }
+
+/* Bascule de thème : cercle qui s'étend depuis le bouton, icône qui pivote */
+.theme-anim::view-transition-old(root),
+.theme-anim::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+.theme-anim::view-transition-old(root) { z-index: 1; }
+.theme-anim::view-transition-new(root) { z-index: 2; }
+@keyframes theme-spin { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+#themeBtn svg.theme-spin { animation: theme-spin 0.5s ease-out; }
+@media (prefers-reduced-motion: reduce) { #themeBtn svg.theme-spin { animation: none; } }
