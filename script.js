@@ -34,8 +34,8 @@ const captionH = () => {
   return Math.round((sizes.length ? Math.max(...sizes) : DEFAULT_CAP.size) * 1.9);
 };
 const DEFAULT_OVL = { font: "sans", color: "#ffffff", size: 30 };
-const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, gps: false };
-const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", gps: "Lieu GPS" };
+const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, place: false, gps: false };
+const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS" };
 const CORNER_LABELS = { tl: "↖ Haut gauche", tr: "↗ Haut droite", bl: "↙ Bas gauche", br: "↘ Bas droite" };
 const ovlStyleOf = (s) => (s && s.exifStyle) || DEFAULT_OVL;
 const exifFieldsOf = (s) => (s && s.exifFields) || DEFAULT_EXIF_FIELDS;
@@ -66,6 +66,8 @@ function formatExif(r) {
   if (parts.length) out.settings = parts.join(" · ");
   if (typeof r.latitude === "number" && typeof r.longitude === "number") {
     out.gps = `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}`;
+    out.lat = r.latitude;
+    out.lon = r.longitude;
   }
   return Object.keys(out).length ? out : null;
 }
@@ -79,10 +81,51 @@ async function readExif(file) {
   }
 }
 
+// Lieu lisible (ville, pays) via OpenStreetMap Nominatim, uniquement si l'utilisateur coche « Lieu »
+const placeCache = new Map();
+async function lookupPlace(lat, lon) {
+  // coordonnées arrondies (~1 km) avant envoi
+  const la = lat.toFixed(2), lo = lon.toFixed(2);
+  const key = `${la},${lo}`;
+  if (!placeCache.has(key)) {
+    placeCache.set(
+      key,
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=${la}&lon=${lo}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("http"))))
+        .then((j) => {
+          const a = j.address || {};
+          const city = a.city || a.town || a.village || a.municipality || a.county || a.state;
+          const label = [city, a.country].filter(Boolean).join(", ");
+          if (!label) throw new Error("empty");
+          return label;
+        })
+    );
+    placeCache.get(key).catch(() => placeCache.delete(key));
+  }
+  return placeCache.get(key);
+}
+
+function ensurePlace(s) {
+  if (!s || !s.exif || s.exif.lat == null || s.exif.placeState) return;
+  s.exif.placeState = "loading";
+  lookupPlace(s.exif.lat, s.exif.lon)
+    .then((label) => {
+      s.exif.place = label;
+      s.exif.placeState = "ok";
+    })
+    .catch(() => {
+      s.exif.placeState = "error";
+    })
+    .then(() => render());
+}
+const exifAvailable = (s, k) => !!(s && s.exif && (k === "place" ? s.exif.lat != null : s.exif[k]));
+
 // lignes EXIF actives pour une photo
 function exifLines(s) {
   if (!s || !s.exif) return [];
+  if (exifModeOf(s) === "none") return [];
   const f = exifFieldsOf(s);
+  if (f.place) ensurePlace(s);
   return Object.keys(EXIF_FIELD_LABELS).filter((k) => f[k] && s.exif[k]).map((k) => s.exif[k]);
 }
 const hasExifCaption = (s) => exifModeOf(s) === "caption" && exifLines(s).length > 0;
@@ -369,10 +412,16 @@ function refreshExifUI(s) {
   $("exifNote").textContent = !s
     ? "Ajoute une photo pour voir ses infos EXIF."
     : has
-    ? exifLines(s).join(" · ") || "Aucun champ sélectionné."
+    ? mode === "none"
+      ? "Données EXIF trouvées. Choisis Légende ou Overlay pour les afficher."
+      : exifLines(s).join(" · ") || "Aucun champ sélectionné."
     : "Aucune donnée EXIF dans cette photo.";
   setModeChips((k) => k === mode, !has);
-  setFieldChips((k) => !!exifFieldsOf(s)[k] && !!(s && s.exif && s.exif[k]), !has || mode === "none");
+  setFieldChips((k) => !!exifFieldsOf(s)[k] && exifAvailable(s, k), !has || mode === "none");
+  const place = has && mode !== "none" && exifFieldsOf(s).place ? s.exif.placeState : null;
+  if (place === "loading") $("exifNote").textContent = "Recherche du lieu…";
+  if (place === "error") $("exifNote").textContent = "Lieu introuvable (hors ligne ?). Les coordonnées GPS restent disponibles.";
+  $("exifPrivacy").hidden = !(has && mode !== "none" && exifFieldsOf(s).place);
   setCornerChips((k) => k === (s && s.exifCorner ? s.exifCorner : "bl"), !has || mode !== "overlay");
   ovlEditor.set(ovlStyleOf(s));
   ovlEditor.setDisabled(!has || mode !== "overlay");
@@ -775,6 +824,7 @@ const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
   const s = slots[selected];
   if (!s) return;
   s.exifFields = { ...exifFieldsOf(s), [k]: !exifFieldsOf(s)[k] };
+  if (k === "place" && s.exif && s.exif.placeState === "error") delete s.exif.placeState;
   render();
 });
 $("exifApplyAll").onclick = () => {
