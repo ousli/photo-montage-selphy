@@ -544,5 +544,5 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .theme-anim::view-transition-old(root) { z-index: 1; }
 .theme-anim::view-transition-new(root) { z-index: 2; }
 @keyframes theme-spin { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
-#themeBtn svg.theme-spin { animation: theme-spin 0.5s ease-out; }
+#themeBtn svg.theme-spin { animation: theme-spin 0.3s ease-out; }
 @media (prefers-reduced-motion: reduce) { #themeBtn svg.theme-spin { animation: none; } }

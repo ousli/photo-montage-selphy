@@ -57,7 +57,7 @@
       .then(() =>
         root.animate(
           { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-          { duration: 550, easing: "ease-in-out", pseudoElement: "::view-transition-new(root)" }
+          { duration: 320, easing: "ease-out", pseudoElement: "::view-transition-new(root)" }
         )
       )
       .catch(() => {});
