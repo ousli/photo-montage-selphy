@@ -1,11 +1,31 @@
 // Incrémente la version pour forcer la mise à jour du cache
-const CACHE = "montage-photo-v6";
+const CACHE = "montage-photo-v22";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
-  "./script.js",
-  "./extras.js",
+  "./js/core.js",
+  "./js/exif.js",
+  "./js/layout.js",
+  "./js/render.js",
+  "./js/printers-data.js",
+  "./js/printers.js",
+  "./js/selection.js",
+  "./js/import.js",
+  "./js/cell-menu.js",
+  "./js/interactions.js",
+  "./js/editors.js",
+  "./js/pickers.js",
+  "./js/montage-ui.js",
+  "./js/settings.js",
+  "./js/controls.js",
+  "./js/export.js",
+  "./js/segmented.js",
+  "./js/presets.js",
+  "./js/pwa.js",
+  "./js/tabs.js",
+  "./js/main.js",
+  "./js/history.js",
   "./vendor/exifr.full.umd.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
@@ -32,7 +52,8 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
   event.respondWith(
-    fetch(req)
+    // si le réseau ne répond pas en 4 s (connexion très faible), on sert le cache
+    Promise.race([fetch(req), new Promise((_, rej) => setTimeout(rej, 4000))])
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();
