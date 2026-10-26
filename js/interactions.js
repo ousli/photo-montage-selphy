@@ -263,7 +263,7 @@ multiInput.addEventListener("change", () => {
   if (files.length > (free.length || n)) {
     // plus de photos que de cases : propose le nombre de cases le plus proche
     const needed = (free.length ? n - free.length : 0) + files.length;
-    const best = [2, 4, 6, 8].find((v) => v >= needed) || 8;
+    const best = Array.from(countSelect.options, (o) => Number(o.value)).find((v) => v >= needed) || 8;
     if (best > n && confirm(`Tu as choisi ${files.length} photos pour ${n} cases.\nPasser à ${best} cases ?`)) {
       countSelect.value = String(best);
       countSelect.dispatchEvent(new Event("change", { bubbles: true }));
