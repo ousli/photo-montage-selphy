@@ -828,14 +828,23 @@ const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
   render();
 });
 (function () {
-  const chip = Array.from($("exifFields").children).find((b) => b.textContent === EXIF_FIELD_LABELS.place);
   const tip = document.createElement("button");
   tip.type = "button";
   tip.className = "info-tip";
   tip.textContent = "i";
   tip.setAttribute("aria-label", "Informations sur le lieu");
   tip.dataset.tip = "Le nom du lieu est cherché via OpenStreetMap : seules des coordonnées arrondies (~1 km) sont envoyées. Les coordonnées GPS exactes ne quittent jamais ton navigateur.";
-  chip.after(tip);
+  $("exifFields").appendChild(tip);
+  // l'infobulle est en position fixe : on la cale dans la fenêtre pour qu'elle ne soit jamais coupée
+  const place = () => {
+    const r = tip.getBoundingClientRect();
+    const w = Math.min(240, window.innerWidth - 16);
+    const left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8));
+    tip.style.setProperty("--tip-w", `${w}px`);
+    tip.style.setProperty("--tip-l", `${left}px`);
+    tip.style.setProperty("--tip-b", `${window.innerHeight - r.top + 8}px`);
+  };
+  ["mouseenter", "focus", "click"].forEach((e) => tip.addEventListener(e, place));
 })();
 $("exifApplyAll").onclick = () => {
   const src = slots[selected];

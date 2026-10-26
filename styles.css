@@ -335,11 +335,10 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 .info-tip:hover, .info-tip:focus-visible { filter: none; background: #e4e9fb; color: var(--accent); outline: none; }
 .info-tip::after {
   content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-80%);
-  width: 240px;
+  position: fixed;
+  bottom: var(--tip-b, 0);
+  left: var(--tip-l, 0);
+  width: var(--tip-w, 240px);
   padding: 8px 10px;
   border-radius: 8px;
   background: var(--text);
