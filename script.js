@@ -302,10 +302,16 @@ function drawOverlay(s, pr) {
   ctx.fillStyle = st.color;
   ctx.textAlign = right ? "right" : "left";
   ctx.textBaseline = "middle";
-  const x = right ? pr.x + pr.w - pad : pr.x + pad;
-  const y0 = top ? pr.y + pad + lh / 2 : pr.y + pr.h - pad - lh / 2 - (lines.length - 1) * lh;
+  // le texte reste hors de la zone rognée par la Selphy, même si la photo touche le bord du montage
+  const d = safeInsetPx(canvas.width, canvas.height);
+  const sx = Math.max(pr.x, d);
+  const sy = Math.max(pr.y, d);
+  const sw = Math.min(pr.x + pr.w, canvas.width - d) - sx;
+  const sh = Math.min(pr.y + pr.h, canvas.height - d) - sy;
+  const x = right ? sx + sw - pad : sx + pad;
+  const y0 = top ? sy + pad + lh / 2 : sy + sh - pad - lh / 2 - (lines.length - 1) * lh;
   lines.forEach((t, i) => {
-    drawText(t, x, y0 + i * lh, st, pr.w - pad * 2);
+    drawText(t, x, y0 + i * lh, st, sw - pad * 2);
   });
   ctx.restore();
 }
@@ -392,12 +398,14 @@ function render(forExport = false) {
 // Papier Selphy [grand côté, petit côté] en mm ; la Selphy rogne légèrement les bords en impression sans marge
 const PAPER = { "3:2": [148, 100], "4:3": [119, 89] };
 const SAFE_MM = 3;
+function safeInsetPx(w, h) {
+  const paper = PAPER[ratioSelect.value];
+  return paper ? (SAFE_MM * Math.max(w, h)) / paper[0] : 0;
+}
 function drawGuides(w, h) {
   if (!$("guides").checked) return;
-  const paper = PAPER[ratioSelect.value];
-  if (!paper) return;
-  const pxPerMm = Math.max(w, h) / paper[0];
-  const d = SAFE_MM * pxPerMm;
+  const d = safeInsetPx(w, h);
+  if (!d) return;
   ctx.save();
   ctx.fillStyle = "rgba(20, 30, 70, 0.16)";
   ctx.fillRect(0, 0, w, d);
@@ -628,9 +636,20 @@ function showMenu(ev) {
     b.onclick = () => { hideMenu(); fn(); };
     menuEl.appendChild(b);
   });
-  menuEl.style.left = `${ev.pageX}px`;
-  menuEl.style.top = `${ev.pageY}px`;
+  const fixed = matchMedia("(max-width: 860px)").matches;
+  const x = fixed ? ev.clientX : ev.pageX;
+  const y = fixed ? ev.clientY : ev.pageY;
+  menuEl.style.left = `${x}px`;
+  menuEl.style.top = `${y}px`;
   menuEl.hidden = false;
+  if (fixed) {
+    menuEl.style.left = "0px";
+    const r = { width: menuEl.offsetWidth, height: menuEl.offsetHeight };
+    const left = Math.max(8, Math.min(x, innerWidth - r.width - 8));
+    const top = y + r.height + 8 > innerHeight ? Math.max(8, y - r.height - 8) : y;
+    menuEl.style.left = `${left}px`;
+    menuEl.style.top = `${top}px`;
+  }
 }
 document.addEventListener("pointerdown", (ev) => {
   if (!menuEl.contains(ev.target) && ev.target !== canvas) hideMenu();
@@ -968,7 +987,7 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
     fontBtns.forEach(([k, b]) => b.classList.toggle("on", k === fontKey));
     flagBtns.forEach(([k, b]) => b.classList.toggle("on", flags[k]));
     q(".se-hex").textContent = color.value;
-    q(".se-sizeval").textContent = size.value;
+    q(".se-sizeval").textContent = size.value + " px";
     const cur = color.value.toLowerCase();
     buttons.forEach((b) => b.classList.toggle("on", b.dataset.color === cur));
     color.classList.toggle("on", !PALETTE.includes(cur));
@@ -1079,14 +1098,19 @@ const setLayoutChips = chipGroup($("layoutChips"), { grid: "Grille", hero: "Une 
   render();
 });
 
+const RANGE_UNITS = { zoom: " %", rot: "°", gap: " px", outerGap: " px", radius: " px", frameW: " px" };
+function syncRangeValues() {
+  Object.entries(RANGE_UNITS).forEach(([id, u]) => {
+    const b = $(id).closest("label").querySelector(":scope > b");
+    if (b) b.textContent = $(id).value + u;
+  });
+}
+
 function refreshMontageUI() {
+  syncRangeValues();
   setLayoutChips((k) => k === layoutKey, false);
   $("outerWrap").hidden = $("gapLink").checked;
   setGapChips((v) => Number(v) === gapV() && ($("gapLink").checked || Number($("outerGap").value) === gapV()), false);
-  $("gapValue").textContent = gapInput.value;
-  $("outerValue").textContent = $("outerGap").value;
-  $("radiusValue").textContent = $("radius").value;
-  $("frameWValue").textContent = $("frameW").value;
   $("frameBox").hidden = !$("frameOn").checked;
   const paper = PAPER[ratioSelect.value];
   const [pl, ps] = paper || [];
@@ -1396,7 +1420,6 @@ function applyPreset(p) {
   orientationSelect.value = p.orientation;
   countSelect.value = p.count;
   gapInput.value = p.gap;
-  $("gapValue").textContent = p.gap;
   [ratioSelect, orientationSelect, countSelect, gapInput].forEach((el) => {
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
