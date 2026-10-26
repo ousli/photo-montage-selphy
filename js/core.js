@@ -44,8 +44,11 @@ const FONTS = {
   rounded: '"Trebuchet MS", "Arial Rounded MT Bold", Verdana, sans-serif',
   script: '"Snell Roundhand", "Brush Script MT", "Segoe Script", cursive',
   mono: '"Courier New", Courier, monospace',
+  display: 'Impact, "Arial Narrow Bold", "Haettenschweiler", sans-serif',
+  elegant: '"Didot", "Bodoni 72", "Playfair Display", Georgia, serif',
+  marker: '"Marker Felt", "Chalkboard SE", "Comic Sans MS", cursive',
 };
-const FONT_LABELS = { sans: "Sans-serif", serif: "Serif", rounded: "Arrondie", script: "Manuscrite", mono: "Machine à écrire" };
+const FONT_LABELS = { sans: "Sans-serif", serif: "Serif", rounded: "Arrondie", script: "Manuscrite", mono: "Machine à écrire", display: "Affiche", elegant: "Élégante", marker: "Feutre" };
 const PALETTE = ["#1f2430", "#ffffff", "#c0392b", "#e67e22", "#f1c40f", "#27ae60", "#2980b9", "#8e44ad"];
 let titleStyle = { ...DEFAULT_TITLE };
 const capStyleOf = (s) => (s && s.style) || DEFAULT_CAP;

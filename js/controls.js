@@ -71,12 +71,19 @@ $("capApplyAll").onclick = () => {
 
 const setTitlePosChips = chipGroup($("titlePos"), { top: "Titre en haut", bottom: "Titre en bas" }, (k) => {
   titlePosKey = k;
+  syncTextUI();
+  render();
+});
+const setTitleAlignChips = chipGroup($("titleAlignChips"), { left: "À gauche", center: "Centré", right: "À droite" }, (k) => {
+  titleAlign = k;
+  syncTextUI();
   render();
 });
 const syncTextUI = () => {
   titleText.disabled = !titleOn.checked;
   titleDate.disabled = !titleOn.checked;
   setTitlePosChips((k) => k === titlePosKey, !titleOn.checked);
+  setTitleAlignChips((k) => k === titleAlign, !titleOn.checked);
   titleEditor.setDisabled(!titleOn.checked);
 };
 [titleOn, titleText, titleDate].forEach((el) =>

@@ -10,6 +10,9 @@ function syncRangeValues() {
 function refreshMontageUI() {
   syncRangeValues();
   setLayoutChips((k) => k === layoutKey, false);
+  const miss = !layoutAvailable(layoutKey, count());
+  $("layoutNote").hidden = !miss;
+  if (miss) $("layoutNote").textContent = `Pas de mise en page « ${LAYOUT_LABELS[layoutKey]} » pour ${count()} photos : la grille est utilisée.`;
   $("outerWrap").hidden = $("gapLink").checked;
   setGapChips((v) => Number(v) === gapV() && ($("gapLink").checked || Number($("outerGap").value) === gapV()), false);
   $("frameBox").hidden = !$("frameOn").checked;
