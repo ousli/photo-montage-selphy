@@ -52,8 +52,24 @@ function renderPrinterList() {
     printerList.textContent = "Aucun résultat.";
   }
 }
+// mobile : le panneau suit la zone réellement visible (le clavier la réduit)
+function fitPrinterPanel() {
+  const vv = window.visualViewport;
+  if (!vv || printerPanel.hidden) return;
+  printerPanel.style.setProperty("--pp-top", `${vv.offsetTop + 8}px`);
+  printerPanel.style.setProperty("--pp-h", `${Math.max(160, vv.height - 16)}px`);
+}
+if (window.visualViewport) {
+  visualViewport.addEventListener("resize", fitPrinterPanel);
+  visualViewport.addEventListener("scroll", fitPrinterPanel);
+}
+$("printerClose").onclick = () => togglePrinterPanel(false);
 function togglePrinterPanel(open) {
   printerPanel.hidden = !open;
+  // mobile : hors de la feuille basse (qui rogne), sinon le panneau reste coincé dedans
+  const home = open && isMobile() ? document.body : $("printerPicker");
+  if (printerPanel.parentElement !== home) home.appendChild(printerPanel);
+  if (open) fitPrinterPanel();
   printerBtn.setAttribute("aria-expanded", open);
   if (open) {
     printerSearch.value = "";
@@ -89,7 +105,7 @@ printerList.addEventListener("click", (e) => {
   if (it && Date.now() - lastPick > 600) pickPrinter(it.dataset.id);
 });
 document.addEventListener("click", (e) => {
-  if (!printerPanel.hidden && !e.target.closest("#printerPicker")) togglePrinterPanel(false);
+  if (!printerPanel.hidden && !e.target.closest("#printerPicker, #printerPanel")) togglePrinterPanel(false);
 });
 document.addEventListener("keydown", (e) => e.key === "Escape" && togglePrinterPanel(false));
 
