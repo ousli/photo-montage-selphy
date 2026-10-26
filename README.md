@@ -16,7 +16,7 @@ Ouvre `index.html` dans ton navigateur.
 - **Infos EXIF :** si la photo contient des métadonnées (date, appareil, ISO/ouverture/vitesse/focale, lieu en option, par ex. « Paris, France », ou coordonnées GPS), la carte de la photo permet de les afficher en légende sous la photo ou en overlay dans un des 4 coins, avec son propre style. Lecture locale avec [exifr](https://github.com/MikeKovarik/exifr) (MIT, copié dans `vendor/`). Le nom du lieu est cherché via OpenStreetMap seulement si tu coches « Lieu » (coordonnées arrondies à ~1 km envoyées) ; les coordonnées exactes ne quittent jamais le navigateur. Les photos sans EXIF (captures, messageries) n'ont rien à afficher.
 - **Échange :** appui long sur une photo, puis glisse-la sur une autre case pour permuter les deux (ou la déplacer vers une case vide).
 - **Cadrage :** glisse pour déplacer, molette / curseur pour zoomer, curseur et boutons 90° pour pivoter. Sur téléphone, pince avec deux doigts : zoom, rotation et déplacement en même temps.
-- **Mobile :** l'aperçu reste fixe en haut ; les réglages sont dans une feuille en bas (onglets en bas). Touche ou glisse la poignée pour l'agrandir, la réduire ou ne garder que les onglets (aperçu maximal). « Ajouter plusieurs photos » (onglet Montage) remplit les cases vides en une fois ; « Imprimer » ouvre la feuille de partage (AirPrint).
+- **Mobile :** l'aperçu reste fixe en haut ; les réglages sont dans une feuille en bas (onglets en bas). Touche ou glisse la poignée pour l'agrandir, la réduire ou ne garder que les onglets (aperçu maximal). « Ajouter plusieurs photos » (onglet Montage) remplit les cases vides en une fois ; « Imprimer » ouvre la boîte d'impression (AirPrint) et « Télécharger » la feuille de partage.
 - **Imprimante :** choisis ton modèle (Canon Selphy, Kodak, HiTi, DNP, Epson, Instax, HP…), le format de papier, le ratio et la zone imprimable s'adaptent. « Imprimante personnalisée » permet de saisir largeur, hauteur et marge en mm.
 - **Préréglages :** un préréglage fourni par format de l'imprimante choisie ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
@@ -39,7 +39,7 @@ Le navigateur ne peut pas imposer les réglages de l'imprimante. Dans la boîte 
 - format de papier correspondant au ratio (carte postale 100×148 mm pour du 3:2) ;
 - marges à zéro, échelle à 100 %, bonne orientation.
 
-Sur mobile, « Imprimer » ouvre la feuille de partage (AirPrint, app Canon).
+Sur mobile, « Imprimer » ouvre la boîte d'impression du système (AirPrint) ; pour envoyer le montage vers l'app Canon (SELPHY Print), utilise « Télécharger », qui ouvre la feuille de partage.
 
 ## Fichiers
 

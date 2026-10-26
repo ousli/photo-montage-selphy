@@ -52,18 +52,8 @@ function downloadFile(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-$("printBtn").onclick = async () => {
-  // Sur mobile, la feuille de partage donne accès à Imprimer / AirPrint
-  if (matchMedia("(pointer: coarse)").matches && navigator.canShare) {
-    const blob = await exportBlob();
-    const file = new File([blob], "montage.jpg", { type: "image/jpeg" });
-    if (navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file] });
-      } catch {}
-      return;
-    }
-  }
+// « Imprimer » ouvre la boîte d'impression du système (AirPrint sur iPhone) ; « Télécharger » est celui qui partage sur mobile
+$("printBtn").onclick = () => {
   const w = window.open("", "_blank");
   if (!w) return setMessage("Popup bloquée : autorise-la pour imprimer.", true);
   const url = exportDataUrl();
