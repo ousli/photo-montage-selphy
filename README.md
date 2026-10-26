@@ -20,6 +20,7 @@ Ouvre `index.html` dans ton navigateur.
 - **Imprimante :** choisis ton modèle (Canon Selphy, Kodak, HiTi, DNP, Epson, Instax, HP…), le format de papier, le ratio et la zone imprimable s'adaptent. « Imprimante personnalisée » permet de saisir largeur, hauteur et marge en mm.
 - **Préréglages :** un préréglage fourni par format de l'imprimante choisie ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
+- **Thème :** clair ou sombre, qui suit le réglage de l'appareil ; le bouton soleil/lune de l'en-tête force l'un ou l'autre (choix mémorisé dans le navigateur).
 - **Sortie :** Télécharger (JPG) ou Imprimer.
 
 ## Hors ligne
@@ -50,6 +51,7 @@ Sur mobile, « Imprimer » ouvre la feuille de partage (AirPrint, app Canon).
   - `printers-data`, `printers` : catalogue d'imprimantes, sélecteur, papier et zone imprimable
   - `selection`, `import`, `cell-menu`, `interactions` : sélection des cases, import des photos, menu, gestes canvas
   - `editors`, `pickers`, `montage-ui`, `settings`, `controls`, `segmented` : réglages et interface
+  - `theme` : thème clair/sombre (variables CSS dans `styles.css`, chargé dans `<head>`)
   - `export`, `presets`, `pwa`, `tabs`, `main` : impression/export, préréglages, hors ligne, onglets, premier rendu
   - `history` : historique annuler/rétablir et sauvegarde automatique (IndexedDB)
 
