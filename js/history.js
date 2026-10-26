@@ -109,10 +109,12 @@
   // ---- sauvegarde automatique ----
   const dbP = new Promise((res, rej) => {
     if (!window.indexedDB) return rej(new Error("no idb"));
-    const r = indexedDB.open("montage-photo", 1);
+    const r = indexedDB.open("montage-photo", 2);
     r.onupgradeneeded = () => {
-      r.result.createObjectStore("kv");
-      r.result.createObjectStore("photos");
+      const names = r.result.objectStoreNames;
+      if (!names.contains("kv")) r.result.createObjectStore("kv");
+      if (!names.contains("photos")) r.result.createObjectStore("photos");
+      if (!names.contains("projects")) r.result.createObjectStore("projects");
     };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
@@ -200,6 +202,17 @@
     applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected }, true);
     return hasPhotos;
   }
+
+  // ouvre un état complet (projet nommé) : repart d'un historique neuf
+  function loadState(st) {
+    flush();
+    applyState(st, true);
+    hist = [getState()];
+    idx = 0;
+    updateBtns();
+    scheduleSave();
+  }
+  window.MontageDoc = { getState, loadState, idb };
 
   // état de départ : on ne le restaure qu'une fois, avant toute action de l'utilisateur
   hist = [getState()];

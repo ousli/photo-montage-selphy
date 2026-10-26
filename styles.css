@@ -493,3 +493,24 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .printer-list .printer-item { display: block; height: auto; min-height: 0; flex: none; padding: 10px 12px; white-space: normal; line-height: 1.3; }
 .printer-list .printer-item strong { display: block; }
 .printer-list .printer-item small { display: block; margin-top: 3px; line-height: 1.35; overflow-wrap: anywhere; }
+
+/* Projets nommés */
+.modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 24, 36, 0.5); }
+.modal[hidden] { display: none; }
+.modal-card { width: min(560px, 100%); max-height: 86vh; overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; background: var(--card); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
+.modal-head h2 { margin: 0; font-size: 1rem; }
+.project-save { display: flex; gap: 8px; }
+.project-save input { flex: 1; min-width: 0; }
+.projects-list { display: flex; flex-direction: column; gap: 8px; }
+.project-row { display: grid; grid-template-columns: 72px 1fr; gap: 4px 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.project-row.current { border-color: var(--accent); }
+.project-row img { width: 72px; height: 54px; object-fit: contain; background: var(--bg); border-radius: 6px; }
+.project-info strong, .project-info small { display: block; overflow-wrap: anywhere; }
+.project-info small { color: var(--muted); }
+.project-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.project-actions button { min-height: 0; padding: 6px 10px; font-size: 0.85rem; }
+@media (max-width: 860px) {
+  .top-actions { gap: 6px; flex-wrap: nowrap; }
+  .top-actions button { padding-left: 10px; padding-right: 10px; }
+}
