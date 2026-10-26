@@ -318,3 +318,39 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 
 .font-chip:disabled { opacity: 0.4; cursor: default; }
 .exif-note { margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+.info-tip {
+  position: relative;
+  width: 22px; height: 22px;
+  padding: 0;
+  align-self: center;
+  border-radius: 50%;
+  background: #eef1f8;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-style: italic;
+  font-family: Georgia, serif;
+}
+.info-tip:hover, .info-tip:focus-visible { filter: none; background: #e4e9fb; color: var(--accent); outline: none; }
+.info-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-80%);
+  width: 240px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--text);
+  color: #fff;
+  font: 500 0.8rem/1.35 Inter, system-ui, sans-serif;
+  font-style: normal;
+  text-align: left;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.info-tip:hover::after, .info-tip:focus::after { opacity: 1; }

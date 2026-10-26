@@ -421,7 +421,7 @@ function refreshExifUI(s) {
   const place = has && mode !== "none" && exifFieldsOf(s).place ? s.exif.placeState : null;
   if (place === "loading") $("exifNote").textContent = "Recherche du lieu…";
   if (place === "error") $("exifNote").textContent = "Lieu introuvable (hors ligne ?). Les coordonnées GPS restent disponibles.";
-  $("exifPrivacy").hidden = !(has && mode !== "none" && exifFieldsOf(s).place);
+
   setCornerChips((k) => k === (s && s.exifCorner ? s.exifCorner : "bl"), !has || mode !== "overlay");
   ovlEditor.set(ovlStyleOf(s));
   ovlEditor.setDisabled(!has || mode !== "overlay");
@@ -827,6 +827,16 @@ const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
   if (k === "place" && s.exif && s.exif.placeState === "error") delete s.exif.placeState;
   render();
 });
+(function () {
+  const chip = Array.from($("exifFields").children).find((b) => b.textContent === EXIF_FIELD_LABELS.place);
+  const tip = document.createElement("button");
+  tip.type = "button";
+  tip.className = "info-tip";
+  tip.textContent = "i";
+  tip.setAttribute("aria-label", "Informations sur le lieu");
+  tip.dataset.tip = "Le nom du lieu est cherché via OpenStreetMap : seules des coordonnées arrondies (~1 km) sont envoyées. Les coordonnées GPS exactes ne quittent jamais ton navigateur.";
+  chip.after(tip);
+})();
 $("exifApplyAll").onclick = () => {
   const src = slots[selected];
   if (!src) return;
