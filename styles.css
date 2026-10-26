@@ -476,3 +476,14 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .printer-list .printer-item:hover:not(:disabled),
 .printer-list .printer-item:active:not(:disabled) { transform: none; }
 .printer-list .printer-item { transition: background 0.15s; }
+
+/* Mobile : le sélecteur d'imprimante occupe la zone visible au-dessus du clavier (positionné par js/printers.js) */
+.printer-head { display: flex; gap: 6px; align-items: flex-start; }
+.printer-head input[type="search"] { flex: 1; min-width: 0; }
+.printer-close { display: none; }
+@media (max-width: 860px) {
+  .printer-panel:not([hidden]) { position: fixed; z-index: 50; left: 8px; right: 8px; top: var(--pp-top, 8px); height: var(--pp-h, 60vh);
+    margin: 0; display: flex; flex-direction: column; }
+  .printer-panel .printer-list { flex: 1; max-height: none; min-height: 0; overscroll-behavior: contain; }
+  .printer-close { display: block; flex: none; padding: 9px 12px; }
+}

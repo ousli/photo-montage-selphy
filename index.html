@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=36" />
+  <link rel="stylesheet" href="./styles.css?v=37" />
 </head>
 <body>
   <header class="topbar">
@@ -45,7 +45,10 @@
             <span id="printerBtnLabel"></span><span class="printer-caret" aria-hidden="true">▾</span>
           </button>
           <div id="printerPanel" class="printer-panel" hidden>
-            <input id="printerSearch" type="search" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Rechercher (Polaroid, Kodak, Selphy…)" autocomplete="off" />
+            <div class="printer-head">
+              <input id="printerSearch" type="search" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Rechercher (Polaroid, Kodak, Selphy…)" autocomplete="off" />
+              <button type="button" id="printerClose" class="printer-close">Fermer</button>
+            </div>
             <div id="printerList" class="printer-list" role="listbox"></div>
           </div>
         </div>
@@ -224,27 +227,27 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=40"></script>
-  <script src="./js/exif.js?v=40"></script>
-  <script src="./js/layout.js?v=40"></script>
-  <script src="./js/render.js?v=40"></script>
-  <script src="./js/printers-data.js?v=40"></script>
-  <script src="./js/printers.js?v=40"></script>
-  <script src="./js/selection.js?v=40"></script>
-  <script src="./js/import.js?v=40"></script>
-  <script src="./js/cell-menu.js?v=40"></script>
-  <script src="./js/interactions.js?v=40"></script>
-  <script src="./js/editors.js?v=40"></script>
-  <script src="./js/pickers.js?v=40"></script>
-  <script src="./js/montage-ui.js?v=40"></script>
-  <script src="./js/settings.js?v=40"></script>
-  <script src="./js/controls.js?v=40"></script>
-  <script src="./js/export.js?v=40"></script>
-  <script src="./js/segmented.js?v=40"></script>
-  <script src="./js/presets.js?v=40"></script>
-  <script src="./js/pwa.js?v=40"></script>
-  <script src="./js/tabs.js?v=40"></script>
-  <script src="./js/main.js?v=40"></script>
-  <script src="./js/history.js?v=40"></script>
+  <script src="./js/core.js?v=41"></script>
+  <script src="./js/exif.js?v=41"></script>
+  <script src="./js/layout.js?v=41"></script>
+  <script src="./js/render.js?v=41"></script>
+  <script src="./js/printers-data.js?v=41"></script>
+  <script src="./js/printers.js?v=41"></script>
+  <script src="./js/selection.js?v=41"></script>
+  <script src="./js/import.js?v=41"></script>
+  <script src="./js/cell-menu.js?v=41"></script>
+  <script src="./js/interactions.js?v=41"></script>
+  <script src="./js/editors.js?v=41"></script>
+  <script src="./js/pickers.js?v=41"></script>
+  <script src="./js/montage-ui.js?v=41"></script>
+  <script src="./js/settings.js?v=41"></script>
+  <script src="./js/controls.js?v=41"></script>
+  <script src="./js/export.js?v=41"></script>
+  <script src="./js/segmented.js?v=41"></script>
+  <script src="./js/presets.js?v=41"></script>
+  <script src="./js/pwa.js?v=41"></script>
+  <script src="./js/tabs.js?v=41"></script>
+  <script src="./js/main.js?v=41"></script>
+  <script src="./js/history.js?v=41"></script>
 </body>
 </html>
