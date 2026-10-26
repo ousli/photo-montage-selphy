@@ -71,10 +71,12 @@ $("capApplyAll").onclick = () => {
 
 const setTitlePosChips = chipGroup($("titlePos"), { top: "Titre en haut", bottom: "Titre en bas" }, (k) => {
   titlePosKey = k;
+  syncTextUI();
   render();
 });
 const setTitleAlignChips = chipGroup($("titleAlignChips"), { left: "À gauche", center: "Centré", right: "À droite" }, (k) => {
   titleAlign = k;
+  syncTextUI();
   render();
 });
 const syncTextUI = () => {
