@@ -346,3 +346,9 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
   z-index: 100;
 }
 .tip-bubble.on { opacity: 1; }
+
+.flag { min-width: 40px; text-align: center; padding: 6px 10px; }
+.flag-bold { font-weight: 800; }
+.flag-italic { font-style: italic; font-family: Georgia, serif; }
+.flag-underline { text-decoration: underline; }
+.flag-upper { font-size: 0.85rem; letter-spacing: 0.04em; }

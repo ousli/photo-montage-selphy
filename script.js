@@ -196,33 +196,46 @@ function photoRect(c) {
   return bandOn() ? { ...c, h: c.h - captionH() } : c;
 }
 
+const fontSpec = (st, size) =>
+  `${st.italic ? "italic " : ""}${st.bold ? "bold " : ""}${size}px ${FONTS[st.font] || FONTS.sans}`;
+
 function fitText(text, st, maxW) {
   let size = st.size;
-  const fam = FONTS[st.font] || FONTS.sans;
-  ctx.font = `${size}px ${fam}`;
+  ctx.font = fontSpec(st, size);
   while (size > 14 && ctx.measureText(text).width > maxW) {
     size -= 2;
-    ctx.font = `${size}px ${fam}`;
+    ctx.font = fontSpec(st, size);
+  }
+  return size;
+}
+
+// Dessine un texte avec son style complet (gras, italique, souligné, majuscules), rétréci pour tenir dans maxW
+function drawText(raw, x, y, st, maxW) {
+  const text = st.upper ? raw.toUpperCase() : raw;
+  const size = fitText(text, st, maxW);
+  ctx.fillText(text, x, y);
+  if (st.underline) {
+    const wd = ctx.measureText(text).width;
+    const left = ctx.textAlign === "center" ? x - wd / 2 : ctx.textAlign === "right" ? x - wd : x;
+    ctx.fillRect(left, y + size * 0.55, wd, Math.max(2, size * 0.06));
   }
 }
 
 function drawCaption(text, c, st) {
   ctx.save();
-  fitText(text, st, c.w - 32);
   ctx.fillStyle = st.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2);
+  drawText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2, st, c.w - 32);
   ctx.restore();
 }
 
 function drawTitle(w) {
   ctx.save();
-  fitText(titleText.value.trim(), titleStyle, w - 80);
   ctx.fillStyle = titleStyle.color;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(titleText.value.trim(), w / 2, titleH() / 2 + 6);
+  drawText(titleText.value.trim(), w / 2, titleH() / 2 + 6, titleStyle, w - 80);
   ctx.restore();
 }
 
@@ -249,8 +262,7 @@ function drawOverlay(s, pr) {
   const x = right ? pr.x + pr.w - pad : pr.x + pad;
   const y0 = top ? pr.y + pad + lh / 2 : pr.y + pr.h - pad - lh / 2 - (lines.length - 1) * lh;
   lines.forEach((t, i) => {
-    fitText(t, st, pr.w - pad * 2);
-    ctx.fillText(t, x, y0 + i * lh);
+    drawText(t, x, y0 + i * lh, st, pr.w - pad * 2);
   });
   ctx.restore();
 }
@@ -691,6 +703,10 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
         <input class="swatch custom se-color" type="color" title="Couleur personnalisée" aria-label="Couleur personnalisée" />
       </div>
     </div>
+    <div class="color-field">
+      <span class="color-head">Style</span>
+      <div class="se-flags fonts"></div>
+    </div>
     <label>${sizeLabel} <b class="se-sizeval"></b>
       <input class="se-size" type="range" min="${min}" max="${max}" />
     </label>
@@ -712,6 +728,23 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
     q(".fonts").appendChild(b);
     return [k, b];
   });
+  const flags = { bold: false, italic: false, underline: false, upper: false };
+  const FLAG_LABELS = { bold: "G", italic: "I", underline: "S", upper: "AA" };
+  const FLAG_TITLES = { bold: "Gras", italic: "Italique", underline: "Souligné", upper: "Majuscules" };
+  const flagBtns = Object.keys(FLAG_LABELS).map((k) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = `font-chip flag flag-${k}`;
+    b.textContent = FLAG_LABELS[k];
+    b.title = FLAG_TITLES[k];
+    b.setAttribute("aria-label", FLAG_TITLES[k]);
+    b.onclick = () => {
+      flags[k] = !flags[k];
+      changed();
+    };
+    q(".se-flags").appendChild(b);
+    return [k, b];
+  });
   const buttons = PALETTE.map((c) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -726,9 +759,10 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
     sw.appendChild(b);
     return b;
   });
-  const read = () => ({ font: fontKey, color: color.value, size: Number(size.value) });
+  const read = () => ({ font: fontKey, color: color.value, size: Number(size.value), ...flags });
   const refresh = () => {
     fontBtns.forEach(([k, b]) => b.classList.toggle("on", k === fontKey));
+    flagBtns.forEach(([k, b]) => b.classList.toggle("on", flags[k]));
     q(".se-hex").textContent = color.value;
     q(".se-sizeval").textContent = size.value;
     const cur = color.value.toLowerCase();
@@ -748,6 +782,7 @@ function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
   const api = {
     set(st) {
       fontKey = st.font;
+      Object.keys(flags).forEach((k) => (flags[k] = !!st[k]));
       color.value = st.color;
       size.value = st.size;
       refresh();
