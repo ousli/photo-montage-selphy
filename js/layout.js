@@ -2,6 +2,7 @@
 
 const titleDate = $("titleDate");
 let titlePosKey = "top";
+let titleAlign = "center";
 const todayFr = () => new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const titleString = () => [titleText.value.trim(), titleDate.checked ? todayFr() : ""].filter(Boolean).join(" · ");
 const titleActive = () => titleOn.checked && titleString() !== "";
@@ -31,25 +32,42 @@ function canvasSize() {
 function gridFor(n) {
   const land = isLandscape();
   if (n === 2) return land ? [1, 2] : [2, 1];
+  if (n === 3) return land ? [1, 3] : [3, 1];
   if (n === 4) return [2, 2];
   if (n === 8) return land ? [2, 4] : [4, 2];
   return land ? [2, 3] : [3, 2];
 }
 
-// Mises en page : grille régulière ou une grande photo + des petites (cellules en unités [col, ligne, largeur, hauteur])
-const HERO = {
-  2: { cols: 3, rows: 1, cells: [[0, 0, 2, 1], [2, 0, 1, 1]] },
-  4: { cols: 3, rows: 3, cells: [[0, 0, 2, 3], [2, 0, 1, 1], [2, 1, 1, 1], [2, 2, 1, 1]] },
-  6: { cols: 3, rows: 3, cells: [[0, 0, 2, 2], [2, 0, 1, 1], [2, 1, 1, 1], [0, 2, 1, 1], [1, 2, 1, 1], [2, 2, 1, 1]] },
-  8: { cols: 4, rows: 4, cells: [[0, 0, 3, 3], [3, 0, 1, 1], [3, 1, 1, 1], [3, 2, 1, 1], [0, 3, 1, 1], [1, 3, 1, 1], [2, 3, 1, 1], [3, 3, 1, 1]] },
+// Mises en page non régulières, définies en paysage (inversées en portrait).
+// Cellules en unités [col, ligne, largeur, hauteur]. Les nombres de photos absents retombent sur la grille.
+const LAYOUT_DEFS = {
+  grid: {
+    5: { cols: 6, rows: 2, cells: [[0, 0, 3, 1], [3, 0, 3, 1], [0, 1, 2, 1], [2, 1, 2, 1], [4, 1, 2, 1]] },
+  },
+  hero: {
+    2: { cols: 3, rows: 1, cells: [[0, 0, 2, 1], [2, 0, 1, 1]] },
+    3: { cols: 3, rows: 2, cells: [[0, 0, 2, 2], [2, 0, 1, 1], [2, 1, 1, 1]] },
+    4: { cols: 3, rows: 3, cells: [[0, 0, 2, 3], [2, 0, 1, 1], [2, 1, 1, 1], [2, 2, 1, 1]] },
+    6: { cols: 3, rows: 3, cells: [[0, 0, 2, 2], [2, 0, 1, 1], [2, 1, 1, 1], [0, 2, 1, 1], [1, 2, 1, 1], [2, 2, 1, 1]] },
+    8: { cols: 4, rows: 4, cells: [[0, 0, 3, 3], [3, 0, 1, 1], [3, 1, 1, 1], [3, 2, 1, 1], [0, 3, 1, 1], [1, 3, 1, 1], [2, 3, 1, 1], [3, 3, 1, 1]] },
+  },
+  mosaic: {
+    3: { cols: 2, rows: 2, cells: [[0, 0, 2, 1], [0, 1, 1, 1], [1, 1, 1, 1]] },
+    4: { cols: 3, rows: 2, cells: [[0, 0, 1, 2], [1, 0, 2, 1], [1, 1, 1, 1], [2, 1, 1, 1]] },
+    5: { cols: 3, rows: 3, cells: [[0, 0, 2, 2], [2, 0, 1, 1], [2, 1, 1, 2], [0, 2, 1, 1], [1, 2, 1, 1]] },
+    6: { cols: 3, rows: 3, cells: [[0, 0, 1, 2], [1, 0, 1, 1], [2, 0, 1, 2], [1, 1, 1, 2], [0, 2, 1, 1], [2, 2, 1, 1]] },
+  },
 };
+const LAYOUT_LABELS = { grid: "Grille", hero: "Une grande photo", mosaic: "Mosaïque" };
 let layoutKey = "grid";
+const layoutDef = (key, n) => (LAYOUT_DEFS[key] || {})[n] || null;
+// la mise en page choisie existe-t-elle pour ce nombre de photos ? (la grille régulière existe toujours)
+const layoutAvailable = (key, n) => key === "grid" || !!layoutDef(key, n);
 function currentLayout() {
   const n = count();
   const land = isLandscape();
-  let L;
-  if (layoutKey === "hero" && HERO[n]) {
-    L = HERO[n];
+  let L = layoutDef(layoutKey, n) || layoutDef("grid", n);
+  if (L) {
     if (!land) L = { cols: L.rows, rows: L.cols, cells: L.cells.map(([c, r, sw, sh]) => [r, c, sh, sw]) };
   } else {
     const [rows, cols] = gridFor(n);

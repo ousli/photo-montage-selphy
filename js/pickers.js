@@ -39,9 +39,9 @@ function createColorPicker(box, hexEl, initial) {
 const bgPicker = createColorPicker($("bgPicker"), $("bgHex"), "#ffffff");
 const framePicker = createColorPicker($("framePicker"), $("frameHex"), "#ffffff");
 
-const setLayoutChips = chipGroup($("layoutChips"), { grid: "Grille", hero: "Une grande photo" }, (k) => {
+const setLayoutChips = chipGroup($("layoutChips"), LAYOUT_LABELS, (k) => {
   layoutKey = k;
   render();
 });
 
-const RANGE_UNITS = { zoom: " %", rot: "°", gap: " px", outerGap: " px", radius: " px", frameW: " px" };
+const RANGE_UNITS = { zoom: " %", rot: "°", bright: " %", contrast: " %", gap: " px", outerGap: " px", radius: " px", frameW: " px" };

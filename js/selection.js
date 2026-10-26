@@ -77,6 +77,13 @@ function refreshUI() {
   rotInput.value = s ? s.rot : 0;
   $("resetBtn").disabled = !s;
   zoomInput.value = s ? Math.round(s.zoom * 100) : 100;
+  const f = s ? filterOf(s) : filterOf({});
+  brightInput.value = f.bright;
+  contrastInput.value = f.contrast;
+  brightInput.disabled = contrastInput.disabled = !s;
+  setLookChips((k) => k === f.look, !s);
+  $("filterResetBtn").disabled = !s || !hasFilter(s);
+  $("filterAllBtn").disabled = !s;
   captionsOn.checked = !!(s && s.capOn);
   captionsOn.disabled = !s;
   captionInput.disabled = !s || !s.capOn;

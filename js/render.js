@@ -25,10 +25,19 @@ function fitText(text, st, maxW) {
   return size;
 }
 
+// ombre lisible sur n'importe quel fond : sombre pour un texte clair, claire pour un texte foncé
+function textShadow(color, size) {
+  const n = parseInt(color.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  ctx.shadowColor = lum > 0.55 ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.8)";
+  ctx.shadowBlur = size * 0.25;
+}
+
 // Dessine un texte avec son style complet (gras, italique, souligné, majuscules), rétréci pour tenir dans maxW
 function drawText(raw, x, y, st, maxW) {
   const text = st.upper ? raw.toUpperCase() : raw;
   const size = fitText(text, st, maxW);
+  if (st.shadow) textShadow(st.color, size);
   ctx.fillText(text, x, y);
   if (st.underline) {
     const wd = ctx.measureText(text).width;
@@ -52,11 +61,12 @@ function drawCaption(text, c, st) {
 function drawTitle(w) {
   ctx.save();
   ctx.fillStyle = titleStyle.color;
-  ctx.textAlign = "center";
+  ctx.textAlign = titleAlign;
   ctx.textBaseline = "middle";
   const d = safeInsetPx(canvas.width, canvas.height);
+  const x = titleAlign === "left" ? d + 40 : titleAlign === "right" ? w - d - 40 : w / 2;
   const y = titlePosKey === "bottom" ? canvas.height - d - titleBase() / 2 - 6 : d + titleBase() / 2 + 6;
-  drawText(titleString(), w / 2, y, titleStyle, w - 2 * d - 80);
+  drawText(titleString(), x, y, titleStyle, w - 2 * d - 80);
   ctx.restore();
 }
 
@@ -73,10 +83,7 @@ function drawOverlay(s, pr) {
   ctx.beginPath();
   ctx.rect(pr.x, pr.y, pr.w, pr.h);
   ctx.clip();
-  const n = parseInt(st.color.slice(1), 16);
-  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
-  ctx.shadowColor = lum > 0.55 ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.8)";
-  ctx.shadowBlur = st.size * 0.25;
+  textShadow(st.color, st.size);
   ctx.fillStyle = st.color;
   ctx.textAlign = right ? "right" : "left";
   ctx.textBaseline = "middle";
@@ -94,7 +101,48 @@ function drawOverlay(s, pr) {
   ctx.restore();
 }
 
-function drawSlot(s, c) {
+// Retouche d'une photo : { look: none | bw | sepia, bright, contrast } (100 = inchangé)
+const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia" };
+const filterOf = (s) => ({ look: s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
+const hasFilter = (s) => {
+  const f = filterOf(s);
+  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
+};
+const filterCss = (s) => {
+  const f = filterOf(s);
+  return `brightness(${f.bright}%) contrast(${f.contrast}%)${f.look === "bw" ? " grayscale(1)" : f.look === "sepia" ? " sepia(1)" : ""}`;
+};
+// Safari n'a pas toujours ctx.filter : repli par traitement des pixels
+const CTX_FILTER = typeof ctx.filter === "string";
+function filterPixels(g, w, h, s) {
+  const f = filterOf(s);
+  const img = g.getImageData(0, 0, w, h);
+  const d = img.data;
+  const b = f.bright / 100;
+  const k = f.contrast / 100;
+  const clamp = (v) => (v < 0 ? 0 : v > 255 ? 255 : v);
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i] * b, gr = d[i + 1] * b, bl = d[i + 2] * b;
+    r = (r - 127.5) * k + 127.5;
+    gr = (gr - 127.5) * k + 127.5;
+    bl = (bl - 127.5) * k + 127.5;
+    if (f.look === "bw") {
+      r = gr = bl = 0.2126 * r + 0.7152 * gr + 0.0722 * bl;
+    } else if (f.look === "sepia") {
+      const nr = 0.393 * r + 0.769 * gr + 0.189 * bl;
+      const ng = 0.349 * r + 0.686 * gr + 0.168 * bl;
+      const nb = 0.272 * r + 0.534 * gr + 0.131 * bl;
+      r = nr; gr = ng; bl = nb;
+    }
+    d[i] = clamp(r);
+    d[i + 1] = clamp(gr);
+    d[i + 2] = clamp(bl);
+  }
+  g.putImageData(img, 0, 0);
+}
+
+// dx, dy : origine de la case dans le contexte g (0 quand on dessine directement sur le canvas)
+function paintSlot(g, s, c, dx, dy) {
   const rad = (s.rot * Math.PI) / 180;
   const sin = Math.abs(Math.sin(rad));
   const cos = Math.abs(Math.cos(rad));
@@ -104,11 +152,26 @@ function drawSlot(s, c) {
   const cover = Math.max(c.w / bw, c.h / bh) * s.zoom;
   const dw = s.img.width * cover;
   const dh = s.img.height * cover;
-  const cx = c.x + c.w / 2 + s.ox * c.w;
-  const cy = c.y + c.h / 2 + s.oy * c.h;
-  ctx.translate(cx, cy);
-  ctx.rotate(rad);
-  ctx.drawImage(s.img, -dw / 2, -dh / 2, dw, dh);
+  const cx = c.x - dx + c.w / 2 + s.ox * c.w;
+  const cy = c.y - dy + c.h / 2 + s.oy * c.h;
+  g.translate(cx, cy);
+  g.rotate(rad);
+  g.drawImage(s.img, -dw / 2, -dh / 2, dw, dh);
+}
+
+function drawSlot(s, c) {
+  if (!hasFilter(s)) return paintSlot(ctx, s, c, 0, 0);
+  if (CTX_FILTER) {
+    ctx.filter = filterCss(s);
+    return paintSlot(ctx, s, c, 0, 0);
+  }
+  const off = document.createElement("canvas");
+  off.width = Math.max(1, Math.ceil(c.w));
+  off.height = Math.max(1, Math.ceil(c.h));
+  const g = off.getContext("2d");
+  paintSlot(g, s, c, c.x, c.y);
+  filterPixels(g, off.width, off.height, s);
+  ctx.drawImage(off, c.x, c.y);
 }
 
 function render(forExport = false) {
