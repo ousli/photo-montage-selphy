@@ -1,0 +1,15 @@
+# Montage photo - déploiement QNAP (Container Station)
+# Les fichiers du site sont montés en lecture seule : pour mettre à jour l'app,
+# remplace simplement les fichiers de app/, sans reconstruire.
+services:
+  montage-photo:
+    image: nginx:1.27-alpine
+    container_name: ${CONTAINER_NAME:-montage-photo}
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    environment:
+      - TZ=${TZ:-Europe/Paris}
+    volumes:
+      - ${APP_DIR:-./app}:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro

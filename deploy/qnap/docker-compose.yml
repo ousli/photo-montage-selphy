@@ -1,6 +1,6 @@
 # Montage photo - déploiement QNAP (Container Station)
 # Les fichiers du site sont montés en lecture seule : pour mettre à jour l'app,
-# remplace simplement index.html / script.js / styles.css, sans reconstruire.
+# remplace simplement les fichiers de app/, sans reconstruire.
 services:
   montage-photo:
     image: nginx:1.27-alpine

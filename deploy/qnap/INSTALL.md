@@ -17,7 +17,7 @@ Cela crée `deploy/qnap/dist/` :
 
 ```
 dist/
-├── app/                 index.html, script.js, styles.css
+├── app/                 index.html, script.js, styles.css, sw.js, manifest.webmanifest, icons/, vendor/
 ├── docker-compose.yml
 ├── nginx.conf
 └── .env                 réglages (port, fuseau…)
@@ -76,4 +76,4 @@ Pour arrêter ou supprimer : `docker compose down`.
 
 ## Alternative sans Docker
 
-Copie `index.html`, `script.js` et `styles.css` dans le dossier `Web` du NAS (`/share/Web`) et active le **Serveur Web** QTS (Panneau de configuration → Applications → Serveur Web). L'app sera sur `http://IP-DU-NAS/`.
+Copie le contenu de `dist/app/` (index.html, script.js, styles.css, sw.js, manifest.webmanifest, icons/, vendor/) dans le dossier `Web` du NAS (`/share/Web`) et active le **Serveur Web** QTS (Panneau de configuration → Applications → Serveur Web). L'app sera sur `http://IP-DU-NAS/`.

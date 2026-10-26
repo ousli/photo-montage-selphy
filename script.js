@@ -12,6 +12,135 @@ const canvas = $("montageCanvas");
 const ctx = canvas.getContext("2d");
 
 const LONG_EDGE_PX = 1800;
+const captionsOn = $("captionsOn");
+const titleOn = $("titleOn");
+const titleText = $("titleText");
+const DEFAULT_TITLE = { font: "sans", color: "#1f2430", size: 72 };
+const DEFAULT_CAP = { font: "sans", color: "#1f2430", size: 40 };
+const FONTS = {
+  sans: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  serif: 'Georgia, "Times New Roman", serif',
+  rounded: '"Trebuchet MS", "Arial Rounded MT Bold", Verdana, sans-serif',
+  script: '"Snell Roundhand", "Brush Script MT", "Segoe Script", cursive',
+  mono: '"Courier New", Courier, monospace',
+};
+const FONT_LABELS = { sans: "Sans-serif", serif: "Serif", rounded: "Arrondie", script: "Manuscrite", mono: "Machine à écrire" };
+const PALETTE = ["#1f2430", "#ffffff", "#c0392b", "#e67e22", "#f1c40f", "#27ae60", "#2980b9", "#8e44ad"];
+let titleStyle = { ...DEFAULT_TITLE };
+const capStyleOf = (s) => (s && s.style) || DEFAULT_CAP;
+// la bande de légende est la même pour toutes les cases : elle suit la plus grande taille choisie
+const captionH = () => {
+  const sizes = slots.slice(0, count()).filter(Boolean).map((s) => capStyleOf(s).size);
+  return Math.round((sizes.length ? Math.max(...sizes) : DEFAULT_CAP.size) * 1.9);
+};
+const DEFAULT_OVL = { font: "sans", color: "#ffffff", size: 30 };
+const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, place: false, gps: false };
+const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS" };
+const CORNER_LABELS = { tl: "↖ Haut gauche", tr: "↗ Haut droite", bl: "↙ Bas gauche", br: "↘ Bas droite" };
+const ovlStyleOf = (s) => (s && s.exifStyle) || DEFAULT_OVL;
+const exifFieldsOf = (s) => (s && s.exifFields) || DEFAULT_EXIF_FIELDS;
+const exifModeOf = (s) => (s && s.exifMode) || "none";
+
+// certains fichiers donnent les rationnels sous forme [numérateur, dénominateur]
+const num = (v) => (v && typeof v === "object" && v.length === 2 ? v[0] / v[1] : Number(v));
+
+function formatExif(r) {
+  if (!r) return null;
+  const out = {};
+  const d = r.DateTimeOriginal || r.CreateDate;
+  if (d instanceof Date && !isNaN(d)) {
+    out.date = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+  const make = (r.Make || "").trim();
+  const model = (r.Model || "").trim();
+  const cam = model.toLowerCase().startsWith(make.toLowerCase()) ? model : `${make} ${model}`.trim();
+  if (cam) out.camera = cam;
+  const parts = [];
+  if (r.ISO) parts.push(`ISO ${r.ISO}`);
+  if (num(r.FNumber)) parts.push(`f/${Math.round(num(r.FNumber) * 10) / 10}`);
+  if (num(r.ExposureTime)) {
+    const t = num(r.ExposureTime);
+    parts.push(t < 1 ? `1/${Math.round(1 / t)} s` : `${Math.round(t * 10) / 10} s`);
+  }
+  if (num(r.FocalLength)) parts.push(`${Math.round(num(r.FocalLength))} mm`);
+  if (parts.length) out.settings = parts.join(" · ");
+  if (typeof r.latitude === "number" && typeof r.longitude === "number") {
+    out.gps = `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}`;
+    out.lat = r.latitude;
+    out.lon = r.longitude;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+async function readExif(file) {
+  if (typeof exifr === "undefined") return null;
+  try {
+    return formatExif(await exifr.parse(file, { gps: true }));
+  } catch (e) {
+    return null;
+  }
+}
+
+// Lieu lisible (ville, pays) via OpenStreetMap Nominatim, uniquement si l'utilisateur coche « Lieu »
+const placeCache = new Map();
+async function lookupPlace(lat, lon) {
+  // coordonnées arrondies (~1 km) avant envoi
+  const la = lat.toFixed(2), lo = lon.toFixed(2);
+  const key = `${la},${lo}`;
+  if (!placeCache.has(key)) {
+    placeCache.set(
+      key,
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=${la}&lon=${lo}`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("http"))))
+        .then((j) => {
+          const a = j.address || {};
+          const city = a.city || a.town || a.village || a.municipality || a.county || a.state;
+          const label = [city, a.country].filter(Boolean).join(", ");
+          if (!label) throw new Error("empty");
+          return label;
+        })
+    );
+    placeCache.get(key).catch(() => placeCache.delete(key));
+  }
+  return placeCache.get(key);
+}
+
+function ensurePlace(s) {
+  if (!s || !s.exif || s.exif.lat == null || s.exif.placeState) return;
+  s.exif.placeState = "loading";
+  lookupPlace(s.exif.lat, s.exif.lon)
+    .then((label) => {
+      s.exif.place = label;
+      s.exif.placeState = "ok";
+    })
+    .catch(() => {
+      s.exif.placeState = "error";
+    })
+    .then(() => render());
+}
+const exifAvailable = (s, k) => !!(s && s.exif && (k === "place" ? s.exif.lat != null : s.exif[k]));
+
+// lignes EXIF actives pour une photo
+function exifLines(s) {
+  if (!s || !s.exif) return [];
+  if (exifModeOf(s) === "none") return [];
+  const f = exifFieldsOf(s);
+  if (f.place) ensurePlace(s);
+  return Object.keys(EXIF_FIELD_LABELS).filter((k) => f[k] && s.exif[k]).map((k) => s.exif[k]);
+}
+const hasExifCaption = (s) => exifModeOf(s) === "caption" && exifLines(s).length > 0;
+// texte sous la photo : légende manuelle et/ou infos EXIF
+function captionTextOf(s) {
+  const parts = [];
+  if (captionsOn.checked && s.caption) parts.push(s.caption);
+  if (hasExifCaption(s)) parts.push(exifLines(s).join(" · "));
+  return parts.join(" · ");
+}
+const bandOn = () => captionsOn.checked || slots.slice(0, count()).some(hasExifCaption);
+
+const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
+const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
+const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
 const slots = Array.from({ length: 6 }, () => null);
 let selected = 0;
@@ -43,12 +172,13 @@ function computeCells() {
   const [rows, cols] = gridFor(count());
   const gap = Number(gapInput.value);
   const cw = (w - gap * (cols + 1)) / cols;
-  const ch = (h - gap * (rows + 1)) / rows;
+  const top = titleH();
+  const ch = (h - top - gap * (rows + 1)) / rows;
   cells = [];
   for (let i = 0; i < count(); i++) {
     cells.push({
       x: gap + (i % cols) * (cw + gap),
-      y: gap + Math.floor(i / cols) * (ch + gap),
+      y: top + gap + Math.floor(i / cols) * (ch + gap),
       w: cw,
       h: ch,
     });
@@ -59,6 +189,82 @@ function clampOffset(s) {
   const lim = Math.max(0, 0.5 * (s.zoom - 0.0)) + 0.5; // garde toujours une partie visible
   s.ox = Math.max(-lim, Math.min(lim, s.ox));
   s.oy = Math.max(-lim, Math.min(lim, s.oy));
+}
+
+// Zone occupée par la photo : la cellule moins la bande de légende
+function photoRect(c) {
+  return bandOn() ? { ...c, h: c.h - captionH() } : c;
+}
+
+const fontSpec = (st, size) =>
+  `${st.italic ? "italic " : ""}${st.bold ? "bold " : ""}${size}px ${FONTS[st.font] || FONTS.sans}`;
+
+function fitText(text, st, maxW) {
+  let size = st.size;
+  ctx.font = fontSpec(st, size);
+  while (size > 14 && ctx.measureText(text).width > maxW) {
+    size -= 2;
+    ctx.font = fontSpec(st, size);
+  }
+  return size;
+}
+
+// Dessine un texte avec son style complet (gras, italique, souligné, majuscules), rétréci pour tenir dans maxW
+function drawText(raw, x, y, st, maxW) {
+  const text = st.upper ? raw.toUpperCase() : raw;
+  const size = fitText(text, st, maxW);
+  ctx.fillText(text, x, y);
+  if (st.underline) {
+    const wd = ctx.measureText(text).width;
+    const left = ctx.textAlign === "center" ? x - wd / 2 : ctx.textAlign === "right" ? x - wd : x;
+    ctx.fillRect(left, y + size * 0.55, wd, Math.max(2, size * 0.06));
+  }
+}
+
+function drawCaption(text, c, st) {
+  ctx.save();
+  ctx.fillStyle = st.color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  drawText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2, st, c.w - 32);
+  ctx.restore();
+}
+
+function drawTitle(w) {
+  ctx.save();
+  ctx.fillStyle = titleStyle.color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  drawText(titleText.value.trim(), w / 2, titleH() / 2 + 6, titleStyle, w - 80);
+  ctx.restore();
+}
+
+function drawOverlay(s, pr) {
+  const lines = exifLines(s);
+  if (!lines.length) return;
+  const st = ovlStyleOf(s);
+  const pad = Math.round(st.size * 0.8);
+  const corner = s.exifCorner || "bl";
+  const right = corner.endsWith("r");
+  const top = corner.startsWith("t");
+  const lh = st.size * 1.3;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pr.x, pr.y, pr.w, pr.h);
+  ctx.clip();
+  const n = parseInt(st.color.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  ctx.shadowColor = lum > 0.55 ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.8)";
+  ctx.shadowBlur = st.size * 0.25;
+  ctx.fillStyle = st.color;
+  ctx.textAlign = right ? "right" : "left";
+  ctx.textBaseline = "middle";
+  const x = right ? pr.x + pr.w - pad : pr.x + pad;
+  const y0 = top ? pr.y + pad + lh / 2 : pr.y + pr.h - pad - lh / 2 - (lines.length - 1) * lh;
+  lines.forEach((t, i) => {
+    drawText(t, x, y0 + i * lh, st, pr.w - pad * 2);
+  });
+  ctx.restore();
 }
 
 function drawSlot(s, c) {
@@ -86,8 +292,15 @@ function render(forExport = false) {
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, w, h);
 
+  // pendant un échange, la case survolée montre déjà le résultat
+  const shown = slots.slice();
+  const hover = !forExport && swap ? swapTarget() : -1;
+  if (hover >= 0) [shown[selected], shown[hover]] = [shown[hover], shown[selected]];
+
+  if (titleActive()) drawTitle(w);
+
   cells.forEach((c, i) => {
-    const s = slots[i];
+    const s = shown[i];
     if (!s) {
       if (!forExport) {
         ctx.fillStyle = "#eef1f8";
@@ -99,12 +312,16 @@ function render(forExport = false) {
       }
       return;
     }
+    const pr = photoRect(c);
     ctx.save();
     ctx.beginPath();
-    ctx.rect(c.x, c.y, c.w, c.h);
+    ctx.rect(pr.x, pr.y, pr.w, pr.h);
     ctx.clip();
-    drawSlot(s, c);
+    drawSlot(s, pr);
     ctx.restore();
+    const txt = captionTextOf(s);
+    if (txt) drawCaption(txt, c, capStyleOf(s));
+    if (exifModeOf(s) === "overlay") drawOverlay(s, pr);
   });
 
   if (!forExport && cells[selected]) {
@@ -113,7 +330,59 @@ function render(forExport = false) {
     ctx.lineWidth = 8;
     ctx.strokeRect(c.x + 4, c.y + 4, c.w - 8, c.h - 8);
   }
+  if (!forExport && swap) drawSwapOverlay();
   refreshUI();
+}
+
+function swapTarget() {
+  const t = cells.findIndex(
+    (c) => swap.x >= c.x && swap.x <= c.x + c.w && swap.y >= c.y && swap.y <= c.y + c.h
+  );
+  return t === selected ? -1 : t;
+}
+
+function drawSwapOverlay() {
+  const hover = swapTarget();
+  ctx.save();
+  cells.forEach((c, i) => {
+    if (i === selected) {
+      ctx.fillStyle = "rgba(255,255,255,0.6)";
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+      return;
+    }
+    const on = i === hover;
+    ctx.fillStyle = on ? "rgba(51,102,255,0.22)" : "rgba(51,102,255,0.08)";
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.strokeStyle = "#3366ff";
+    ctx.lineWidth = on ? 10 : 5;
+    ctx.setLineDash(on ? [] : [24, 16]);
+    ctx.strokeRect(c.x + 6, c.y + 6, c.w - 12, c.h - 12);
+    // pastille d'indication au centre de chaque zone de dépôt
+    const r = Math.min(c.w, c.h) * 0.09;
+    ctx.setLineDash([]);
+    ctx.fillStyle = on ? "#3366ff" : "rgba(51,102,255,0.75)";
+    ctx.beginPath();
+    ctx.arc(c.x + c.w / 2, c.y + c.h / 2, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = `bold ${Math.round(r * 1.3)}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("⇄", c.x + c.w / 2, c.y + c.h / 2);
+  });
+  ctx.restore();
+  // miniature qui suit le pointeur
+  const src = cells[selected];
+  const g = { x: swap.x - src.w * 0.2, y: swap.y - src.h * 0.2, w: src.w * 0.4, h: src.h * 0.4 };
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 30;
+  ctx.beginPath();
+  ctx.rect(g.x, g.y, g.w, g.h);
+  ctx.clip();
+  drawSlot(slots[selected], g);
+  ctx.restore();
 }
 
 function refreshUI() {
@@ -130,7 +399,10 @@ function refreshUI() {
     b.classList.toggle("active", i === selected);
     b.classList.toggle("filled", !!slots[i]);
   });
-  $("editorTitle").textContent = `Photo ${selected + 1}`;
+  $("editorTitle").textContent = `Photo ${selected + 1} sur ${count()}`;
+  $("pickBtn").textContent = slots[selected] ? "Remplacer la photo" : "Choisir une photo";
+  $("removeBtn").disabled = !slots[selected];
+  $("fitBtn").disabled = !slots[selected];
   const s = slots[selected];
   zoomInput.disabled = !s;
   rotInput.disabled = !s;
@@ -139,10 +411,64 @@ function refreshUI() {
   rotInput.value = s ? s.rot : 0;
   $("resetBtn").disabled = !s;
   zoomInput.value = s ? Math.round(s.zoom * 100) : 100;
+  captionInput.disabled = !s || !captionsOn.checked;
+  captionInput.placeholder = "Texte sous la photo";
+  const capMsg = !captionsOn.checked
+    ? "Active « Légende sous la photo » pour écrire une légende."
+    : !s
+    ? "Ajoute d'abord une photo dans cette case pour écrire sa légende."
+    : "";
+  $("capNote").textContent = capMsg;
+  $("capNote").hidden = !capMsg;
+  const cap = s ? s.caption || "" : "";
+  if (captionInput.value !== cap) captionInput.value = cap;
+  capEditor.set(capStyleOf(s));
+  capEditor.setDisabled(!s || !bandOn());
+  $("capApplyAll").disabled = !s || !bandOn();
+  refreshExifUI(s);
+}
+
+function refreshExifUI(s) {
+  const has = !!(s && s.exif);
+  const mode = exifModeOf(s);
+  $("exifNote").textContent = !s
+    ? "Ajoute une photo pour voir ses infos EXIF."
+    : has
+    ? mode === "none"
+      ? "Données EXIF trouvées. Choisis Légende ou Overlay pour les afficher."
+      : exifLines(s).join(" · ") || "Aucun champ sélectionné."
+    : "Aucune donnée EXIF dans cette photo.";
+  setModeChips((k) => k === mode, !has);
+  const data = $("exifData");
+  data.innerHTML = "";
+  Object.keys(EXIF_FIELD_LABELS).forEach((k) => {
+    if (!exifAvailable(s, k)) return;
+    const row = document.createElement("div");
+    const v = k === "place" ? s.exif.place || (s.exif.placeState === "loading" ? "recherche…" : "—") : s.exif[k];
+    row.innerHTML = "<span></span><b></b>";
+    row.firstChild.textContent = EXIF_FIELD_LABELS[k];
+    row.lastChild.textContent = v;
+    data.appendChild(row);
+  });
+  $("exifStyleNote").hidden = mode !== "none";
+  setFieldChips((k) => !!exifFieldsOf(s)[k] && exifAvailable(s, k), !has || mode === "none");
+  const place = has && mode !== "none" && exifFieldsOf(s).place ? s.exif.placeState : null;
+  if (place === "loading") $("exifNote").textContent = "Recherche du lieu…";
+  if (place === "error") $("exifNote").textContent = "Lieu introuvable (hors ligne ?). Les coordonnées GPS restent disponibles.";
+
+  setCornerChips((k) => k === (s && s.exifCorner ? s.exifCorner : "bl"), !has || mode !== "overlay");
+  exifCapEditor.set(capStyleOf(s));
+  exifCapEditor.setDisabled(!has || mode !== "caption");
+  $("exifCapAdv").hidden = mode !== "caption";
+  $("exifOvlAdv").hidden = mode !== "overlay";
+  ovlEditor.set(ovlStyleOf(s));
+  ovlEditor.setDisabled(!has || mode !== "overlay");
+  $("exifApplyAll").disabled = !has;
 }
 
 function select(i) {
   selected = i;
+  if (currentTab() === "montage") showTab("photo");
   render();
 }
 
@@ -152,8 +478,18 @@ function loadFile(file, index) {
   }
   const img = new Image();
   const url = URL.createObjectURL(file);
+  const exifP = readExif(file);
   img.onload = () => {
-    slots[index] = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
+    const prev = slots[index];
+    const slot = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
+    slots[index] = slot;
+    if (prev) {
+      ["caption", "style", "exifMode", "exifFields", "exifCorner", "exifStyle"].forEach((k) => (slot[k] = prev[k]));
+    }
+    exifP.then((ex) => {
+      slot.exif = ex;
+      render();
+    });
     setMessage(`Photo ${index + 1} : ${file.name}`);
     render();
   };
@@ -192,14 +528,22 @@ function pickFor(index) {
   fileInput.click();
 }
 
-function cellAt(ev) {
+function canvasPoint(ev) {
   const r = canvas.getBoundingClientRect();
-  const x = ((ev.clientX - r.left) * canvas.width) / r.width;
-  const y = ((ev.clientY - r.top) * canvas.height) / r.height;
+  return {
+    x: ((ev.clientX - r.left) * canvas.width) / r.width,
+    y: ((ev.clientY - r.top) * canvas.height) / r.height,
+  };
+}
+
+function cellAt(ev) {
+  const { x, y } = canvasPoint(ev);
   return cells.findIndex((c) => x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h);
 }
 
 let drag = null;
+let swap = null; // { x, y } position du pointeur en coordonnées canvas pendant un échange
+const LONG_PRESS_MS = 400;
 const pointers = new Map();
 let pinch = null;
 
@@ -217,8 +561,20 @@ canvas.addEventListener("pointerdown", (ev) => {
   if (i < 0) return;
   selected = i;
   hideMenu();
-  drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false };
+  drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false, swap: false };
   canvas.style.cursor = "grabbing";
+  // appui long sur une photo sans bouger : mode échange
+  if (slots[i]) {
+    const d = drag;
+    d.timer = setTimeout(() => {
+      if (drag !== d || d.moved) return;
+      d.swap = true;
+      swap = canvasPoint(ev);
+      canvas.style.cursor = "move";
+      navigator.vibrate?.(20);
+      render();
+    }, LONG_PRESS_MS);
+  }
   render();
 });
 canvas.addEventListener("pointermove", (ev) => {
@@ -233,19 +589,32 @@ canvas.addEventListener("pointermove", (ev) => {
     render();
     return;
   }
+  if (drag && drag.swap) {
+    swap = canvasPoint(ev);
+    render();
+    return;
+  }
   if (!drag || !s) return;
+  if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 5) {
+    drag.moved = true;
+    clearTimeout(drag.timer);
+  }
   const r = canvas.getBoundingClientRect();
   const k = canvas.width / r.width;
-  const c = cells[selected];
+  const c = photoRect(cells[selected]);
   s.ox += ((ev.clientX - drag.x) * k) / c.w;
   s.oy += ((ev.clientY - drag.y) * k) / c.h;
   clampOffset(s);
-  if (Math.hypot(ev.clientX - drag.sx, ev.clientY - drag.sy) > 5) drag.moved = true;
-  drag = { ...drag, x: ev.clientX, y: ev.clientY };
+  drag.x = ev.clientX;
+  drag.y = ev.clientY;
   render();
 });
 const endDrag = () => {
+  if (drag) clearTimeout(drag.timer);
+  const wasSwapping = !!swap;
   drag = null;
+  swap = null;
+  if (wasSwapping) render();
   canvas.style.cursor = "grab";
 };
 canvas.addEventListener("pointerup", (ev) => {
@@ -255,9 +624,27 @@ canvas.addEventListener("pointerup", (ev) => {
     endDrag();
     return;
   }
+  if (drag && drag.swap) {
+    const to = cellAt(ev);
+    if (to >= 0 && to !== selected) {
+      [slots[selected], slots[to]] = [slots[to], slots[selected]];
+      selected = to;
+      setMessage(`Photos échangées.`);
+    }
+    endDrag();
+    return;
+  }
   const wasClick = drag && !drag.moved;
   endDrag();
   if (wasClick) showMenu(ev);
+});
+canvas.addEventListener("contextmenu", (ev) => ev.preventDefault());
+canvas.addEventListener("selectstart", (ev) => ev.preventDefault());
+// iOS : empêche l'appui long de lancer la sélection / la bulle copier-traduire
+canvas.addEventListener("touchstart", (ev) => ev.preventDefault(), { passive: false });
+document.addEventListener("selectionchange", () => {
+  const sel = getSelection();
+  if (drag && sel && !sel.isCollapsed) sel.removeAllRanges();
 });
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
@@ -309,6 +696,19 @@ rotInput.addEventListener("input", () => {
 });
 $("rotLeftBtn").onclick = () => rotateBy(-90);
 $("rotRightBtn").onclick = () => rotateBy(90);
+$("pickBtn").onclick = () => pickFor(selected);
+$("removeBtn").onclick = () => {
+  slots[selected] = null;
+  render();
+};
+$("fitBtn").onclick = () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.zoom = 1;
+  s.ox = 0;
+  s.oy = 0;
+  render();
+};
 $("resetBtn").onclick = () => {
   const s = slots[selected];
   if (s) {
@@ -329,6 +729,252 @@ $("gapReset").onclick = () => {
   render();
 };
 
+// Éditeur de style (police, couleur, taille) réutilisable pour le titre et les légendes
+function createStyleEditor(box, { min, max, sizeLabel, onChange }) {
+  box.innerHTML = `
+    <div class="color-field">
+      <span class="color-head">Police</span>
+      <div class="fonts"></div>
+    </div>
+    <div class="color-field">
+      <span class="color-head">Couleur <b class="se-hex"></b></span>
+      <div class="color-row">
+        <div class="swatches"></div>
+        <input class="swatch custom se-color" type="color" title="Couleur personnalisée" aria-label="Couleur personnalisée" />
+      </div>
+    </div>
+    <div class="color-field">
+      <span class="color-head">Style</span>
+      <div class="se-flags fonts"></div>
+    </div>
+    <label>${sizeLabel} <b class="se-sizeval"></b>
+      <input class="se-size" type="range" min="${min}" max="${max}" />
+    </label>
+    <button type="button" class="ghost small se-reset">Reset</button>`;
+  const q = (c) => box.querySelector(c);
+  const color = q(".se-color"), size = q(".se-size"), sw = q(".swatches");
+  let defaults = null;
+  let fontKey = "sans";
+  const fontBtns = Object.entries(FONT_LABELS).map(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "font-chip";
+    b.textContent = label;
+    b.style.fontFamily = FONTS[k];
+    b.onclick = () => {
+      fontKey = k;
+      changed();
+    };
+    q(".fonts").appendChild(b);
+    return [k, b];
+  });
+  const flags = { bold: false, italic: false, underline: false, upper: false };
+  const FLAG_LABELS = { bold: "G", italic: "I", underline: "S", upper: "AA" };
+  const FLAG_TITLES = { bold: "Gras", italic: "Italique", underline: "Souligné", upper: "Majuscules" };
+  const flagBtns = Object.keys(FLAG_LABELS).map((k) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = `font-chip flag flag-${k}`;
+    b.textContent = FLAG_LABELS[k];
+    b.title = FLAG_TITLES[k];
+    b.setAttribute("aria-label", FLAG_TITLES[k]);
+    b.onclick = () => {
+      flags[k] = !flags[k];
+      changed();
+    };
+    q(".se-flags").appendChild(b);
+    return [k, b];
+  });
+  const buttons = PALETTE.map((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "swatch";
+    b.dataset.color = c;
+    b.style.setProperty("--c", c);
+    b.setAttribute("aria-label", c);
+    b.onclick = () => {
+      color.value = c;
+      changed();
+    };
+    sw.appendChild(b);
+    return b;
+  });
+  const read = () => ({ font: fontKey, color: color.value, size: Number(size.value), ...flags });
+  const refresh = () => {
+    fontBtns.forEach(([k, b]) => b.classList.toggle("on", k === fontKey));
+    flagBtns.forEach(([k, b]) => b.classList.toggle("on", flags[k]));
+    q(".se-hex").textContent = color.value;
+    q(".se-sizeval").textContent = size.value;
+    const cur = color.value.toLowerCase();
+    buttons.forEach((b) => b.classList.toggle("on", b.dataset.color === cur));
+    color.classList.toggle("on", !PALETTE.includes(cur));
+  };
+  const changed = () => {
+    refresh();
+    onChange(read());
+  };
+  [color, size].forEach((el) => el.addEventListener("input", changed));
+  q(".se-reset").onclick = () => {
+    if (!defaults) return;
+    api.set(defaults);
+    onChange(read());
+  };
+  const api = {
+    set(st) {
+      fontKey = st.font;
+      Object.keys(flags).forEach((k) => (flags[k] = !!st[k]));
+      color.value = st.color;
+      size.value = st.size;
+      refresh();
+    },
+    setDefaults(d) { defaults = d; },
+    setDisabled(d) {
+      box.classList.toggle("disabled", d);
+      box.querySelectorAll("select, input, button").forEach((el) => (el.disabled = d));
+    },
+  };
+  return api;
+}
+
+const titleEditor = createStyleEditor($("titleStyle"), {
+  min: 30, max: 140, sizeLabel: "Taille du titre",
+  onChange: (st) => {
+    titleStyle = st;
+    render();
+  },
+});
+titleEditor.setDefaults(DEFAULT_TITLE);
+titleEditor.set(titleStyle);
+
+// Deux éditeurs pour le même style de légende : onglet Texte et onglet Infos (EXIF en légende)
+const capOpts = {
+  min: 20, max: 80, sizeLabel: "Taille de la légende",
+  onChange: (st) => {
+    const s = slots[selected];
+    if (!s) return;
+    s.style = st;
+    render();
+  },
+};
+const capEditor = createStyleEditor($("capStyle"), capOpts);
+capEditor.setDefaults(DEFAULT_CAP);
+const exifCapEditor = createStyleEditor($("exifCapStyle"), capOpts);
+exifCapEditor.setDefaults(DEFAULT_CAP);
+const ovlEditor = createStyleEditor($("exifStyle"), {
+  min: 14, max: 60, sizeLabel: "Taille de l'overlay",
+  onChange: (st) => {
+    const s = slots[selected];
+    if (!s) return;
+    s.exifStyle = st;
+    render();
+  },
+});
+ovlEditor.setDefaults(DEFAULT_OVL);
+
+function chipGroup(box, entries, onPick) {
+  const btns = Object.entries(entries).map(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "font-chip";
+    b.textContent = label;
+    b.onclick = () => onPick(k);
+    box.appendChild(b);
+    return [k, b];
+  });
+  return (isOn, disabled) =>
+    btns.forEach(([k, b]) => {
+      b.classList.toggle("on", isOn(k));
+      b.disabled = disabled;
+    });
+}
+const setModeChips = chipGroup($("exifMode"), { none: "Aucun", caption: "Légende", overlay: "Overlay" }, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifMode = k;
+  render();
+});
+const setCornerChips = chipGroup($("exifCorner"), CORNER_LABELS, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifCorner = k;
+  render();
+});
+const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifFields = { ...exifFieldsOf(s), [k]: !exifFieldsOf(s)[k] };
+  if (k === "place" && s.exif && s.exif.placeState === "error") delete s.exif.placeState;
+  render();
+});
+(function () {
+  const tip = document.createElement("button");
+  tip.type = "button";
+  tip.className = "info-tip";
+  tip.textContent = "i";
+  tip.setAttribute("aria-label", "Informations sur le lieu");
+  tip.dataset.tip = "Le nom du lieu est cherché via OpenStreetMap : seules des coordonnées arrondies (~1 km) sont envoyées. Les coordonnées GPS exactes ne quittent jamais ton navigateur.";
+  $("exifFields").appendChild(tip);
+  // l'infobulle vit dans <body> (position fixe) pour ne jamais être coupée par le panneau
+  const bubble = document.createElement("div");
+  bubble.className = "tip-bubble";
+  bubble.textContent = tip.dataset.tip;
+  document.body.appendChild(bubble);
+  const show = () => {
+    const r = tip.getBoundingClientRect();
+    const w = Math.min(240, window.innerWidth - 16);
+    bubble.style.width = `${w}px`;
+    bubble.style.left = `${Math.max(8, Math.min(r.left + r.width / 2 - w / 2, window.innerWidth - w - 8))}px`;
+    bubble.style.bottom = `${window.innerHeight - r.top + 8}px`;
+    bubble.classList.add("on");
+  };
+  const hide = () => bubble.classList.remove("on");
+  tip.addEventListener("mouseenter", show);
+  tip.addEventListener("mouseleave", hide);
+  tip.addEventListener("focus", show);
+  tip.addEventListener("blur", hide);
+})();
+$("exifApplyAll").onclick = () => {
+  const src = slots[selected];
+  if (!src) return;
+  slots.forEach((s) => {
+    if (!s) return;
+    s.exifMode = exifModeOf(src);
+    s.exifFields = { ...exifFieldsOf(src) };
+    s.exifCorner = src.exifCorner || "bl";
+    s.exifStyle = { ...ovlStyleOf(src) };
+  });
+  render();
+  setMessage("Réglages EXIF appliqués à toutes les photos.");
+};
+
+$("capApplyAll").onclick = () => {
+  const src = slots[selected];
+  if (!src) return;
+  const st = { ...capStyleOf(src) };
+  slots.forEach((s) => s && (s.style = { ...st }));
+  render();
+  setMessage("Style appliqué à toutes les légendes.");
+};
+
+const syncTextUI = () => {
+  titleText.disabled = !titleOn.checked;
+  titleEditor.setDisabled(!titleOn.checked);
+};
+[captionsOn, titleOn, titleText].forEach((el) =>
+  el.addEventListener("input", () => {
+    syncTextUI();
+    render();
+  })
+);
+syncTextUI();
+captionInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.caption = captionInput.value;
+  render();
+});
+
+$("resetAllBtn2").onclick = () => $("resetAllBtn").click();
 $("resetAllBtn").onclick = () => {
   if (!confirm("Réinitialiser les réglages et retirer toutes les photos ?")) return;
   ratioSelect.value = "3:2";
@@ -337,6 +983,12 @@ $("resetAllBtn").onclick = () => {
   gapInput.value = DEFAULT_GAP;
   $("gapValue").textContent = DEFAULT_GAP;
   slots.fill(null);
+  captionsOn.checked = false;
+  titleOn.checked = false;
+  titleText.value = "";
+  titleStyle = { ...DEFAULT_TITLE };
+  titleEditor.set(titleStyle);
+  syncTextUI();
   selected = 0;
   render();
   setMessage("Tout a été réinitialisé.");
@@ -528,3 +1180,25 @@ $("presetSave").onclick = () => {
 presetName.addEventListener("keydown", (e) => e.key === "Enter" && $("presetSave").click());
 
 renderPresets();
+
+// PWA : le service worker n'est disponible qu'en https (ou localhost)
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+// Onglets du panneau
+const tabBtns = Array.from(document.querySelectorAll(".tabs button"));
+function showTab(name) {
+  tabBtns.forEach((b) => {
+    b.classList.toggle("on", b.dataset.tab === name);
+    b.setAttribute("aria-selected", String(b.dataset.tab === name));
+  });
+  document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
+  $("slotBar").hidden = name === "montage";
+  try { localStorage.setItem("montage-tab", name); } catch (e) {}
+}
+tabBtns.forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+const currentTab = () => (tabBtns.find((b) => b.classList.contains("on")) || {}).dataset.tab;
+let savedTab = "montage";
+try { savedTab = localStorage.getItem("montage-tab") || "montage"; } catch (e) {}
+showTab(savedTab);

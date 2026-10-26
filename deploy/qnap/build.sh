@@ -5,7 +5,8 @@ set -e
 cd "$(dirname "$0")"
 rm -rf dist
 mkdir -p dist/app
-cp ../../index.html ../../script.js ../../styles.css dist/app/
+cp ../../index.html ../../script.js ../../styles.css ../../sw.js ../../manifest.webmanifest dist/app/
+cp -R ../../icons ../../vendor dist/app/
 cp docker-compose.yml nginx.conf .env.example dist/
 cp .env.example dist/.env
 echo "Build prêt : $(pwd)/dist"
