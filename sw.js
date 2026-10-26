@@ -1,10 +1,11 @@
 // Incrémente la version pour forcer la mise à jour du cache
-const CACHE = "montage-photo-v2";
+const CACHE = "montage-photo-v3";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./script.js",
+  "./vendor/exifr.full.umd.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",

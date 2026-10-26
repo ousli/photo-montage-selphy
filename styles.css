@@ -315,3 +315,6 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 }
 .font-chip:hover { filter: none; background: #e4e9fb; }
 .font-chip.on { background: #fff; color: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(51, 102, 255, 0.15); }
+
+.font-chip:disabled { opacity: 0.4; cursor: default; }
+.exif-note { margin: 0; font-size: 0.85rem; color: var(--muted); }

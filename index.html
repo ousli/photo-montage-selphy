@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=11" />
+  <link rel="stylesheet" href="./styles.css?v=12" />
 </head>
 <body>
   <header class="topbar">
@@ -81,6 +81,15 @@
         </label>
         <div id="capStyle" class="style-box"></div>
         <button id="capApplyAll" type="button" class="ghost small">Appliquer ce style à toutes les légendes</button>
+        <div class="color-field">
+          <span class="color-head">Infos EXIF</span>
+          <div id="exifMode" class="fonts"></div>
+          <p id="exifNote" class="exif-note"></p>
+          <div id="exifFields" class="fonts"></div>
+          <div id="exifCorner" class="fonts"></div>
+        </div>
+        <div id="exifStyle" class="style-box"></div>
+        <button id="exifApplyAll" type="button" class="ghost small">Appliquer les réglages EXIF à toutes les photos</button>
         <div class="row">
           <button id="rotLeftBtn" type="button" class="secondary small">⟲ 90°</button>
           <button id="rotRightBtn" type="button" class="secondary small">⟳ 90°</button>
@@ -111,6 +120,7 @@
   </main>
 
   <div id="cellMenu" class="cell-menu" hidden></div>
-  <script src="./script.js?v=7"></script>
+  <script src="./vendor/exifr.full.umd.js"></script>
+  <script src="./script.js?v=8"></script>
 </body>
 </html>

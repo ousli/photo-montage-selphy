@@ -33,6 +33,68 @@ const captionH = () => {
   const sizes = slots.slice(0, count()).filter(Boolean).map((s) => capStyleOf(s).size);
   return Math.round((sizes.length ? Math.max(...sizes) : DEFAULT_CAP.size) * 1.9);
 };
+const DEFAULT_OVL = { font: "sans", color: "#ffffff", size: 30 };
+const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, gps: false };
+const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", gps: "Lieu GPS" };
+const CORNER_LABELS = { tl: "↖ Haut gauche", tr: "↗ Haut droite", bl: "↙ Bas gauche", br: "↘ Bas droite" };
+const ovlStyleOf = (s) => (s && s.exifStyle) || DEFAULT_OVL;
+const exifFieldsOf = (s) => (s && s.exifFields) || DEFAULT_EXIF_FIELDS;
+const exifModeOf = (s) => (s && s.exifMode) || "none";
+
+// certains fichiers donnent les rationnels sous forme [numérateur, dénominateur]
+const num = (v) => (v && typeof v === "object" && v.length === 2 ? v[0] / v[1] : Number(v));
+
+function formatExif(r) {
+  if (!r) return null;
+  const out = {};
+  const d = r.DateTimeOriginal || r.CreateDate;
+  if (d instanceof Date && !isNaN(d)) {
+    out.date = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  }
+  const make = (r.Make || "").trim();
+  const model = (r.Model || "").trim();
+  const cam = model.toLowerCase().startsWith(make.toLowerCase()) ? model : `${make} ${model}`.trim();
+  if (cam) out.camera = cam;
+  const parts = [];
+  if (r.ISO) parts.push(`ISO ${r.ISO}`);
+  if (num(r.FNumber)) parts.push(`f/${Math.round(num(r.FNumber) * 10) / 10}`);
+  if (num(r.ExposureTime)) {
+    const t = num(r.ExposureTime);
+    parts.push(t < 1 ? `1/${Math.round(1 / t)} s` : `${Math.round(t * 10) / 10} s`);
+  }
+  if (num(r.FocalLength)) parts.push(`${Math.round(num(r.FocalLength))} mm`);
+  if (parts.length) out.settings = parts.join(" · ");
+  if (typeof r.latitude === "number" && typeof r.longitude === "number") {
+    out.gps = `${r.latitude.toFixed(5)}, ${r.longitude.toFixed(5)}`;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+async function readExif(file) {
+  if (typeof exifr === "undefined") return null;
+  try {
+    return formatExif(await exifr.parse(file, { gps: true }));
+  } catch (e) {
+    return null;
+  }
+}
+
+// lignes EXIF actives pour une photo
+function exifLines(s) {
+  if (!s || !s.exif) return [];
+  const f = exifFieldsOf(s);
+  return Object.keys(EXIF_FIELD_LABELS).filter((k) => f[k] && s.exif[k]).map((k) => s.exif[k]);
+}
+const hasExifCaption = (s) => exifModeOf(s) === "caption" && exifLines(s).length > 0;
+// texte sous la photo : légende manuelle et/ou infos EXIF
+function captionTextOf(s) {
+  const parts = [];
+  if (captionsOn.checked && s.caption) parts.push(s.caption);
+  if (hasExifCaption(s)) parts.push(exifLines(s).join(" · "));
+  return parts.join(" · ");
+}
+const bandOn = () => captionsOn.checked || slots.slice(0, count()).some(hasExifCaption);
+
 const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
 const titleH = () => (titleActive() ? Math.round(titleStyle.size * 1.8) : 0);
 const captionInput = $("caption");
@@ -88,7 +150,7 @@ function clampOffset(s) {
 
 // Zone occupée par la photo : la cellule moins la bande de légende
 function photoRect(c) {
-  return captionsOn.checked ? { ...c, h: c.h - captionH() } : c;
+  return bandOn() ? { ...c, h: c.h - captionH() } : c;
 }
 
 function fitText(text, st, maxW) {
@@ -118,6 +180,35 @@ function drawTitle(w) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(titleText.value.trim(), w / 2, titleH() / 2 + 6);
+  ctx.restore();
+}
+
+function drawOverlay(s, pr) {
+  const lines = exifLines(s);
+  if (!lines.length) return;
+  const st = ovlStyleOf(s);
+  const pad = Math.round(st.size * 0.8);
+  const corner = s.exifCorner || "bl";
+  const right = corner.endsWith("r");
+  const top = corner.startsWith("t");
+  const lh = st.size * 1.3;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(pr.x, pr.y, pr.w, pr.h);
+  ctx.clip();
+  const n = parseInt(st.color.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  ctx.shadowColor = lum > 0.55 ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.8)";
+  ctx.shadowBlur = st.size * 0.25;
+  ctx.fillStyle = st.color;
+  ctx.textAlign = right ? "right" : "left";
+  ctx.textBaseline = "middle";
+  const x = right ? pr.x + pr.w - pad : pr.x + pad;
+  const y0 = top ? pr.y + pad + lh / 2 : pr.y + pr.h - pad - lh / 2 - (lines.length - 1) * lh;
+  lines.forEach((t, i) => {
+    fitText(t, st, pr.w - pad * 2);
+    ctx.fillText(t, x, y0 + i * lh);
+  });
   ctx.restore();
 }
 
@@ -173,7 +264,9 @@ function render(forExport = false) {
     ctx.clip();
     drawSlot(s, pr);
     ctx.restore();
-    if (captionsOn.checked && s.caption) drawCaption(s.caption, c, capStyleOf(s));
+    const txt = captionTextOf(s);
+    if (txt) drawCaption(txt, c, capStyleOf(s));
+    if (exifModeOf(s) === "overlay") drawOverlay(s, pr);
   });
 
   if (!forExport && cells[selected]) {
@@ -265,8 +358,25 @@ function refreshUI() {
   const cap = s ? s.caption || "" : "";
   if (captionInput.value !== cap) captionInput.value = cap;
   capEditor.set(capStyleOf(s));
-  capEditor.setDisabled(!s || !captionsOn.checked);
-  $("capApplyAll").disabled = !s || !captionsOn.checked;
+  capEditor.setDisabled(!s || !bandOn());
+  $("capApplyAll").disabled = !s || !bandOn();
+  refreshExifUI(s);
+}
+
+function refreshExifUI(s) {
+  const has = !!(s && s.exif);
+  const mode = exifModeOf(s);
+  $("exifNote").textContent = !s
+    ? "Ajoute une photo pour voir ses infos EXIF."
+    : has
+    ? exifLines(s).join(" · ") || "Aucun champ sélectionné."
+    : "Aucune donnée EXIF dans cette photo.";
+  setModeChips((k) => k === mode, !has);
+  setFieldChips((k) => !!exifFieldsOf(s)[k] && !!(s && s.exif && s.exif[k]), !has || mode === "none");
+  setCornerChips((k) => k === (s && s.exifCorner ? s.exifCorner : "bl"), !has || mode !== "overlay");
+  ovlEditor.set(ovlStyleOf(s));
+  ovlEditor.setDisabled(!has || mode !== "overlay");
+  $("exifApplyAll").disabled = !has;
 }
 
 function select(i) {
@@ -280,13 +390,18 @@ function loadFile(file, index) {
   }
   const img = new Image();
   const url = URL.createObjectURL(file);
+  const exifP = readExif(file);
   img.onload = () => {
     const prev = slots[index];
-    slots[index] = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
+    const slot = { img, zoom: 1, rot: 0, ox: 0, oy: 0 };
+    slots[index] = slot;
     if (prev) {
-      slots[index].caption = prev.caption;
-      slots[index].style = prev.style;
+      ["caption", "style", "exifMode", "exifFields", "exifCorner", "exifStyle"].forEach((k) => (slot[k] = prev[k]));
     }
+    exifP.then((ex) => {
+      slot.exif = ex;
+      render();
+    });
     setMessage(`Photo ${index + 1} : ${file.name}`);
     render();
   };
@@ -617,6 +732,65 @@ const capEditor = createStyleEditor($("capStyle"), {
   },
 });
 capEditor.setDefaults(DEFAULT_CAP);
+const ovlEditor = createStyleEditor($("exifStyle"), {
+  min: 14, max: 60, sizeLabel: "Taille de l'overlay",
+  onChange: (st) => {
+    const s = slots[selected];
+    if (!s) return;
+    s.exifStyle = st;
+    render();
+  },
+});
+ovlEditor.setDefaults(DEFAULT_OVL);
+
+function chipGroup(box, entries, onPick) {
+  const btns = Object.entries(entries).map(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "font-chip";
+    b.textContent = label;
+    b.onclick = () => onPick(k);
+    box.appendChild(b);
+    return [k, b];
+  });
+  return (isOn, disabled) =>
+    btns.forEach(([k, b]) => {
+      b.classList.toggle("on", isOn(k));
+      b.disabled = disabled;
+    });
+}
+const setModeChips = chipGroup($("exifMode"), { none: "Aucun", caption: "Légende", overlay: "Overlay" }, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifMode = k;
+  render();
+});
+const setCornerChips = chipGroup($("exifCorner"), CORNER_LABELS, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifCorner = k;
+  render();
+});
+const setFieldChips = chipGroup($("exifFields"), EXIF_FIELD_LABELS, (k) => {
+  const s = slots[selected];
+  if (!s) return;
+  s.exifFields = { ...exifFieldsOf(s), [k]: !exifFieldsOf(s)[k] };
+  render();
+});
+$("exifApplyAll").onclick = () => {
+  const src = slots[selected];
+  if (!src) return;
+  slots.forEach((s) => {
+    if (!s) return;
+    s.exifMode = exifModeOf(src);
+    s.exifFields = { ...exifFieldsOf(src) };
+    s.exifCorner = src.exifCorner || "bl";
+    s.exifStyle = { ...ovlStyleOf(src) };
+  });
+  render();
+  setMessage("Réglages EXIF appliqués à toutes les photos.");
+};
+
 $("capApplyAll").onclick = () => {
   const src = slots[selected];
   if (!src) return;
