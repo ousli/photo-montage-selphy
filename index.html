@@ -61,9 +61,39 @@
             <button id="gapReset" type="button" class="ghost small">Reset</button>
           </span>
         </label>
+      </section>
+
+      <section class="card">
+        <h2>Texte</h2>
+        <label class="check">
+          <input id="titleOn" type="checkbox" />
+          Titre en haut du montage
+        </label>
+        <input id="titleText" type="text" maxlength="80" placeholder="Titre du montage" disabled />
         <label class="check">
           <input id="captionsOn" type="checkbox" />
           Légendes sous les photos
+        </label>
+        <label>Police
+          <select id="fontSel">
+            <option value="sans">Sans-serif</option>
+            <option value="serif">Serif</option>
+            <option value="rounded">Arrondie</option>
+            <option value="script">Manuscrite</option>
+            <option value="mono">Machine à écrire</option>
+          </select>
+        </label>
+        <div class="row">
+          <label class="grow">Couleur
+            <input id="textColor" type="color" value="#1f2430" />
+          </label>
+          <button id="textReset" type="button" class="ghost small">Reset</button>
+        </div>
+        <label>Taille du titre <b><span id="titleSizeVal">72</span></b>
+          <input id="titleSize" type="range" min="30" max="140" value="72" />
+        </label>
+        <label>Taille des légendes <b><span id="capSizeVal">40</span></b>
+          <input id="capSize" type="range" min="20" max="80" value="40" />
         </label>
       </section>
 

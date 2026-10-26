@@ -12,8 +12,26 @@ const canvas = $("montageCanvas");
 const ctx = canvas.getContext("2d");
 
 const LONG_EDGE_PX = 1800;
-const CAPTION_H = 76; // hauteur de la bande de légende (px canvas)
 const captionsOn = $("captionsOn");
+const titleOn = $("titleOn");
+const titleText = $("titleText");
+const fontSel = $("fontSel");
+const textColor = $("textColor");
+const titleSize = $("titleSize");
+const capSize = $("capSize");
+const DEFAULT_TEXT = { font: "sans", color: "#1f2430", title: 72, cap: 40 };
+const FONTS = {
+  sans: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+  serif: 'Georgia, "Times New Roman", serif',
+  rounded: '"Trebuchet MS", "Arial Rounded MT Bold", Verdana, sans-serif',
+  script: '"Snell Roundhand", "Brush Script MT", "Segoe Script", cursive',
+  mono: '"Courier New", Courier, monospace',
+};
+const fontFamily = () => FONTS[fontSel.value] || FONTS.sans;
+// les bandes de texte grandissent avec la taille choisie
+const captionH = () => Math.round(Number(capSize.value) * 1.9);
+const titleActive = () => titleOn.checked && titleText.value.trim() !== "";
+const titleH = () => (titleActive() ? Math.round(Number(titleSize.value) * 1.8) : 0);
 const captionInput = $("caption");
 // slot: { img, zoom (1 = remplit la case), rot (degrés), ox, oy (décalage en fraction de la case) }
 const slots = Array.from({ length: 6 }, () => null);
@@ -46,12 +64,13 @@ function computeCells() {
   const [rows, cols] = gridFor(count());
   const gap = Number(gapInput.value);
   const cw = (w - gap * (cols + 1)) / cols;
-  const ch = (h - gap * (rows + 1)) / rows;
+  const top = titleH();
+  const ch = (h - top - gap * (rows + 1)) / rows;
   cells = [];
   for (let i = 0; i < count(); i++) {
     cells.push({
       x: gap + (i % cols) * (cw + gap),
-      y: gap + Math.floor(i / cols) * (ch + gap),
+      y: top + gap + Math.floor(i / cols) * (ch + gap),
       w: cw,
       h: ch,
     });
@@ -66,21 +85,36 @@ function clampOffset(s) {
 
 // Zone occupée par la photo : la cellule moins la bande de légende
 function photoRect(c) {
-  return captionsOn.checked ? { ...c, h: c.h - CAPTION_H } : c;
+  return captionsOn.checked ? { ...c, h: c.h - captionH() } : c;
+}
+
+function fitText(text, base, maxW) {
+  let size = base;
+  const fam = fontFamily();
+  ctx.font = `${size}px ${fam}`;
+  while (size > 14 && ctx.measureText(text).width > maxW) {
+    size -= 2;
+    ctx.font = `${size}px ${fam}`;
+  }
 }
 
 function drawCaption(text, c) {
   ctx.save();
-  let size = 40;
-  ctx.font = `${size}px sans-serif`;
-  while (size > 18 && ctx.measureText(text).width > c.w - 32) {
-    size -= 2;
-    ctx.font = `${size}px sans-serif`;
-  }
-  ctx.fillStyle = "#1f2430";
+  fitText(text, Number(capSize.value), c.w - 32);
+  ctx.fillStyle = textColor.value;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(text, c.x + c.w / 2, c.y + c.h - CAPTION_H / 2, c.w - 32);
+  ctx.fillText(text, c.x + c.w / 2, c.y + c.h - captionH() / 2);
+  ctx.restore();
+}
+
+function drawTitle(w) {
+  ctx.save();
+  fitText(titleText.value.trim(), Number(titleSize.value), w - 80);
+  ctx.fillStyle = textColor.value;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(titleText.value.trim(), w / 2, titleH() / 2 + 6);
   ctx.restore();
 }
 
@@ -113,6 +147,8 @@ function render(forExport = false) {
   const shown = slots.slice();
   const hover = !forExport && swap ? swapTarget() : -1;
   if (hover >= 0) [shown[selected], shown[hover]] = [shown[hover], shown[selected]];
+
+  if (titleActive()) drawTitle(w);
 
   cells.forEach((c, i) => {
     const s = shown[i];
@@ -466,7 +502,26 @@ $("gapReset").onclick = () => {
   render();
 };
 
-captionsOn.addEventListener("change", () => render());
+const syncTextUI = () => {
+  titleText.disabled = !titleOn.checked;
+  $("titleSizeVal").textContent = titleSize.value;
+  $("capSizeVal").textContent = capSize.value;
+};
+[captionsOn, titleOn, titleText, fontSel, textColor, titleSize, capSize].forEach((el) =>
+  el.addEventListener("input", () => {
+    syncTextUI();
+    render();
+  })
+);
+$("textReset").onclick = () => {
+  fontSel.value = DEFAULT_TEXT.font;
+  textColor.value = DEFAULT_TEXT.color;
+  titleSize.value = DEFAULT_TEXT.title;
+  capSize.value = DEFAULT_TEXT.cap;
+  syncTextUI();
+  render();
+};
+syncTextUI();
 captionInput.addEventListener("input", () => {
   const s = slots[selected];
   if (!s) return;
@@ -483,6 +538,13 @@ $("resetAllBtn").onclick = () => {
   $("gapValue").textContent = DEFAULT_GAP;
   slots.fill(null);
   captionsOn.checked = false;
+  titleOn.checked = false;
+  titleText.value = "";
+  fontSel.value = DEFAULT_TEXT.font;
+  textColor.value = DEFAULT_TEXT.color;
+  titleSize.value = DEFAULT_TEXT.title;
+  capSize.value = DEFAULT_TEXT.cap;
+  syncTextUI();
   selected = 0;
   render();
   setMessage("Tout a été réinitialisé.");
