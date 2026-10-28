@@ -119,7 +119,7 @@
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
-  dbP.catch(() => {});
+  dbP.catch(saveFailed);
   const idb = (store, mode, fn) =>
     dbP.then(
       (db) =>
@@ -131,12 +131,20 @@
         })
     );
 
+  let warned = false;
+  function saveFailed(e) {
+    console.error("Sauvegarde automatique impossible", e);
+    if (warned) return;
+    warned = true;
+    setMessage("Sauvegarde automatique impossible (navigation privée ou stockage plein ?) : télécharge ton montage pour ne rien perdre.", true);
+  }
+
   const stored = new Set();
   let saveTimer = null;
   let chain = Promise.resolve();
   function scheduleSave() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => (chain = chain.then(save).catch(() => {})), 1000);
+    saveTimer = setTimeout(() => (chain = chain.then(save).catch(saveFailed)), 1000);
   }
   async function save() {
     const st = getState();
@@ -183,7 +191,7 @@
   const saveNow = () => {
     flush();
     clearTimeout(saveTimer);
-    chain = chain.then(save).catch(() => {});
+    chain = chain.then(save).catch(saveFailed);
   };
   document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && saveNow());
   window.addEventListener("pagehide", saveNow);
