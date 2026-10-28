@@ -889,4 +889,11 @@ canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
 @keyframes m3-ripple { to { transform: scale(1); } }
 @keyframes m3-ripple-out { from { transform: scale(1); opacity: 0.12; } to { transform: scale(1); opacity: 0; } }
 
+/* App bar petite (essai) : 64 dp, titre « title large » 22/28, couleur surface puis surface container au défilement, sans ombre */
+.topbar { min-height: 64px; padding: 8px 16px; transition: background-color 0.2s var(--md-eff); }
+.topbar.scrolled { background: var(--md-sc); }
+.topbar h1 { font-size: 1.375rem; line-height: 1.75rem; font-weight: 400; letter-spacing: 0; color: var(--md-on-surface); }
+.topbar h1 .ic { color: var(--md-on-surface-variant); }
+@media (max-width: 860px) { .topbar h1 { font-size: 1.375rem; } .topbar { min-height: var(--top-h); } }
+
 @media (prefers-reduced-motion: reduce) { #printBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }

@@ -72,3 +72,11 @@ function layoutPanels() {
 }
 wideMq.addEventListener("change", layoutPanels);
 layoutPanels();
+
+// App bar : se remplit (surface container) dès que la page défile
+(function () {
+  const bar = document.querySelector(".topbar");
+  const upd = () => bar.classList.toggle("scrolled", scrollY > 0);
+  addEventListener("scroll", upd, { passive: true });
+  upd();
+})();
