@@ -588,3 +588,12 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .hint-left { margin: 0; font-size: 0.9rem; color: var(--muted); }
 .hint-left.warn { color: #b25e00; font-weight: 600; }
 .modal-head button.round { flex: none; }
+
+/* Harmonisation : en-tête compact sur petit écran, intitulé de section avant curseurs */
+@media (max-width: 430px) {
+  .top-actions { gap: 4px; }
+  .top-actions button { padding-left: 8px; padding-right: 8px; }
+  button.round { width: 36px; height: 36px; }
+  .undo-bar { gap: 4px; }
+}
+#stickerSel h2 { margin-bottom: 10px; }

@@ -19,7 +19,7 @@ const isLandscape = () => orientationSelect.value === "landscape";
 
 function setMessage(text, isError = false) {
   messageEl.textContent = text;
-  messageEl.style.color = isError ? "#c62828" : "#1f2430";
+  messageEl.style.color = isError ? "#e5383b" : "var(--text)";
 }
 
 function canvasSize() {
