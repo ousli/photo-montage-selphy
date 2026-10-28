@@ -93,26 +93,71 @@ function popSticker(id) {
   requestAnimationFrame(step);
 }
 
+// contenu du sticker centré sur l'origine du contexte (image, ou emoji)
+function paintStickerContent(c, s, hw, hh, useCut) {
+  if (s.kind === "image") {
+    const im = useCut && cutPreview && cutPreview.id === s.id ? cutPreview.canvas : s.img;
+    if (im) {
+      if (im !== s.img) c.drawImage(s.img, -hw, -hh, hw * 2, hh * 2);
+      c.drawImage(im, -hw, -hh, hw * 2, hh * 2);
+    }
+  } else {
+    const S = hw * 2;
+    c.font = `${S * 0.82}px ${STICKER_FONT}`;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillStyle = "#000";
+    c.fillText(s.char, 0, S * 0.05);
+  }
+}
+
+// contour « sticker découpé » : la silhouette (alpha) du sticker dilatée, en cache par sticker
+const outlineCache = new Map();
+function stickerOutlineBitmap(s, hw, hh) {
+  const t = ((s.outW || 4) / 100) * s.size * stickerBase();
+  const color = s.outColor || "#ffffff";
+  const key = `${s.kind}|${s.char || ""}|${Math.round(hw)}|${Math.round(hh)}|${t.toFixed(1)}|${color}`;
+  const hit = outlineCache.get(s.id);
+  if (hit && hit.key === key && hit.img === s.img) return hit;
+  const pad = Math.ceil(t) + 2;
+  const w = Math.max(1, Math.ceil(hw * 2) + pad * 2);
+  const h = Math.max(1, Math.ceil(hh * 2) + pad * 2);
+  const mk = () => Object.assign(document.createElement("canvas"), { width: w, height: h });
+  const base = mk();
+  const bc = base.getContext("2d");
+  bc.translate(w / 2, h / 2);
+  paintStickerContent(bc, s, hw, hh, false);
+  const tint = mk();
+  const tc = tint.getContext("2d");
+  tc.drawImage(base, 0, 0);
+  tc.globalCompositeOperation = "source-in";
+  tc.fillStyle = color;
+  tc.fillRect(0, 0, w, h);
+  const out = mk();
+  const oc = out.getContext("2d");
+  [[t, 36], [t * 0.66, 24], [t * 0.33, 16]].forEach(([r, n]) => {
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      oc.drawImage(tint, Math.cos(a) * r, Math.sin(a) * r);
+    }
+  });
+  oc.drawImage(base, 0, 0);
+  const res = { key, img: s.img, canvas: out, w, h };
+  outlineCache.set(s.id, res);
+  return res;
+}
+
 function drawSticker(s) {
   const [hw, hh] = stickerHalf(s);
   ctx.save();
   ctx.translate(s.x * canvas.width, s.y * canvas.height);
   ctx.rotate((s.rot * Math.PI) / 180);
   if (!stickerExport && stickerPop.has(s.id)) ctx.scale(stickerPop.get(s.id), stickerPop.get(s.id));
-  if (s.kind === "image") {
-    const im = cutPreview && cutPreview.id === s.id && !stickerExport ? cutPreview.canvas : s.img;
-    if (im) {
-      if (im !== s.img) ctx.drawImage(s.img, -hw, -hh, hw * 2, hh * 2);
-      ctx.drawImage(im, -hw, -hh, hw * 2, hh * 2);
-    }
-  } else {
-    const S = hw * 2;
-    ctx.font = `${S * 0.82}px ${STICKER_FONT}`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#000";
-    ctx.fillText(s.char, 0, S * 0.05);
-  }
+  const cutting = !stickerExport && cutPreview && cutPreview.id === s.id;
+  if (s.outline && !cutting && (s.kind !== "image" || s.img)) {
+    const o = stickerOutlineBitmap(s, hw, hh);
+    ctx.drawImage(o.canvas, -o.w / 2, -o.h / 2);
+  } else paintStickerContent(ctx, s, hw, hh, !stickerExport);
   ctx.restore();
 }
 

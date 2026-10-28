@@ -51,6 +51,24 @@ $("stickerRot").oninput = (ev) => {
   s.rot = Number(ev.target.value);
   render();
 };
+const stickerOutPicker = createColorPicker($("stickerOutPicker"), $("stickerOutHex"), "#ffffff", (c) => {
+  const s = currentSticker();
+  if (s) s.outColor = c;
+});
+$("stickerOutOn").onchange = (ev) => {
+  const s = currentSticker();
+  if (!s) return;
+  s.outline = ev.target.checked;
+  if (s.outline && !s.outW) s.outW = Number($("stickerOutW").value);
+  $("stickerOutBox").hidden = !s.outline;
+  render();
+};
+$("stickerOutW").oninput = (ev) => {
+  const s = currentSticker();
+  if (!s) return;
+  s.outW = Number(ev.target.value);
+  render();
+};
 $("stickerDup").onclick = duplicateSticker;
 $("stickerFront").onclick = () => moveSticker(1);
 $("stickerBack").onclick = () => moveSticker(-1);
@@ -80,7 +98,13 @@ function refreshStickerUI() {
   if (s) {
     size.value = Math.round(s.size * 100);
     rot.value = s.rot;
+    $("stickerOutOn").checked = !!s.outline;
+    $("stickerOutBox").hidden = !s.outline;
+    $("stickerOutW").value = s.outW || 4;
+    stickerOutPicker.set(s.outColor || "#ffffff");
   }
+  const ow = $("stickerOutW");
+  ow.closest("label").querySelector(":scope > b").textContent = s ? `${ow.value} %` : "";
   const isImg = !!s && s.kind === "image";
   $("stickerCutBox").hidden = !isImg;
   if ($("stickerCutBox").open && (!isImg || !cutPreview || cutPreview.id !== s.id)) {

@@ -256,6 +256,19 @@
           <label>Rotation <b></b>
             <input id="stickerRot" type="range" min="-180" max="180" value="0" />
           </label>
+          <label class="check switch">
+            <input id="stickerOutOn" type="checkbox" />
+            <span>Contour autour du sticker</span>
+          </label>
+          <div id="stickerOutBox" class="style-box" hidden>
+            <label>Épaisseur du contour <b></b>
+              <input id="stickerOutW" type="range" min="1" max="15" value="4" />
+            </label>
+            <div class="color-field">
+              <span class="color-head">Couleur du contour <b id="stickerOutHex"></b></span>
+              <div id="stickerOutPicker"></div>
+            </div>
+          </div>
           <div class="row">
             <button id="stickerDup" type="button" class="secondary small">Dupliquer</button>
             <button id="stickerFront" type="button" class="secondary small">Devant</button>
