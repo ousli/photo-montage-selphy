@@ -49,12 +49,12 @@ canvas.addEventListener("pointerdown", (ev) => {
         rot0: s.rot,
       };
       canvas.style.cursor = "grabbing";
-      render();
+      renderNow();
       return;
     }
     if (selectedSticker) {
       selectedSticker = null;
-      render();
+      renderNow();
     }
   }
   if (pointers.size === 2) {
@@ -80,10 +80,10 @@ canvas.addEventListener("pointerdown", (ev) => {
       swap = canvasPoint(ev);
       canvas.style.cursor = "move";
       navigator.vibrate?.(20);
-      render();
+      renderNow();
     }, LONG_PRESS_MS);
   }
-  render();
+  renderNow();
 });
 canvas.addEventListener("pointermove", (ev) => {
   if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
@@ -114,12 +114,12 @@ canvas.addEventListener("pointermove", (ev) => {
     pinch.mx = mx;
     pinch.my = my;
     clampOffset(s);
-    render();
+    renderNow();
     return;
   }
   if (drag && drag.swap) {
     swap = canvasPoint(ev);
-    render();
+    renderNow();
     return;
   }
   if (!drag || !s) return;
@@ -135,7 +135,7 @@ canvas.addEventListener("pointermove", (ev) => {
   clampOffset(s);
   drag.x = ev.clientX;
   drag.y = ev.clientY;
-  render();
+  renderNow();
 });
 function moveStickerGesture(ev) {
   const st = currentSticker();
@@ -154,7 +154,7 @@ function moveStickerGesture(ev) {
     st.y = Math.max(0, Math.min(1, (pt.y - stickerDrag.dy) / canvas.height));
     snapStickerMove(st);
   }
-  render();
+  renderNow();
 }
 
 // deux doigts avec un sticker sélectionné : taille, rotation et déplacement du sticker
@@ -170,7 +170,7 @@ function pinchSticker(st) {
   st.x = Math.max(0, Math.min(1, st.x + (mx - pinch.mx) / r.width));
   st.y = Math.max(0, Math.min(1, st.y + (my - pinch.my) / r.height));
   Object.assign(pinch, { dist, ang, mx, my });
-  render();
+  renderNow();
 }
 
 // souris : curseur adapté au survol d'un sticker ou d'une poignée
@@ -185,7 +185,7 @@ const endDrag = () => {
   const wasSwapping = !!swap;
   drag = null;
   swap = null;
-  if (wasSwapping) render();
+  if (wasSwapping) renderNow();
   canvas.style.cursor = "grab";
 };
 canvas.addEventListener("pointerup", (ev) => {
