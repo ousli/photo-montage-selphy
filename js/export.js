@@ -52,32 +52,4 @@ function downloadFile(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-// Sur mobile avec partage de fichiers, un seul bouton (« Télécharger ») : la feuille de partage propose déjà Imprimer
-const canShareFiles = () => {
-  try {
-    return matchMedia("(pointer: coarse)").matches && !!navigator.canShare && navigator.canShare({ files: [new File([""], "a.jpg", { type: "image/jpeg" })] });
-  } catch {
-    return false;
-  }
-};
-if (canShareFiles()) $("printBtn").hidden = true;
-
-$("printBtn").onclick = () => {
-  const w = window.open("", "_blank");
-  if (!w) return setMessage("Popup bloquée : autorise-la pour imprimer.", true);
-  const url = exportDataUrl();
-  const pi = paperInfo();
-  const paper = pi ? [pi.w, pi.h] : { "3:2": [148, 100], "4:3": [119, 89] }[ratioSelect.value];
-  const [pw, ph] = paper ? (isLandscape() ? paper : [paper[1], paper[0]]) : [];
-  const pageSize = paper ? `size:${pw}mm ${ph}mm;` : "";
-  w.document.write(
-    `<html><head><title>Impression</title><style>
-      @page{margin:0;${pageSize}}html,body{margin:0;height:100%}
-      body{display:flex;align-items:center;justify-content:center}
-      img{width:100%;height:100%;object-fit:contain}
-    </style></head><body><img src="${url}" onload="window.print()"></body></html>`
-  );
-  w.document.close();
-};
-
 render();
