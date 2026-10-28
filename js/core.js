@@ -27,7 +27,6 @@ const gapInput = $("gap");
 const zoomInput = $("zoom");
 const rotInput = $("rot");
 const fileInput = $("fileInput");
-const slotsEl = $("slots");
 const messageEl = $("message");
 const canvas = $("montageCanvas");
 const ctx = canvas.getContext("2d");

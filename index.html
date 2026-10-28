@@ -10,8 +10,8 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=62" />
-  <script src="./js/theme.js?v=62"></script>
+  <link rel="stylesheet" href="./styles.css?v=63" />
+  <script src="./js/theme.js?v=63"></script>
 </head>
 <body>
   <div id="projectsPanel" class="modal" hidden>
@@ -56,11 +56,6 @@
     <aside class="sidebar" id="sheet" data-sheet="mid">
       <button type="button" class="sheet-handle" id="sheetHandle" aria-label="Agrandir ou réduire le panneau"><span></span></button>
       <div class="sheet-body">
-
-      <div class="card slot-bar" id="slotBar" hidden>
-        <h2 id="editorTitle">Photo 1</h2>
-        <div class="slots" id="slots"></div>
-      </div>
 
       <section class="card tab-panel" data-panel="montage">
         <h2>Imprimante</h2>
@@ -196,6 +191,7 @@
         </div>
         <p class="exif-note">Formats acceptés : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF. Les très grandes photos sont réduites automatiquement.</p>
         <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" hidden />
+              <p class="exif-note nosel-note">Touche une photo sur le montage pour la sélectionner.</p>
       </section>
 
       <section class="card tab-panel" data-panel="text" hidden>
@@ -215,17 +211,18 @@
           <div id="titleStyle" class="style-box"></div>
         </details>
         <h2>Légendes</h2>
-        <label class="check switch">
+        <label class="check switch photo-only">
           <input id="captionsOn" type="checkbox" />
           <span>Légende sous cette photo</span>
         </label>
-        <input id="caption" type="text" maxlength="60" placeholder="Texte sous la photo" disabled />
-        <p id="capNote" class="exif-note" hidden></p>
-        <details class="adv"><summary>Style de la légende</summary>
+        <input id="caption" class="photo-only" type="text" maxlength="60" placeholder="Texte sous la photo" disabled />
+        <p id="capNote" class="exif-note photo-only" hidden></p>
+        <details class="adv photo-only"><summary>Style de la légende</summary>
           <div id="capStyle" class="style-box"></div>
         </details>
         <button id="capAllOn" type="button" class="ghost small">Activer la légende sur toutes les photos</button>
-        <button id="capApplyAll" type="button" class="ghost small">Appliquer ce style à toutes les légendes</button>
+        <button id="capApplyAll" type="button" class="ghost small photo-only">Appliquer ce style à toutes les légendes</button>
+              <p class="exif-note nosel-note">Touche une photo sur le montage pour la sélectionner.</p>
       </section>
 
       <section class="card tab-panel" data-panel="stickers" hidden>
@@ -293,6 +290,7 @@
         </details>
         <p id="exifStyleNote" class="exif-note">Choisis Légende ou Overlay pour régler le style.</p>
         <button id="exifApplyAll" type="button" class="ghost small">Appliquer à toutes les photos</button>
+              <p class="exif-note nosel-note">Touche une photo sur le montage pour la sélectionner.</p>
       </section>
 
       <p id="message" class="message"></p>
@@ -316,31 +314,31 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=62"></script>
-  <script src="./js/exif.js?v=62"></script>
-  <script src="./js/layout.js?v=62"></script>
-  <script src="./js/render.js?v=62"></script>
-  <script src="./js/stickers.js?v=62"></script>
-  <script src="./js/printers-data.js?v=62"></script>
-  <script src="./js/printers.js?v=62"></script>
-  <script src="./js/selection.js?v=62"></script>
-  <script src="./js/import.js?v=62"></script>
-  <script src="./js/cell-menu.js?v=62"></script>
-  <script src="./js/interactions.js?v=62"></script>
-  <script src="./js/editors.js?v=62"></script>
-  <script src="./js/pickers.js?v=62"></script>
-  <script src="./js/montage-ui.js?v=62"></script>
-  <script src="./js/settings.js?v=62"></script>
-  <script src="./js/controls.js?v=62"></script>
-  <script src="./js/stickers-ui.js?v=62"></script>
-  <script src="./js/export.js?v=62"></script>
-  <script src="./js/segmented.js?v=62"></script>
-  <script src="./js/presets.js?v=62"></script>
-  <script src="./js/pwa.js?v=62"></script>
-  <script src="./js/tabs.js?v=62"></script>
-  <script src="./js/slider-anchors.js?v=62"></script>
-  <script src="./js/main.js?v=62"></script>
-  <script src="./js/history.js?v=62"></script>
-  <script src="./js/projects.js?v=62"></script>
+  <script src="./js/core.js?v=63"></script>
+  <script src="./js/exif.js?v=63"></script>
+  <script src="./js/layout.js?v=63"></script>
+  <script src="./js/render.js?v=63"></script>
+  <script src="./js/stickers.js?v=63"></script>
+  <script src="./js/printers-data.js?v=63"></script>
+  <script src="./js/printers.js?v=63"></script>
+  <script src="./js/selection.js?v=63"></script>
+  <script src="./js/import.js?v=63"></script>
+  <script src="./js/cell-menu.js?v=63"></script>
+  <script src="./js/interactions.js?v=63"></script>
+  <script src="./js/editors.js?v=63"></script>
+  <script src="./js/pickers.js?v=63"></script>
+  <script src="./js/montage-ui.js?v=63"></script>
+  <script src="./js/settings.js?v=63"></script>
+  <script src="./js/controls.js?v=63"></script>
+  <script src="./js/stickers-ui.js?v=63"></script>
+  <script src="./js/export.js?v=63"></script>
+  <script src="./js/segmented.js?v=63"></script>
+  <script src="./js/presets.js?v=63"></script>
+  <script src="./js/pwa.js?v=63"></script>
+  <script src="./js/tabs.js?v=63"></script>
+  <script src="./js/slider-anchors.js?v=63"></script>
+  <script src="./js/main.js?v=63"></script>
+  <script src="./js/history.js?v=63"></script>
+  <script src="./js/projects.js?v=63"></script>
 </body>
 </html>

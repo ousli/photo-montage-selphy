@@ -157,16 +157,6 @@ button.secondary { background: var(--soft2); color: var(--accent-ink); }
 button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
 button.small { padding: 8px 12px; font-size: 0.9rem; }
 
-.slots { display: flex; gap: 6px; flex-wrap: wrap; }
-.slots button {
-  background: var(--slot);
-  color: var(--text);
-  border: 2px solid transparent;
-  padding: 8px 12px;
-  font-size: 0.95rem;
-}
-.slots button.active { border-color: var(--accent); background: var(--surface); }
-.slots button.filled::after { content: " ✓"; color: #2e7d32; }
 
 .message { min-height: 1.2em; margin: 0; font-size: 0.85rem; color: var(--muted); }
 
@@ -246,8 +236,6 @@ button { transition: transform 0.15s, filter 0.15s, background 0.2s, color 0.2s,
 button:hover:not(:disabled) { transform: translateY(-1px); }
 button:active:not(:disabled) { transform: scale(0.96); }
 .seg button:hover:not(:disabled), .seg button:active:not(:disabled) { transform: none; }
-.slots button { transition: transform 0.15s, border-color 0.25s, background 0.25s; }
-.slots button.active { animation: pop 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
 select, input[type="range"] { transition: opacity 0.25s, box-shadow 0.2s; }
 input[type="range"]::-webkit-slider-thumb { transition: transform 0.15s; }
 input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.25); }
@@ -397,7 +385,6 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
 .tabs button { flex: 1; background: transparent; color: var(--muted); padding: 9px 4px; font-weight: 600; }
 .tabs button:hover { filter: none; color: var(--text); }
 .tabs button.on { background: var(--surface); color: var(--accent); box-shadow: 0 1px 4px rgba(31, 36, 48, 0.12); }
-.slot-bar { padding: 14px 20px; }
 .card > h2:not(:first-child) { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
 .adv summary { cursor: pointer; font-weight: 600; font-size: 0.95rem; color: var(--muted); padding: 4px 0; }
 .adv summary:hover { color: var(--text); }
@@ -461,7 +448,6 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
     mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent); }
   .sidebar .tabs button { min-height: 0; font-size: 0.85rem; }
   .sheet-body .card { box-shadow: none; padding: 14px; animation: none; }
-  .slot-bar { padding: 10px 14px; }
   .cell-menu { z-index: 30; }
 
   /* Cibles tactiles */
@@ -469,7 +455,6 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
   .swatches { gap: 10px; }
   .font-chip { padding: 10px 14px; min-height: 44px; }
   .flag { min-width: 48px; }
-  .slots button { min-height: 44px; min-width: 52px; }
   .check input { width: 24px; height: 24px; }
   .switch input { width: 48px; height: 28px; }
   .switch input::after { width: 22px; height: 22px; }
@@ -597,3 +582,10 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
   .undo-bar { gap: 4px; }
 }
 #stickerSel h2 { margin-bottom: 10px; }
+
+/* Aucune photo sélectionnée (rien, ou un sticker) : seuls les réglages globaux restent visibles */
+.nosel-note { display: none; }
+body.no-photo .nosel-note { display: block; }
+body.no-photo .photo-only,
+body.no-photo [data-panel="photo"] > :not(.nosel-note),
+body.no-photo [data-panel="info"] > :not(.nosel-note) { display: none !important; }

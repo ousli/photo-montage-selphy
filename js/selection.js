@@ -52,20 +52,7 @@ function drawSwapOverlay() {
 }
 
 function refreshUI() {
-  // Les boutons sont réutilisés pour ne pas rejouer l'animation à chaque rendu
-  while (slotsEl.children.length > count()) slotsEl.lastChild.remove();
-  for (let i = slotsEl.children.length; i < count(); i++) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = `Photo ${i + 1}`;
-    b.onclick = () => select(i);
-    slotsEl.appendChild(b);
-  }
-  Array.from(slotsEl.children).forEach((b, i) => {
-    b.classList.toggle("active", i === selected);
-    b.classList.toggle("filled", !!slots[i]);
-  });
-  $("editorTitle").textContent = `Photo ${selected + 1} sur ${count()}`;
+  document.body.classList.toggle("no-photo", !cells[selected]);
   $("pickBtn").textContent = slots[selected] ? "Remplacer la photo" : "Choisir une photo";
   $("removeBtn").disabled = !slots[selected];
   $("fitBtn").disabled = !slots[selected];
@@ -143,10 +130,9 @@ function refreshExifUI(s) {
   $("exifApplyAll").disabled = !has;
 }
 
-function select(i) {
+function selectPhoto(i) {
   selected = i;
-  if (currentTab() === "montage") showTab("photo");
-  render();
+  selectedSticker = null;
 }
 
 const FORMAT_EXT = /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i;

@@ -34,7 +34,7 @@ canvas.addEventListener("pointerdown", (ev) => {
     }
     if (hit) {
       hideMenu();
-      selectedSticker = hit.s.id;
+      selectSticker(hit.s.id);
       const s = hit.s;
       const cx = s.x * canvas.width;
       const cy = s.y * canvas.height;
@@ -67,7 +67,7 @@ canvas.addEventListener("pointerdown", (ev) => {
   }
   const i = cellAt(ev);
   if (i < 0) return;
-  selected = i;
+  selectPhoto(i);
   hideMenu();
   drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false, swap: false };
   canvas.style.cursor = "grabbing";
@@ -235,7 +235,7 @@ canvas.addEventListener(
     const hit = stickerHit(pt.x, pt.y, false);
     if (hit) {
       ev.preventDefault();
-      selectedSticker = hit.s.id;
+      selectSticker(hit.s.id);
       hit.s.size = clampSize(hit.s.size * (ev.deltaY < 0 ? 1.06 : 1 / 1.06));
       render();
       return;
@@ -243,7 +243,7 @@ canvas.addEventListener(
     const i = cellAt(ev);
     if (i < 0 || !slots[i]) return;
     ev.preventDefault();
-    selected = i;
+    selectPhoto(i);
     const s = slots[i];
     s.zoom = Math.max(0.2, Math.min(4, s.zoom * (ev.deltaY < 0 ? 1.06 : 1 / 1.06)));
     render();
@@ -259,7 +259,7 @@ canvas.addEventListener("drop", (ev) => {
   const i = cellAt(ev);
   const file = ev.dataTransfer.files[0];
   if (i >= 0 && file) {
-    selected = i;
+    selectPhoto(i);
     loadFile(file, i);
   }
 });
@@ -373,7 +373,7 @@ multiInput.addEventListener("change", () => {
   }
   // s'il n'y a plus de case vide, on remplace depuis la première
   const targets = free.length ? free : Array.from({ length: n }, (_, k) => k);
-  selected = targets[0];
+  selectPhoto(targets[0]);
   Promise.all(files.slice(0, targets.length).map((f, k) => loadFile(f, targets[k]))).then(() => {
     const extra = files.length - targets.length;
     setMessage(extra > 0 ? `${targets.length} photos importées, ${extra} ignorée(s) : pas assez de cases.` : `${files.length} photo(s) importée(s).`, extra > 0);

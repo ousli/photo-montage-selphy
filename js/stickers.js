@@ -21,11 +21,17 @@ function snapSticker(s) {
   return { ...rest, img, blob };
 }
 
+// un sticker sélectionné désélectionne la photo, et inversement (selectPhoto)
+function selectSticker(id) {
+  selectedSticker = id;
+  selected = -1;
+}
+
 // point d'entrée unique pour ajouter un sticker (emoji, image importée, futures sources)
 function addSticker(data) {
   const s = { id: stickerId(), x: 0.5, y: 0.5, size: 0.2, rot: 0, ...data };
   stickers.push(s);
-  selectedSticker = s.id;
+  selectSticker(s.id);
   render();
   return s;
 }

@@ -8,7 +8,6 @@ function showTab(name) {
     b.setAttribute("aria-selected", String(b.dataset.tab === name));
   });
   document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
-  $("slotBar").hidden = name === "montage" || name === "stickers";
   try { localStorage.setItem("montage-tab", name); } catch (e) {}
 }
 tabBtns.forEach((b) => b.addEventListener("click", () => {
