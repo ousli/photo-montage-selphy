@@ -68,13 +68,18 @@ function stickerHalf(s) {
   return [S / 2, S / 2];
 }
 
+let stickerExport = false;
 function drawSticker(s) {
   const [hw, hh] = stickerHalf(s);
   ctx.save();
   ctx.translate(s.x * canvas.width, s.y * canvas.height);
   ctx.rotate((s.rot * Math.PI) / 180);
   if (s.kind === "image") {
-    if (s.img) ctx.drawImage(s.img, -hw, -hh, hw * 2, hh * 2);
+    const im = cutPreview && cutPreview.id === s.id && !stickerExport ? cutPreview.canvas : s.img;
+    if (im) {
+      if (im !== s.img) ctx.drawImage(s.img, -hw, -hh, hw * 2, hh * 2);
+      ctx.drawImage(im, -hw, -hh, hw * 2, hh * 2);
+    }
   } else {
     const S = hw * 2;
     ctx.font = `${S * 0.82}px ${STICKER_FONT}`;
@@ -90,6 +95,7 @@ function drawSticker(s) {
 const screenK = () => canvas.width / canvas.getBoundingClientRect().width;
 
 function drawStickers(forExport) {
+  stickerExport = !!forExport;
   stickers.forEach(drawSticker);
   const s = forExport ? null : currentSticker();
   if (!s) return;
@@ -197,19 +203,21 @@ async function importStickerFile(file) {
   setMessage(`Sticker ajouté : ${file.name}`);
 }
 
-// Retire un fond de couleur proche de celle des bords, par remplissage depuis les bords
-async function removeStickerBackground(s, tol) {
+// Retrait de fond : aperçu non destructif (cutPreview) puis application.
+// Le fond = pixels proches (distance RVB <= tol) de la couleur des bords, atteignables depuis les bords.
+let cutPreview = null; // { id, w, h, data, bg, canvas }
+
+function cutStart(s) {
   const src = s.img;
   const w = src.naturalWidth || src.width;
   const h = src.naturalHeight || src.height;
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
-  const cx = c.getContext("2d");
+  const cx = c.getContext("2d", { willReadFrequently: true });
   cx.drawImage(src, 0, 0);
-  const im = cx.getImageData(0, 0, w, h);
-  const d = im.data;
-  // couleur de fond = médiane des pixels du bord
+  const data = cx.getImageData(0, 0, w, h);
+  const d = data.data;
   const ch = [[], [], []];
   const edge = (x, y) => {
     const i = (y * w + x) * 4;
@@ -220,6 +228,17 @@ async function removeStickerBackground(s, tol) {
   for (let y = 0; y < h; y++) (edge(0, y), edge(w - 1, y));
   if (!ch[0].length) return false;
   const bg = ch.map((a) => a.sort((p, q) => p - q)[a.length >> 1]);
+  cutPreview = { id: s.id, w, h, data, bg, canvas: document.createElement("canvas"), cx: null };
+  cutPreview.canvas.width = w;
+  cutPreview.canvas.height = h;
+  cutPreview.cx = cutPreview.canvas.getContext("2d");
+  return true;
+}
+
+// recalcule le canevas d'aperçu (fond en rose translucide) ou final (fond transparent)
+function cutRender(tol, final) {
+  const { w, h, data, bg } = cutPreview;
+  const d = data.data;
   const t2 = tol * tol;
   const near = (i) => {
     const dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
@@ -238,7 +257,6 @@ async function removeStickerBackground(s, tol) {
   let n = 0;
   while (stack.length) {
     const p = stack.pop();
-    d[p * 4 + 3] = 0;
     n++;
     const x = p % w, y = (p - x) / w;
     if (x > 0) push(x - 1, y);
@@ -246,20 +264,44 @@ async function removeStickerBackground(s, tol) {
     if (y > 0) push(x, y - 1);
     if (y < h - 1) push(x, y + 1);
   }
-  if (n < 16) return false;
-  // adoucit d'un pixel le contour pour éviter l'effet « escalier »
-  for (let y = 1; y < h - 1; y++)
-    for (let x = 1; x < w - 1; x++) {
-      const p = y * w + x;
-      if (seen[p]) continue;
-      if (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w]) d[p * 4 + 3] = 150;
+  const out = new ImageData(w, h);
+  const o = out.data;
+  o.set(d);
+  for (let p = 0; p < w * h; p++) {
+    const i = p * 4;
+    if (seen[p]) {
+      if (final) o[i + 3] = 0;
+      else (o[i] = 255), (o[i + 1] = 40), (o[i + 2] = 160), (o[i + 3] = 110);
     }
-  cx.putImageData(im, 0, 0);
-  const blob = await new Promise((res) => c.toBlob(res, "image/png"));
-  if (!blob) return false;
-  s.img = c;
+  }
+  if (final) {
+    // adoucit d'un pixel le contour
+    for (let y = 1; y < h - 1; y++)
+      for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x;
+        if (!seen[p] && (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w])) o[p * 4 + 3] = 150;
+      }
+  }
+  cutPreview.cx.putImageData(out, 0, 0);
+  return { n, pct: Math.round((n / (w * h)) * 100) };
+}
+
+function cutCancel() {
+  if (!cutPreview) return;
+  cutPreview = null;
+  render();
+}
+
+async function cutApply(tol) {
+  const s = getSticker(cutPreview && cutPreview.id);
+  if (!s) return cutCancel();
+  const r = cutRender(tol, true);
+  const blob = await new Promise((res) => cutPreview.canvas.toBlob(res, "image/png"));
+  if (!blob || r.n < 16) return false;
+  s.img = cutPreview.canvas;
   s.blob = blob;
   s.uid = stickerId();
+  cutPreview = null;
   render();
   return true;
 }

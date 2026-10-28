@@ -10,8 +10,8 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=56" />
-  <script src="./js/theme.js?v=56"></script>
+  <link rel="stylesheet" href="./styles.css?v=57" />
+  <script src="./js/theme.js?v=57"></script>
 </head>
 <body>
   <header class="topbar">
@@ -237,11 +237,15 @@
           </div>
           <details id="stickerCutBox" class="sticker-cut">
             <summary>Retirer le fond</summary>
-            <label>Tolérance <b></b>
-              <input id="stickerTol" type="range" min="5" max="120" value="40" />
+            <p class="exif-note">Le fond uni est détecté depuis les bords. Les zones <span class="cut-pink">roses</span> sur le montage seront effacées : règle le curseur jusqu'à ce que seul le fond soit rose.</p>
+            <label>Quantité de fond effacée
+              <input id="stickerTol" type="range" min="5" max="150" value="40" />
             </label>
-            <button id="stickerCut" type="button" class="secondary small">Retirer le fond</button>
-            <p class="exif-note">Efface la couleur du fond à partir des bords : efficace sur fond uni. Annulable.</p>
+            <p id="stickerCutInfo" class="exif-note"></p>
+            <div class="row">
+              <button id="stickerCutApply" type="button" class="secondary small">Appliquer</button>
+              <button id="stickerCutCancel" type="button" class="ghost small">Annuler</button>
+            </div>
           </details>
         </div>
       </section>
@@ -287,29 +291,29 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=56"></script>
-  <script src="./js/exif.js?v=56"></script>
-  <script src="./js/layout.js?v=56"></script>
-  <script src="./js/render.js?v=56"></script>
-  <script src="./js/stickers.js?v=56"></script>
-  <script src="./js/printers-data.js?v=56"></script>
-  <script src="./js/printers.js?v=56"></script>
-  <script src="./js/selection.js?v=56"></script>
-  <script src="./js/import.js?v=56"></script>
-  <script src="./js/cell-menu.js?v=56"></script>
-  <script src="./js/interactions.js?v=56"></script>
-  <script src="./js/editors.js?v=56"></script>
-  <script src="./js/pickers.js?v=56"></script>
-  <script src="./js/montage-ui.js?v=56"></script>
-  <script src="./js/settings.js?v=56"></script>
-  <script src="./js/controls.js?v=56"></script>
-  <script src="./js/stickers-ui.js?v=56"></script>
-  <script src="./js/export.js?v=56"></script>
-  <script src="./js/segmented.js?v=56"></script>
-  <script src="./js/presets.js?v=56"></script>
-  <script src="./js/pwa.js?v=56"></script>
-  <script src="./js/tabs.js?v=56"></script>
-  <script src="./js/main.js?v=56"></script>
-  <script src="./js/history.js?v=56"></script>
+  <script src="./js/core.js?v=57"></script>
+  <script src="./js/exif.js?v=57"></script>
+  <script src="./js/layout.js?v=57"></script>
+  <script src="./js/render.js?v=57"></script>
+  <script src="./js/stickers.js?v=57"></script>
+  <script src="./js/printers-data.js?v=57"></script>
+  <script src="./js/printers.js?v=57"></script>
+  <script src="./js/selection.js?v=57"></script>
+  <script src="./js/import.js?v=57"></script>
+  <script src="./js/cell-menu.js?v=57"></script>
+  <script src="./js/interactions.js?v=57"></script>
+  <script src="./js/editors.js?v=57"></script>
+  <script src="./js/pickers.js?v=57"></script>
+  <script src="./js/montage-ui.js?v=57"></script>
+  <script src="./js/settings.js?v=57"></script>
+  <script src="./js/controls.js?v=57"></script>
+  <script src="./js/stickers-ui.js?v=57"></script>
+  <script src="./js/export.js?v=57"></script>
+  <script src="./js/segmented.js?v=57"></script>
+  <script src="./js/presets.js?v=57"></script>
+  <script src="./js/pwa.js?v=57"></script>
+  <script src="./js/tabs.js?v=57"></script>
+  <script src="./js/main.js?v=57"></script>
+  <script src="./js/history.js?v=57"></script>
 </body>
 </html>

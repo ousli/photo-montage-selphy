@@ -561,3 +561,5 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 #stickerSel h2 { margin-top: 14px; }
 .sticker-cut summary { font-size: 0.95rem; }
 .sticker-h { margin-top: 16px; }
+.cut-pink { color: #ff28a0; font-weight: 700; }
+.sticker-cut .row { margin-top: 10px; }

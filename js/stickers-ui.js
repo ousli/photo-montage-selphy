@@ -83,17 +83,41 @@ function refreshStickerUI() {
   }
   const isImg = !!s && s.kind === "image";
   $("stickerCutBox").hidden = !isImg;
-  $("stickerTol").closest("label").querySelector(":scope > b").textContent = $("stickerTol").value;
+  if ($("stickerCutBox").open && (!isImg || !cutPreview || cutPreview.id !== s.id)) {
+    cutPreview = null;
+    $("stickerCutBox").open = false;
+  }
   size.closest("label").querySelector(":scope > b").textContent = s ? `${size.value} %` : "";
   rot.closest("label").querySelector(":scope > b").textContent = s ? `${rot.value}°` : "";
 }
 
-$("stickerTol").oninput = refreshStickerUI;
-$("stickerCut").onclick = async () => {
+// Retrait du fond : aperçu en direct (rose) quand le bloc est ouvert, puis Appliquer
+let cutRaf = 0;
+function cutUpdate() {
   const s = currentSticker();
-  if (!s || s.kind !== "image") return;
-  const ok = await removeStickerBackground(s, Number($("stickerTol").value));
-  setMessage(ok ? "Fond retiré. Ajuste la tolérance puis annule (↶) pour réessayer." : "Aucun fond uni détecté sur les bords : essaie une tolérance plus haute.", !ok);
+  if (!s || s.kind !== "image" || !$("stickerCutBox").open) return;
+  if (!cutPreview || cutPreview.id !== s.id) if (!cutStart(s)) return setMessage("Impossible d'analyser les bords de cette image.", true);
+  const r = cutRender(Number($("stickerTol").value), false);
+  $("stickerCutInfo").textContent = `${r.pct} % de l'image sera effacé`;
+  render();
+}
+function cutClose() {
+  cancelAnimationFrame(cutRaf);
+  cutCancel();
+}
+$("stickerTol").oninput = () => {
+  cancelAnimationFrame(cutRaf);
+  cutRaf = requestAnimationFrame(cutUpdate);
+};
+$("stickerCutBox").addEventListener("toggle", () => ($("stickerCutBox").open ? cutUpdate() : cutClose()));
+$("stickerCutCancel").onclick = () => {
+  $("stickerCutBox").open = false;
+};
+$("stickerCutApply").onclick = async () => {
+  if (!cutPreview) return;
+  const ok = await cutApply(Number($("stickerTol").value));
+  $("stickerCutBox").open = false;
+  setMessage(ok ? "Fond retiré. Tu peux annuler avec ↶." : "Presque rien à effacer : augmente la quantité.", !ok);
 };
 
 $("stickerPasteBtn").onclick = async () => {
