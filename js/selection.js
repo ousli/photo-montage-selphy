@@ -52,6 +52,7 @@ function drawSwapOverlay() {
 }
 
 function refreshUI() {
+  if (typeof syncCalib === "function") syncCalib();
   document.body.classList.toggle("no-photo", !cells[selected]);
   $("pickBtn").textContent = slots[selected] ? "Remplacer la photo" : "Choisir une photo";
   $("removeBtn").disabled = !slots[selected];

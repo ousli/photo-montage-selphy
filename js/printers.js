@@ -123,7 +123,31 @@ function paperInfo() {
     return { w: Math.max(c.w, c.h), h: Math.min(c.w, c.h), safe: c.safe, label: "Personnalisé" };
   }
   const pr = printerOf(printerId) || printerOf(DEFAULT_PRINTER);
-  return pr.papers.find((x) => x.id === paperId) || pr.papers[0];
+  const paper = pr.papers.find((x) => x.id === paperId) || pr.papers[0];
+  const cal = calibGet(pr.id, paper.id);
+  return cal == null ? paper : { ...paper, safe: cal, calibrated: true };
+}
+
+// Marge réellement rognée, mesurée par l'utilisateur (page de test) : par imprimante + papier, prioritaire sur l'estimation
+const CALIB_KEY = "montage-calib";
+function calibAll() {
+  try {
+    return JSON.parse(localStorage.getItem(CALIB_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+function calibGet(pid, paper) {
+  const v = calibAll()[`${pid}|${paper}`];
+  return Number.isFinite(v) ? v : null;
+}
+function calibSet(pid, paper, mm) {
+  const all = calibAll();
+  if (mm == null) delete all[`${pid}|${paper}`];
+  else all[`${pid}|${paper}`] = mm;
+  try {
+    localStorage.setItem(CALIB_KEY, JSON.stringify(all));
+  } catch (e) {}
 }
 function setPrinterState(id, pid, custom) {
   printerId = id === PRINTER_CUSTOM || id === PRINTER_FREE || printerOf(id) ? id : DEFAULT_PRINTER;
