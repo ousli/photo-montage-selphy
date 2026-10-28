@@ -10,8 +10,8 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=52" />
-  <script src="./js/theme.js?v=52"></script>
+  <link rel="stylesheet" href="./styles.css?v=53" />
+  <script src="./js/theme.js?v=53"></script>
 </head>
 <body>
   <header class="topbar">
@@ -212,6 +212,8 @@
         <h2>Image</h2>
         <button id="stickerImportBtn" type="button" class="secondary small">Importer une image…</button>
         <p class="exif-note">PNG ou WebP à fond transparent conseillés (réduite à 1024 px).</p>
+        <button id="stickerPasteBtn" type="button" class="secondary small">Coller une image</button>
+        <p class="exif-note">Pinterest : « Copier l'image », puis Coller (ou Cmd/Ctrl+V). Sur ordinateur, tu peux aussi glisser l'image sur le montage.</p>
         <input id="stickerFile" type="file" accept="image/png,image/webp,image/gif,image/avif,image/jpeg,.png,.webp,.gif,.avif,.jpg,.jpeg" hidden />
         <h2>Sticker sélectionné</h2>
         <p id="stickerNote" class="exif-note"></p>
@@ -221,6 +223,13 @@
         <label>Rotation <b></b>
           <input id="stickerRot" type="range" min="-180" max="180" value="0" />
         </label>
+        <div id="stickerCutBox">
+          <label>Tolérance du fond <b></b>
+            <input id="stickerTol" type="range" min="5" max="120" value="40" />
+          </label>
+          <button id="stickerCut" type="button" class="secondary small">Retirer le fond</button>
+          <p class="exif-note">Efface la couleur du fond à partir des bords : efficace sur fond uni. Annulable.</p>
+        </div>
         <div class="row">
           <button id="stickerDup" type="button" class="secondary small">Dupliquer</button>
           <button id="stickerFront" type="button" class="secondary small">Devant</button>
@@ -270,29 +279,29 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=52"></script>
-  <script src="./js/exif.js?v=52"></script>
-  <script src="./js/layout.js?v=52"></script>
-  <script src="./js/render.js?v=52"></script>
-  <script src="./js/stickers.js?v=52"></script>
-  <script src="./js/printers-data.js?v=52"></script>
-  <script src="./js/printers.js?v=52"></script>
-  <script src="./js/selection.js?v=52"></script>
-  <script src="./js/import.js?v=52"></script>
-  <script src="./js/cell-menu.js?v=52"></script>
-  <script src="./js/interactions.js?v=52"></script>
-  <script src="./js/editors.js?v=52"></script>
-  <script src="./js/pickers.js?v=52"></script>
-  <script src="./js/montage-ui.js?v=52"></script>
-  <script src="./js/settings.js?v=52"></script>
-  <script src="./js/controls.js?v=52"></script>
-  <script src="./js/stickers-ui.js?v=52"></script>
-  <script src="./js/export.js?v=52"></script>
-  <script src="./js/segmented.js?v=52"></script>
-  <script src="./js/presets.js?v=52"></script>
-  <script src="./js/pwa.js?v=52"></script>
-  <script src="./js/tabs.js?v=52"></script>
-  <script src="./js/main.js?v=52"></script>
-  <script src="./js/history.js?v=52"></script>
+  <script src="./js/core.js?v=53"></script>
+  <script src="./js/exif.js?v=53"></script>
+  <script src="./js/layout.js?v=53"></script>
+  <script src="./js/render.js?v=53"></script>
+  <script src="./js/stickers.js?v=53"></script>
+  <script src="./js/printers-data.js?v=53"></script>
+  <script src="./js/printers.js?v=53"></script>
+  <script src="./js/selection.js?v=53"></script>
+  <script src="./js/import.js?v=53"></script>
+  <script src="./js/cell-menu.js?v=53"></script>
+  <script src="./js/interactions.js?v=53"></script>
+  <script src="./js/editors.js?v=53"></script>
+  <script src="./js/pickers.js?v=53"></script>
+  <script src="./js/montage-ui.js?v=53"></script>
+  <script src="./js/settings.js?v=53"></script>
+  <script src="./js/controls.js?v=53"></script>
+  <script src="./js/stickers-ui.js?v=53"></script>
+  <script src="./js/export.js?v=53"></script>
+  <script src="./js/segmented.js?v=53"></script>
+  <script src="./js/presets.js?v=53"></script>
+  <script src="./js/pwa.js?v=53"></script>
+  <script src="./js/tabs.js?v=53"></script>
+  <script src="./js/main.js?v=53"></script>
+  <script src="./js/history.js?v=53"></script>
 </body>
 </html>

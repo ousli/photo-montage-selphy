@@ -80,8 +80,39 @@ function refreshStickerUI() {
     size.value = Math.round(s.size * 100);
     rot.value = s.rot;
   }
+  const isImg = !!s && s.kind === "image";
+  $("stickerCutBox").hidden = !isImg;
+  $("stickerTol").closest("label").querySelector(":scope > b").textContent = $("stickerTol").value;
   size.closest("label").querySelector(":scope > b").textContent = s ? `${size.value} %` : "";
   rot.closest("label").querySelector(":scope > b").textContent = s ? `${rot.value}°` : "";
 }
+
+$("stickerTol").oninput = refreshStickerUI;
+$("stickerCut").onclick = async () => {
+  const s = currentSticker();
+  if (!s || s.kind !== "image") return;
+  const ok = await removeStickerBackground(s, Number($("stickerTol").value));
+  setMessage(ok ? "Fond retiré. Ajuste la tolérance puis annule (↶) pour réessayer." : "Aucun fond uni détecté sur les bords : essaie une tolérance plus haute.", !ok);
+};
+
+$("stickerPasteBtn").onclick = async () => {
+  try {
+    const items = await navigator.clipboard.read();
+    const files = [];
+    for (const it of items) {
+      const type = it.types.find((t) => t.startsWith("image/"));
+      if (type) files.push(new File([await it.getType(type)], "collage.png", { type }));
+    }
+    if (!addStickerFromFiles(files)) setMessage("Aucune image dans le presse-papiers : copie d'abord une image.", true);
+  } catch (e) {
+    setMessage("Impossible de lire le presse-papiers : autorise l'accès ou importe le fichier.", true);
+  }
+};
+document.addEventListener("paste", (ev) => {
+  if (currentTab() !== "stickers") return;
+  const t = ev.target;
+  if (t && (t.tagName === "TEXTAREA" || (t.tagName === "INPUT" && t.type !== "range"))) return;
+  if (addStickerFromFiles(ev.clipboardData ? ev.clipboardData.files : [])) ev.preventDefault();
+});
 
 fillEmojiGrid();

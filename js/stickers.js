@@ -196,3 +196,78 @@ async function importStickerFile(file) {
   addSticker({ kind: "image", uid: stickerId(), img: out, blob, size: 0.3 });
   setMessage(`Sticker ajouté : ${file.name}`);
 }
+
+// Retire un fond de couleur proche de celle des bords, par remplissage depuis les bords
+async function removeStickerBackground(s, tol) {
+  const src = s.img;
+  const w = src.naturalWidth || src.width;
+  const h = src.naturalHeight || src.height;
+  const c = document.createElement("canvas");
+  c.width = w;
+  c.height = h;
+  const cx = c.getContext("2d");
+  cx.drawImage(src, 0, 0);
+  const im = cx.getImageData(0, 0, w, h);
+  const d = im.data;
+  // couleur de fond = médiane des pixels du bord
+  const ch = [[], [], []];
+  const edge = (x, y) => {
+    const i = (y * w + x) * 4;
+    if (d[i + 3] < 8) return;
+    for (let k = 0; k < 3; k++) ch[k].push(d[i + k]);
+  };
+  for (let x = 0; x < w; x++) (edge(x, 0), edge(x, h - 1));
+  for (let y = 0; y < h; y++) (edge(0, y), edge(w - 1, y));
+  if (!ch[0].length) return false;
+  const bg = ch.map((a) => a.sort((p, q) => p - q)[a.length >> 1]);
+  const t2 = tol * tol;
+  const near = (i) => {
+    const dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
+    return d[i + 3] < 8 || dr * dr + dg * dg + db * db <= t2;
+  };
+  const seen = new Uint8Array(w * h);
+  const stack = [];
+  const push = (x, y) => {
+    const p = y * w + x;
+    if (seen[p] || !near(p * 4)) return;
+    seen[p] = 1;
+    stack.push(p);
+  };
+  for (let x = 0; x < w; x++) (push(x, 0), push(x, h - 1));
+  for (let y = 0; y < h; y++) (push(0, y), push(w - 1, y));
+  let n = 0;
+  while (stack.length) {
+    const p = stack.pop();
+    d[p * 4 + 3] = 0;
+    n++;
+    const x = p % w, y = (p - x) / w;
+    if (x > 0) push(x - 1, y);
+    if (x < w - 1) push(x + 1, y);
+    if (y > 0) push(x, y - 1);
+    if (y < h - 1) push(x, y + 1);
+  }
+  if (n < 16) return false;
+  // adoucit d'un pixel le contour pour éviter l'effet « escalier »
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++) {
+      const p = y * w + x;
+      if (seen[p]) continue;
+      if (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w]) d[p * 4 + 3] = 150;
+    }
+  cx.putImageData(im, 0, 0);
+  const blob = await new Promise((res) => c.toBlob(res, "image/png"));
+  if (!blob) return false;
+  s.img = c;
+  s.blob = blob;
+  s.uid = stickerId();
+  render();
+  return true;
+}
+
+// image collée ou déposée (ex. « Copier l'image » depuis Pinterest)
+function addStickerFromFiles(files) {
+  const imgs = [...files].filter((f) => f.type.startsWith("image/"));
+  if (!imgs.length) return false;
+  imgs.reduce((p, f) => p.then(() => importStickerFile(f)), Promise.resolve());
+  return true;
+}

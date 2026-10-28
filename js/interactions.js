@@ -248,6 +248,9 @@ canvas.addEventListener(
 canvas.addEventListener("dragover", (ev) => ev.preventDefault());
 canvas.addEventListener("drop", (ev) => {
   ev.preventDefault();
+  if (currentTab() === "stickers") {
+    if (addStickerFromFiles(ev.dataTransfer.files)) return;
+  }
   const i = cellAt(ev);
   const file = ev.dataTransfer.files[0];
   if (i >= 0 && file) {
