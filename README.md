@@ -25,7 +25,7 @@ Ouvre `index.html` dans ton navigateur.
 - **Projets :** bouton « Projets » : enregistrer plusieurs montages nommés, les rouvrir, les renommer ou les supprimer. Le projet ouvert est retrouvé après un rechargement et un avertissement évite de perdre des modifications non enregistrées.
 - **Thème :** clair ou sombre, qui suit le réglage de l'appareil ; le bouton soleil/lune de l'en-tête force l'un ou l'autre (choix mémorisé dans le navigateur). Le bouton palette de l'en-tête permet de choisir la couleur d'accent (8 teintes, palettes officielles Material 3 calculées avec [material-color-utilities](https://github.com/material-foundation/material-color-utilities), Apache-2.0, copié dans `vendor/`).
 - **Design :** Material Design 3 (tokens `--md-*`, formes, états, ressorts et transitions M3, snackbar, ripple). Les animations sont désactivées avec « réduire les animations ».
-- **Sortie :** Télécharger (JPG) ou Imprimer. Sur mobile, un seul bouton « Télécharger » ouvre la feuille de partage (Photos, Fichiers, Imprimer, app Canon…) ; sur ordinateur, il télécharge le fichier et « Imprimer » ouvre la boîte d'impression.
+- **Sortie :** Télécharger (JPG), à imprimer ensuite depuis Aperçu ou l'app de l'imprimante (taille réelle, sans mise à l'échelle). Sur mobile, « Télécharger » ouvre la feuille de partage (Photos, Fichiers, Imprimer, app Canon…) ; sur ordinateur, il télécharge le fichier et « Imprimer » ouvre la boîte d'impression.
 
 ## Hors ligne
 
