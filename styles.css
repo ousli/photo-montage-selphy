@@ -560,3 +560,4 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 #stickerSel { margin-top: 16px; border-top: 1px solid var(--line2); }
 #stickerSel h2 { margin-top: 14px; }
 .sticker-cut summary { font-size: 0.95rem; }
+.sticker-h { margin-top: 16px; }

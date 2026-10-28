@@ -8,17 +8,6 @@ const EMOJI_CATS = {
   "Voyage": "✈️ 🏖️ 🏔️ 🚗 ⛵ 🗺️ 📍 🎒 📷 🎵 ⚽ 🏄 🍕 🍔 🍦 🍹",
 };
 let emojiCat = Object.keys(EMOJI_CATS)[0];
-let stickerSrc = "emoji";
-
-const setSrcChips = chipGroup($("stickerSrc"), { emoji: "Emoji", image: "Image" }, (k) => {
-  stickerSrc = k;
-  showStickerSrc();
-});
-function showStickerSrc() {
-  $("stickerEmoji").hidden = stickerSrc !== "emoji";
-  $("stickerImage").hidden = stickerSrc !== "image";
-  setSrcChips((k) => k === stickerSrc, false);
-}
 
 const setEmojiCatChips = chipGroup($("emojiCats"), Object.fromEntries(Object.keys(EMOJI_CATS).map((k) => [k, k])), (k) => {
   emojiCat = k;
@@ -128,4 +117,3 @@ document.addEventListener("paste", (ev) => {
 });
 
 fillEmojiGrid();
-showStickerSrc();
