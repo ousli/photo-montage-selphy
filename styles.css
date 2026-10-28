@@ -70,8 +70,8 @@ h2 { margin: 0 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spaci
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(300px, 340px) 1fr minmax(300px, 340px);
-  gap: 20px;
+  grid-template-columns: minmax(250px, 290px) minmax(0, 1fr) minmax(250px, 290px);
+  gap: 14px;
   max-width: 1800px;
   margin: 0 auto;
   padding: 20px;
@@ -170,7 +170,7 @@ button.small { padding: 8px 12px; font-size: 0.9rem; }
     repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 50% / 24px 24px;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 16px;
+  padding: 10px;
 }
 canvas {
   display: block;
