@@ -17,17 +17,17 @@
   const SUN = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   const MOON = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
 
-  // Couleur d'accent : palettes dérivées d'une teinte (le violet M3 d'origine est celui de styles.css)
+  // Couleur d'accent : palettes officielles M3 (HCT, schéma Tonal Spot) calculées par vendor/m3-palette.js ; le violet d'origine est celui de styles.css
   const AKEY = "montage-accent";
   const ACCENTS = [
-    { id: "violet", name: "Violet", h: 262 },
-    { id: "bleu", name: "Bleu", h: 215 },
-    { id: "turquoise", name: "Turquoise", h: 178 },
-    { id: "vert", name: "Vert", h: 135 },
-    { id: "ambre", name: "Ambre", h: 40 },
-    { id: "orange", name: "Orange", h: 18 },
-    { id: "rose", name: "Rose", h: 335 },
-    { id: "rouge", name: "Rouge", h: 355 },
+    { id: "violet", name: "Violet", seed: "#6750A4" },
+    { id: "bleu", name: "Bleu", seed: "#2F6BDB" },
+    { id: "turquoise", name: "Turquoise", seed: "#00897B" },
+    { id: "vert", name: "Vert", seed: "#2E7D32" },
+    { id: "ambre", name: "Ambre", seed: "#F9A825" },
+    { id: "orange", name: "Orange", seed: "#E65100" },
+    { id: "rose", name: "Rose", seed: "#C2185B" },
+    { id: "rouge", name: "Rouge", seed: "#B3261E" },
   ];
   const savedAccent = () => {
     try {
@@ -37,30 +37,13 @@
       return "violet";
     }
   };
-  const hsl = (h, s, l) => `hsl(${h} ${s}% ${l}%)`;
-  function accentTokens(h, dark) {
-    const t = dark
-      ? {
-          primary: hsl(h, 85, 80), "on-primary": hsl(h, 50, 20), "primary-container": hsl(h, 40, 30), "on-primary-container": hsl(h, 80, 90),
-          "secondary-container": hsl(h, 15, 28), "on-secondary-container": hsl(h, 35, 90),
-          surface: hsl(h, 12, 8), "sc-lowest": hsl(h, 12, 6), "sc-low": hsl(h, 12, 11), sc: hsl(h, 12, 13), "sc-high": hsl(h, 12, 17), "sc-highest": hsl(h, 12, 21),
-          outline: hsl(h, 8, 62), "outline-variant": hsl(h, 10, 30), "on-surface-variant": hsl(h, 15, 80),
-        }
-      : {
-          primary: hsl(h, 50, h >= 80 && h <= 200 ? 29 : h >= 25 && h <= 70 ? 32 : 38), "on-primary": "#fff", "primary-container": hsl(h, 75, 91), "on-primary-container": hsl(h, 70, 15),
-          "secondary-container": hsl(h, 35, 89), "on-secondary-container": hsl(h, 40, 12),
-          surface: hsl(h, 60, 98), "sc-lowest": "#fff", "sc-low": hsl(h, 30, 96), sc: hsl(h, 30, 94.5), "sc-high": hsl(h, 25, 92.5), "sc-highest": hsl(h, 20, 90.5),
-          outline: hsl(h, 8, 47), "outline-variant": hsl(h, 15, 80), "on-surface-variant": hsl(h, 12, 28),
-        };
-    return t;
-  }
+  const TOKENS = ["primary", "on-primary", "primary-container", "on-primary-container", "secondary-container", "on-secondary-container", "surface", "sc-lowest", "sc-low", "sc", "sc-high", "sc-highest", "outline", "outline-variant", "on-surface-variant"];
   function applyAccent(dark) {
     const a = ACCENTS.find((x) => x.id === savedAccent());
-    const names = Object.keys(accentTokens(0, dark));
-    names.forEach((k) => root.style.removeProperty("--md-" + k));
-    if (a.id === "violet") return;
-    const t = accentTokens(a.h, dark);
-    names.forEach((k) => root.style.setProperty("--md-" + k, t[k]));
+    TOKENS.forEach((k) => root.style.removeProperty("--md-" + k));
+    if (a.id === "violet" || !window.M3Palette) return;
+    const t = window.M3Palette(a.seed, dark);
+    TOKENS.forEach((k) => root.style.setProperty("--md-" + k, t[k]));
   }
 
   function apply() {
@@ -122,7 +105,7 @@
     menu.setAttribute("role", "menu");
     menu.hidden = true;
     document.body.appendChild(menu);
-    const swatch = (a) => `<i class="accent-dot" style="background:${hsl(a.h, 50, 45)}"></i>`;
+    const swatch = (a) => `<i class="accent-dot" style="background:${a.seed}"></i>`;
     const render = () => {
       const cur = savedAccent();
       menu.innerHTML = ACCENTS.map(

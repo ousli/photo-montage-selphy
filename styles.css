@@ -872,4 +872,21 @@ canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
 .project-row { animation: m3-row-in 0.4s var(--md-dec) both; }
 .project-row:nth-child(2) { animation-delay: 0.04s; } .project-row:nth-child(3) { animation-delay: 0.08s; } .project-row:nth-child(4) { animation-delay: 0.12s; } .project-row:nth-child(n+5) { animation-delay: 0.16s; }
 
+/* Icônes de navigation : contour au repos, pleines quand l'onglet est sélectionné (les détails prennent la couleur de la pastille) */
+.tabs button.on .tab-ic { color: var(--md-on-secondary-container); }
+.tabs button.on .ic { --pill: var(--md-secondary-container); }
+.tabs button.on[data-tab="photo"] .ic rect, .tabs button.on[data-tab="stickers"] .ic circle:first-child, .tabs button.on[data-tab="info"] .ic circle { fill: currentColor; }
+.tabs button.on[data-tab="photo"] .ic circle { fill: var(--pill); stroke: var(--pill); }
+.tabs button.on[data-tab="photo"] .ic path, .tabs button.on[data-tab="stickers"] .ic path, .tabs button.on[data-tab="info"] .ic path { stroke: var(--pill); }
+.tabs button.on[data-tab="montage"] .ic circle { fill: currentColor; }
+.tabs button.on[data-tab="text"] .ic path { stroke-width: 3; }
+.tab-ic .ic, .tab-ic .ic * { transition: fill 0.2s var(--md-eff), stroke 0.2s var(--md-eff), stroke-width 0.2s var(--md-eff); }
+
+/* Ripple (état pressé M3) */
+.ripple { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.ripple i { position: absolute; border-radius: 50%; background: currentColor; opacity: 0.12; transform: scale(0); animation: m3-ripple 0.45s var(--md-eff) forwards; }
+.ripple i.out { animation: m3-ripple-out 0.25s var(--md-eff) forwards; }
+@keyframes m3-ripple { to { transform: scale(1); } }
+@keyframes m3-ripple-out { from { transform: scale(1); opacity: 0.12; } to { transform: scale(1); opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) { #printBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
