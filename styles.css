@@ -721,7 +721,8 @@ button.round:disabled { background-color: transparent; color: color-mix(in srgb,
 .tabs button { flex-direction: column; gap: 4px; min-height: 0; padding: 8px 4px; border-radius: var(--md-shape-md); background-color: transparent; color: var(--md-on-surface-variant); font-size: 0.75rem; font-weight: 500; letter-spacing: 0.04em; box-shadow: none; }
 .tabs button:hover:not(:disabled) { background-color: transparent; box-shadow: none; color: var(--md-on-surface); }
 .tabs button.on { background-color: transparent; color: var(--md-on-surface); box-shadow: none; }
-.tabs button:has(> .tab-ic) { display: flex; }
+.tabs button:has(> .tab-ic) { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; }
+.tabs button > span { display: block; width: 100%; text-align: center; }
 .tab-ic { display: flex; align-items: center; justify-content: center; width: 56px; height: 32px; border-radius: var(--md-shape-full); transition: background-color 0.25s var(--md-ease); }
 .tab-ic .ic { width: 24px; height: 24px; }
 .tabs button:hover .tab-ic { background-color: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
