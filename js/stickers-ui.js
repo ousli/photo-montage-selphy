@@ -93,6 +93,7 @@ function refreshStickerUI() {
 
 // Retrait du fond : aperçu en direct (rose) quand le bloc est ouvert, puis Appliquer
 let cutRaf = 0;
+const STICKER_TOL_DEFAULT = 40;
 function cutUpdate() {
   const s = currentSticker();
   if (!s || s.kind !== "image" || !$("stickerCutBox").open) return;
@@ -106,8 +107,14 @@ function cutClose() {
   cutCancel();
 }
 $("stickerTol").oninput = () => {
+  const tol = $("stickerTol");
+  if (Math.abs(tol.value - STICKER_TOL_DEFAULT) <= 4) tol.value = STICKER_TOL_DEFAULT; // aimant sur la valeur par défaut
   cancelAnimationFrame(cutRaf);
   cutRaf = requestAnimationFrame(cutUpdate);
+};
+$("stickerTol").ondblclick = () => {
+  $("stickerTol").value = STICKER_TOL_DEFAULT;
+  cutUpdate();
 };
 $("stickerCutBox").addEventListener("toggle", () => ($("stickerCutBox").open ? cutUpdate() : cutClose()));
 $("stickerCutCancel").onclick = () => {
