@@ -207,7 +207,7 @@ function filterPixels(g, w, h, s) {
 }
 
 // dx, dy : origine de la case dans le contexte g (0 quand on dessine directement sur le canvas)
-function paintSlot(g, s, c, dx, dy) {
+function paintSlot(g, s, c, dx, dy, src = s.img) {
   const rad = (s.rot * Math.PI) / 180;
   const sin = Math.abs(Math.sin(rad));
   const cos = Math.abs(Math.cos(rad));
@@ -221,22 +221,32 @@ function paintSlot(g, s, c, dx, dy) {
   const cy = c.y - dy + c.h / 2 + s.oy * c.h;
   g.translate(cx, cy);
   g.rotate(rad);
-  g.drawImage(s.img, -dw / 2, -dh / 2, dw, dh);
+  g.drawImage(src, -dw / 2, -dh / 2, dw, dh);
+}
+
+// Retouche calculée pixel par pixel : faite une seule fois sur une copie de la photo (mise en cache par photo et réglages),
+// pas à chaque image, sinon chaque clic ou geste recalcule des millions de pixels
+const FILTER_SRC_MAX = 1800;
+const filteredSrc = new WeakMap();
+function filteredSource(s) {
+  const f = filterOf(s);
+  const key = `${f.look}|${f.bright}|${f.contrast}|${f.amt}`;
+  const hit = filteredSrc.get(s.img);
+  if (hit && hit.key === key) return hit.canvas;
+  const k = Math.min(1, FILTER_SRC_MAX / Math.max(s.img.width, s.img.height));
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.round(s.img.width * k));
+  cv.height = Math.max(1, Math.round(s.img.height * k));
+  const g = cv.getContext("2d", { willReadFrequently: true });
+  g.drawImage(s.img, 0, 0, cv.width, cv.height);
+  filterPixels(g, cv.width, cv.height, s);
+  filteredSrc.set(s.img, { key, canvas: cv });
+  return cv;
 }
 
 function drawSlot(s, c) {
   if (!hasFilter(s)) return paintSlot(ctx, s, c, 0, 0);
-  if (CTX_FILTER && !FILM_STOCKS[filterOf(s).look]) {
-    ctx.filter = filterCss(s);
-    return paintSlot(ctx, s, c, 0, 0);
-  }
-  const off = document.createElement("canvas");
-  off.width = Math.max(1, Math.ceil(c.w));
-  off.height = Math.max(1, Math.ceil(c.h));
-  const g = off.getContext("2d");
-  paintSlot(g, s, c, c.x, c.y);
-  filterPixels(g, off.width, off.height, s);
-  ctx.drawImage(off, c.x, c.y);
+  paintSlot(ctx, s, c, 0, 0, filteredSource(s));
 }
 
 // render() regroupe les demandes d'une même image (un seul dessin par frame) ; l'export dessine tout de suite
