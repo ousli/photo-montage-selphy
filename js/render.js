@@ -101,8 +101,8 @@ function drawOverlay(s, pr) {
   ctx.restore();
 }
 
-// Retouche d'une photo : { look: none | bw | sepia, bright, contrast } (100 = inchangé)
-const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia" };
+// Retouche d'une photo : { look: none | bw | sepia | vivid | film, bright, contrast } (100 = inchangé)
+const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", film: "Argentique" };
 const filterOf = (s) => ({ look: s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
 const hasFilter = (s) => {
   const f = filterOf(s);
@@ -110,8 +110,21 @@ const hasFilter = (s) => {
 };
 const filterCss = (s) => {
   const f = filterOf(s);
-  return `brightness(${f.bright}%) contrast(${f.contrast}%)${f.look === "bw" ? " grayscale(1)" : f.look === "sepia" ? " sepia(1)" : ""}`;
+  return `brightness(${f.bright}%) contrast(${f.contrast}%)${LOOK_CSS[f.look] || ""}`;
 };
+// Vif : couleurs plus denses pour l'impression thermique. Argentique : noirs relevés, teinte chaude, saturation douce
+const LOOK_CSS = {
+  bw: " grayscale(1)",
+  sepia: " sepia(1)",
+  vivid: " saturate(1.38) contrast(1.08)",
+  film: " contrast(0.92) brightness(1.05) sepia(0.18) saturate(0.88)",
+};
+const LUM = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const sepiaMix = (r, g, b, a) => [
+  r + a * (0.393 * r + 0.769 * g + 0.189 * b - r),
+  g + a * (0.349 * r + 0.686 * g + 0.168 * b - g),
+  b + a * (0.272 * r + 0.534 * g + 0.131 * b - b),
+];
 // Safari n'a pas toujours ctx.filter : repli par traitement des pixels
 const CTX_FILTER = typeof ctx.filter === "string";
 function filterPixels(g, w, h, s) {
@@ -127,12 +140,18 @@ function filterPixels(g, w, h, s) {
     gr = (gr - 127.5) * k + 127.5;
     bl = (bl - 127.5) * k + 127.5;
     if (f.look === "bw") {
-      r = gr = bl = 0.2126 * r + 0.7152 * gr + 0.0722 * bl;
+      r = gr = bl = LUM(r, gr, bl);
     } else if (f.look === "sepia") {
-      const nr = 0.393 * r + 0.769 * gr + 0.189 * bl;
-      const ng = 0.349 * r + 0.686 * gr + 0.168 * bl;
-      const nb = 0.272 * r + 0.534 * gr + 0.131 * bl;
-      r = nr; gr = ng; bl = nb;
+      [r, gr, bl] = sepiaMix(r, gr, bl, 1);
+    } else if (f.look === "vivid") {
+      const l = LUM(r, gr, bl);
+      r = l + 1.38 * (r - l); gr = l + 1.38 * (gr - l); bl = l + 1.38 * (bl - l);
+      r = (r - 127.5) * 1.08 + 127.5; gr = (gr - 127.5) * 1.08 + 127.5; bl = (bl - 127.5) * 1.08 + 127.5;
+    } else if (f.look === "film") {
+      r = ((r - 127.5) * 0.92 + 127.5) * 1.05; gr = ((gr - 127.5) * 0.92 + 127.5) * 1.05; bl = ((bl - 127.5) * 0.92 + 127.5) * 1.05;
+      [r, gr, bl] = sepiaMix(r, gr, bl, 0.18);
+      const l = LUM(r, gr, bl);
+      r = l + 0.88 * (r - l); gr = l + 0.88 * (gr - l); bl = l + 0.88 * (bl - l);
     }
     d[i] = clamp(r);
     d[i + 1] = clamp(gr);
