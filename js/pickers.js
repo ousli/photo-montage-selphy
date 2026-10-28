@@ -45,4 +45,4 @@ const setLayoutChips = chipGroup($("layoutChips"), LAYOUT_LABELS, (k) => {
   render();
 });
 
-const RANGE_UNITS = { zoom: " %", rot: "°", bright: " %", contrast: " %", gap: " px", outerGap: " px", radius: " px", frameW: " px" };
+const RANGE_UNITS = { zoom: " %", rot: "°", bright: " %", contrast: " %", filmAmt: " %", gap: " px", outerGap: " px", radius: " px", frameW: " px" };

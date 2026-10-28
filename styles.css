@@ -913,5 +913,9 @@ canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
   .topbar .top-actions button.round { width: 48px; }
   .topbar .top-actions button { min-width: 48px; }
   .topbar .top-actions #downloadBtn { padding-left: 16px; padding-right: 16px; }
-  .topbar .top-actions, .topbar .undo-bar { gap: 0; }
+  .topbar .top-actions, .topbar .undo-bar { gap: 4px; }
+  .topbar .top-actions #downloadBtn, .topbar .top-actions #projectsBtn { width: 48px; padding: 0; }
+  .topbar .top-actions #downloadBtn { margin-left: 4px; }
+  .topbar { gap: 8px; }
+  .topbar h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }

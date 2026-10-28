@@ -288,6 +288,7 @@ rotInput.addEventListener("input", () => {
 // Retouche de la photo sélectionnée
 const brightInput = $("bright");
 const contrastInput = $("contrast");
+const amtInput = $("filmAmt");
 // Filtres : vignettes d'aperçu calculées sur la photo sélectionnée (filtre CSS, identique au rendu final)
 const lookBox = $("lookChips");
 const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
@@ -306,6 +307,7 @@ const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
     const s = slots[selected];
     if (!s) return;
     s.look = k;
+    s.amt = 100;
     render();
   };
   lookBox.appendChild(b);
@@ -318,8 +320,8 @@ function drawLookThumbs(img) {
   for (const [k, , c] of lookTiles) {
     const g = c.getContext("2d");
     if (img) {
-      const k = Math.max(c.width / img.width, c.height / img.height);
-      g.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k);
+      const sc = Math.max(c.width / img.width, c.height / img.height);
+      g.drawImage(img, (c.width - img.width * sc) / 2, (c.height - img.height * sc) / 2, img.width * sc, img.height * sc);
       if (FILM_STOCKS[k]) filterPixels(g, c.width, c.height, { look: k });
     } else {
       const gr = g.createLinearGradient(0, 0, c.width, c.height);
@@ -351,19 +353,26 @@ contrastInput.addEventListener("input", () => {
   s.contrast = Number(contrastInput.value);
   render();
 });
+amtInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.amt = Number(amtInput.value);
+  render();
+});
 $("filterResetBtn").onclick = () => {
   const s = slots[selected];
   if (!s) return;
   s.look = "none";
   s.bright = 100;
   s.contrast = 100;
+  s.amt = 100;
   render();
 };
 $("filterAllBtn").onclick = () => {
   const src = slots[selected];
   if (!src) return;
   const f = filterOf(src);
-  slots.slice(0, count()).forEach((s) => s && Object.assign(s, { look: f.look, bright: f.bright, contrast: f.contrast }));
+  slots.slice(0, count()).forEach((s) => s && Object.assign(s, { look: f.look, bright: f.bright, contrast: f.contrast, amt: f.amt }));
   render();
   setMessage("Retouche appliquée à toutes les photos.");
 };

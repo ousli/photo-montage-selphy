@@ -112,7 +112,7 @@ function drawOverlay(s, pr) {
   const x = right ? sx + sw - pad : sx + pad;
   const y0 = top ? sy + pad + lh / 2 : sy + sh - pad - lh / 2 - (lines.length - 1) * lh;
   lines.forEach((t, i) => {
-    if (t === s.exif.stamp) return drawStamp(t, x, y0 + i * lh, st.size, sw - pad * 2);
+    if (t === stampOf(s.exif)) return drawStamp(t, x, y0 + i * lh, st.size, sw - pad * 2);
     drawText(t, x, y0 + i * lh, st, sw - pad * 2);
   });
   ctx.restore();
@@ -121,10 +121,10 @@ function drawOverlay(s, pr) {
 // Retouche d'une photo : { look: none | bw | sepia | vivid | gold | ektar | k2383, bright, contrast } (100 = inchangé)
 const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", gold: "Gold 200", ektar: "Ektar 100", k2383: "Kodak 2383" };
 const FILM_NOTES = { gold: "Gold 200 : chaud, jaune doré, grain visible", ektar: "Ektar 100 : couleurs très saturées, contrasté", k2383: "Kodak 2383 : look cinéma, contrasté, ombres teintées de bleu-vert" };
-const filterOf = (s) => ({ look: ({ film: "gold", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
+const filterOf = (s) => ({ look: ({ film: "gold", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100, amt: s.amt ?? 100 });
 const hasFilter = (s) => {
   const f = filterOf(s);
-  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
+  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100 || f.amt !== 100;
 };
 const filterCss = (s) => {
   const f = filterOf(s);
@@ -191,10 +191,13 @@ function filterPixels(g, w, h, s) {
     } else if (FILM_STOCKS[f.look]) {
       const st = FILM_STOCKS[f.look];
       const lut = filmLuts(f.look);
+      const r0 = r, g0 = gr, b0 = bl;
       r = lut[0][clamp(r) | 0]; gr = lut[1][clamp(gr) | 0]; bl = lut[2][clamp(bl) | 0];
       const l = LUM(r, gr, bl);
       const n = filmNoise((i >> 2) % w, ((i >> 2) / w) | 0) * st.grain * (1 - Math.abs(l / 127.5 - 1) * 0.6);
       r = l + st.sat * (r - l) + n; gr = l + st.sat * (gr - l) + n; bl = l + st.sat * (bl - l) + n;
+      const a = f.amt / 100; // intensité : mélange avec la photo d'origine
+      r = r0 + (r - r0) * a; gr = g0 + (gr - g0) * a; bl = b0 + (bl - b0) * a;
     }
     d[i] = clamp(r);
     d[i + 1] = clamp(gr);
