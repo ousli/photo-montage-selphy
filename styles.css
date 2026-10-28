@@ -822,4 +822,7 @@ label:has(> input[type="range"]) > b { color: var(--md-on-surface-variant); }
   .preview { background: repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 50% / 24px 24px; }
 }
 @media (max-width: 860px) { button, button.small, .seg button, .look-tile { min-height: 48px; } button.round { width: 48px; height: 48px; } .top-actions button:not(.round) { min-height: 44px; padding: 8px 12px; } .top-actions button.round { width: 40px; height: 40px; min-height: 40px; padding: 0; flex: none; } .top-actions, .undo-bar { gap: 0; } .undo-bar { margin-right: 0; } .font-chip { min-height: 48px; } }
+button.swatch { min-height: 0; padding: 0; width: 28px; height: 28px; background-image: none; }
+.swatch.on { box-shadow: 0 0 0 2px var(--md-primary); }
+@media (max-width: 860px) { button.swatch { min-height: 0; width: 38px; height: 38px; } }
 @media (prefers-reduced-motion: reduce) { .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
