@@ -35,6 +35,20 @@
     el.title = next.length && title ? `${title} · double-clic : valeur par défaut` : "Double-clic : valeur par défaut";
     drawTicks(el);
   };
+  // peinture M3 : fraction de remplissage (--pf) et repères (--tf0..2), recalculés quand la valeur change
+  const all = [...document.querySelectorAll('input[type="range"]')];
+  function paint(el) {
+    const lo = Number(el.min) || 0;
+    const r = (Number(el.max) || 100) - lo || 1;
+    const f = (v) => Math.min(1, Math.max(0, (v - lo) / r));
+    const marks = def.has(el) ? [def.get(el), ...(extra.get(el) || [])] : [];
+    el.style.setProperty("--pf", f(el.value));
+    for (let i = 0; i < 3; i++) el.style.setProperty("--tf" + i, i < marks.length ? f(marks[i]) : -1);
+  }
+  const paintAll = () => !document.hidden && all.forEach(paint);
+  document.addEventListener("input", (e) => e.target.matches && e.target.matches('input[type="range"]') && paint(e.target));
+  setInterval(paintAll, 150);
+  paintAll();
   // en capture, pour que l'aimant agisse avant les autres écouteurs
   document.addEventListener(
     "input",

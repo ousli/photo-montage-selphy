@@ -23,7 +23,7 @@
     else delete root.dataset.theme;
     const dark = effective() === "dark";
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = dark ? "#1b1f29" : "#3366ff";
+    if (meta) meta.content = dark ? "#141218" : "#fef7ff";
     const btn = document.getElementById("themeBtn");
     if (btn) {
       btn.innerHTML = dark ? SUN : MOON;
