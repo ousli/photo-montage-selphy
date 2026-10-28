@@ -19,8 +19,7 @@
 
   function apply() {
     const s = saved();
-    if (s) root.dataset.theme = s;
-    else delete root.dataset.theme;
+    root.dataset.theme = effective();
     const dark = effective() === "dark";
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = dark ? "#1b1f29" : "#3366ff";
