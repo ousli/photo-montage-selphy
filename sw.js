@@ -1,5 +1,5 @@
 // Incrémente la version pour forcer la mise à jour du cache
-const CACHE = "montage-photo-v34";
+const CACHE = "montage-photo-v45";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,6 +8,8 @@ const ASSETS = [
   "./js/exif.js",
   "./js/layout.js",
   "./js/render.js",
+  "./js/stickers.js",
+  "./js/stickers-ui.js",
   "./js/printers-data.js",
   "./js/printers.js",
   "./js/selection.js",
