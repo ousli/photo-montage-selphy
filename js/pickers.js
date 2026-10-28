@@ -2,7 +2,7 @@
 
 // Sélecteur de couleur simple (pastilles + couleur personnalisée), utilisé pour le fond et le cadre
 const BG_PALETTE = ["#ffffff", "#000000", "#f3ead9", "#1f2430", "#fde68a", "#fbcfe8", "#bfdbfe", "#bbf7d0"];
-function createColorPicker(box, hexEl, initial) {
+function createColorPicker(box, hexEl, initial, onChange) {
   box.classList.add("color-row");
   box.innerHTML = '<div class="swatches"></div><input class="swatch custom" type="color" title="Couleur personnalisée" aria-label="Couleur personnalisée" />';
   const custom = box.querySelector("input");
@@ -30,6 +30,7 @@ function createColorPicker(box, hexEl, initial) {
   };
   const changed = () => {
     refresh();
+    onChange && onChange(custom.value);
     render();
   };
   custom.addEventListener("input", changed);

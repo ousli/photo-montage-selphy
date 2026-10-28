@@ -12,9 +12,9 @@
     if (c.exif && c.exif.placeState === "loading") delete c.exif.placeState;
     return { ...c, img, blob };
   }
-  const getState = () => ({ settings: getSettings(), slots: slots.map(snapSlot), selected });
+  const getState = () => ({ settings: getSettings(), slots: slots.map(snapSlot), selected, stickers: stickers.map(snapSticker) });
   // signature des seules modifications annulables (sans images, sans données EXIF dérivées)
-  const sig = (st) => JSON.stringify({ s: st.settings, l: st.slots }, (k, v) => (k === "img" || k === "blob" || k === "exif" ? undefined : v));
+  const sig = (st) => JSON.stringify({ s: st.settings, l: st.slots, k: st.stickers }, (k, v) => (k === "img" || k === "blob" || k === "exif" ? undefined : v));
 
   function applyState(st, resetSlots = true) {
     applying = true;
@@ -23,6 +23,8 @@
       if (resetSlots) slots.fill(null);
       st.slots.forEach((x, i) => (slots[i] = snapSlot(x)));
       selected = Math.min(st.selected || 0, count() - 1);
+      stickers = (st.stickers || []).map(snapSticker);
+      if (!getSticker(selectedSticker)) selectedSticker = null;
       render();
     } finally {
       applying = false;
@@ -109,15 +111,24 @@
   // ---- sauvegarde automatique ----
   const dbP = new Promise((res, rej) => {
     if (!window.indexedDB) return rej(new Error("no idb"));
-    const r = indexedDB.open("montage-photo", 1);
-    r.onupgradeneeded = () => {
-      r.result.createObjectStore("kv");
-      r.result.createObjectStore("photos");
+    // ouverture sans version imposée : une base déjà passée en version supérieure (autre branche) reste utilisable
+    const need = (db) => ["kv", "photos", "projects"].filter((n) => !db.objectStoreNames.contains(n));
+    const mk = (db) => need(db).forEach((n) => db.createObjectStore(n));
+    const open = (ver) => {
+      const r = ver ? indexedDB.open("montage-photo", ver) : indexedDB.open("montage-photo");
+      r.onupgradeneeded = () => mk(r.result);
+      r.onsuccess = () => {
+        const db = r.result;
+        if (!need(db).length) return res(db);
+        const v = db.version + 1;
+        db.close();
+        open(v);
+      };
+      r.onerror = () => rej(r.error);
     };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    open();
   });
-  dbP.catch(() => {});
+  dbP.catch(saveFailed);
   const idb = (store, mode, fn) =>
     dbP.then(
       (db) =>
@@ -129,18 +140,34 @@
         })
     );
 
+  let warned = false;
+  function saveFailed(e) {
+    console.error("Sauvegarde automatique impossible", e);
+    if (warned) return;
+    warned = true;
+    setMessage(`Sauvegarde automatique impossible (${(e && (e.name || e.message)) || "erreur inconnue"}) : télécharge ton montage pour ne rien perdre.`, true);
+  }
+
   const stored = new Set();
   let saveTimer = null;
   let chain = Promise.resolve();
   function scheduleSave() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => (chain = chain.then(save).catch(() => {})), 1000);
+    saveTimer = setTimeout(() => (chain = chain.then(save).catch(saveFailed)), 1000);
   }
   async function save() {
     const st = getState();
     const used = new Set();
     for (const x of st.slots) {
       if (!x || !x.uid || !x.blob) continue;
+      used.add(x.uid);
+      if (!stored.has(x.uid)) {
+        await idb("photos", "readwrite", (o) => o.put(x.blob, x.uid));
+        stored.add(x.uid);
+      }
+    }
+    for (const x of st.stickers) {
+      if (!x.uid || !x.blob) continue;
       used.add(x.uid);
       if (!stored.has(x.uid)) {
         await idb("photos", "readwrite", (o) => o.put(x.blob, x.uid));
@@ -158,6 +185,10 @@
       v: 1,
       settings: st.settings,
       selected: st.selected,
+      stickers: st.stickers.map((x) => {
+        const { img, blob, ...rest } = x;
+        return rest;
+      }),
       slots: st.slots.map((x) => {
         if (!x || !x.uid || !x.blob) return null;
         const { img, blob, ...rest } = x;
@@ -169,7 +200,7 @@
   const saveNow = () => {
     flush();
     clearTimeout(saveTimer);
-    chain = chain.then(save).catch(() => {});
+    chain = chain.then(save).catch(saveFailed);
   };
   document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && saveNow());
   window.addEventListener("pagehide", saveNow);
@@ -193,19 +224,49 @@
         return { ...x, img, blob };
       })
     );
+    const stk = (
+      await Promise.all(
+        (doc.stickers || []).map(async (x) => {
+          if (x.kind !== "image") return x;
+          const blob = await idb("photos", "readonly", (o) => o.get(x.uid));
+          if (!blob) return null;
+          const img = await new Promise((res) => {
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = () => res(null);
+            i.src = URL.createObjectURL(blob);
+          });
+          if (!img) return null;
+          stored.add(x.uid);
+          return { ...x, img, blob };
+        })
+      )
+    ).filter(Boolean);
     if (idx > 0) return false; // l'utilisateur a déjà commencé un nouveau montage
     const hasPhotos = loaded.some(Boolean);
     const settingsChanged = sig({ settings: doc.settings, slots: [] }) !== sig({ settings: getSettings(), slots: [] });
-    if (!hasPhotos && !settingsChanged) return false;
-    applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected }, true);
-    return hasPhotos;
+    if (!hasPhotos && !settingsChanged && !stk.length) return false;
+    applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected, stickers: stk }, true);
+    return hasPhotos || stk.length > 0;
   }
+
+  // ouvre un état complet (projet nommé) : repart d'un historique neuf
+  function loadState(st) {
+    flush();
+    applyState(st, true);
+    hist = [getState()];
+    idx = 0;
+    updateBtns();
+    scheduleSave();
+  }
+  const doc = { getState, loadState, idb, ready: null };
+  window.MontageDoc = doc;
 
   // état de départ : on ne le restaure qu'une fois, avant toute action de l'utilisateur
   hist = [getState()];
   idx = 0;
   updateBtns();
-  restore()
+  doc.ready = restore()
     .then((did) => {
       hist = [getState()];
       idx = 0;

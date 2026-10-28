@@ -14,6 +14,7 @@ function cellAt(ev) {
 }
 
 let drag = null;
+let stickerDrag = null; // { part, id, ... } geste en cours sur un sticker
 let swap = null; // { x, y } position du pointeur en coordonnées canvas pendant un échange
 const LONG_PRESS_MS = 400;
 const pointers = new Map();
@@ -22,16 +23,51 @@ let pinch = null;
 canvas.addEventListener("pointerdown", (ev) => {
   pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
   canvas.setPointerCapture(ev.pointerId);
+  if (pointers.size === 1) {
+    // les stickers sont au-dessus de tout : ils ont la priorité sur la photo en dessous
+    const pt = canvasPoint(ev);
+    const hit = stickerHit(pt.x, pt.y, ev.pointerType !== "mouse");
+    if (hit && hit.part === "del") {
+      hideMenu();
+      removeSticker(hit.s.id);
+      return;
+    }
+    if (hit) {
+      hideMenu();
+      selectSticker(hit.s.id);
+      const s = hit.s;
+      const cx = s.x * canvas.width;
+      const cy = s.y * canvas.height;
+      stickerDrag = {
+        part: hit.part,
+        id: s.id,
+        dx: pt.x - cx,
+        dy: pt.y - cy,
+        size0: s.size,
+        dist0: Math.hypot(pt.x - cx, pt.y - cy) || 1,
+        ang0: Math.atan2(pt.y - cy, pt.x - cx),
+        rot0: s.rot,
+      };
+      canvas.style.cursor = "grabbing";
+      render();
+      return;
+    }
+    if (selectedSticker) {
+      selectedSticker = null;
+      render();
+    }
+  }
   if (pointers.size === 2) {
     // deuxième doigt : pincement pour zoomer la photo de la case sélectionnée
     const [a, b] = [...pointers.values()];
     pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
     drag = null;
+    stickerDrag = null;
     return;
   }
   const i = cellAt(ev);
   if (i < 0) return;
-  selected = i;
+  selectPhoto(i);
   hideMenu();
   drag = { x: ev.clientX, y: ev.clientY, sx: ev.clientX, sy: ev.clientY, moved: false, swap: false };
   canvas.style.cursor = "grabbing";
@@ -52,6 +88,9 @@ canvas.addEventListener("pointerdown", (ev) => {
 canvas.addEventListener("pointermove", (ev) => {
   if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
   const s = slots[selected];
+  if (stickerDrag) return moveStickerGesture(ev);
+  if (pinch && pointers.size >= 2 && currentSticker()) return pinchSticker(currentSticker());
+  if (!pointers.size && ev.pointerType === "mouse") return hoverCursor(ev);
   if (pinch && pointers.size >= 2) {
     if (!s) return;
     const [a, b] = [...pointers.values()];
@@ -98,6 +137,49 @@ canvas.addEventListener("pointermove", (ev) => {
   drag.y = ev.clientY;
   render();
 });
+function moveStickerGesture(ev) {
+  const st = currentSticker();
+  if (!st || !stickerDrag) return;
+  const pt = canvasPoint(ev);
+  const cx = st.x * canvas.width;
+  const cy = st.y * canvas.height;
+  if (stickerDrag.part === "scale") {
+    st.size = clampSize((stickerDrag.size0 * (Math.hypot(pt.x - cx, pt.y - cy) || 1)) / stickerDrag.dist0);
+    snapStickerSize(st);
+  } else if (stickerDrag.part === "rotate") {
+    const da = ((Math.atan2(pt.y - cy, pt.x - cx) - stickerDrag.ang0) * 180) / Math.PI;
+    st.rot = Math.round(wrapAngle(stickerDrag.rot0 + da));
+  } else {
+    st.x = Math.max(0, Math.min(1, (pt.x - stickerDrag.dx) / canvas.width));
+    st.y = Math.max(0, Math.min(1, (pt.y - stickerDrag.dy) / canvas.height));
+    snapStickerMove(st);
+  }
+  render();
+}
+
+// deux doigts avec un sticker sélectionné : taille, rotation et déplacement du sticker
+function pinchSticker(st) {
+  const [a, b] = [...pointers.values()];
+  const dist = Math.hypot(a.x - b.x, a.y - b.y);
+  const ang = Math.atan2(b.y - a.y, b.x - a.x);
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  if (pinch.dist > 0) st.size = clampSize(st.size * (dist / pinch.dist));
+  st.rot = Math.round(wrapAngle(st.rot + ((ang - pinch.ang) * 180) / Math.PI));
+  const r = canvas.getBoundingClientRect();
+  st.x = Math.max(0, Math.min(1, st.x + (mx - pinch.mx) / r.width));
+  st.y = Math.max(0, Math.min(1, st.y + (my - pinch.my) / r.height));
+  Object.assign(pinch, { dist, ang, mx, my });
+  render();
+}
+
+// souris : curseur adapté au survol d'un sticker ou d'une poignée
+function hoverCursor(ev) {
+  const pt = canvasPoint(ev);
+  const hit = stickerHit(pt.x, pt.y, false);
+  canvas.style.cursor = !hit ? "grab" : hit.part === "scale" ? "nwse-resize" : hit.part === "rotate" ? "crosshair" : hit.part === "del" ? "pointer" : "move";
+}
+
 const endDrag = () => {
   if (drag) clearTimeout(drag.timer);
   const wasSwapping = !!swap;
@@ -108,6 +190,12 @@ const endDrag = () => {
 };
 canvas.addEventListener("pointerup", (ev) => {
   pointers.delete(ev.pointerId);
+  if (stickerDrag) {
+    stickerDrag = null;
+    canvas.style.cursor = "grab";
+    render();
+    return;
+  }
   if (pinch) {
     if (pointers.size < 2) pinch = null;
     endDrag();
@@ -138,16 +226,26 @@ document.addEventListener("selectionchange", () => {
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
   if (pointers.size < 2) pinch = null;
+  stickerDrag = null;
   endDrag();
 });
 
 canvas.addEventListener(
   "wheel",
   (ev) => {
+    const pt = canvasPoint(ev);
+    const hit = stickerHit(pt.x, pt.y, false);
+    if (hit) {
+      ev.preventDefault();
+      selectSticker(hit.s.id);
+      hit.s.size = clampSize(hit.s.size * (ev.deltaY < 0 ? 1.06 : 1 / 1.06));
+      render();
+      return;
+    }
     const i = cellAt(ev);
     if (i < 0 || !slots[i]) return;
     ev.preventDefault();
-    selected = i;
+    selectPhoto(i);
     const s = slots[i];
     s.zoom = Math.max(0.2, Math.min(4, s.zoom * (ev.deltaY < 0 ? 1.06 : 1 / 1.06)));
     render();
@@ -157,10 +255,13 @@ canvas.addEventListener(
 canvas.addEventListener("dragover", (ev) => ev.preventDefault());
 canvas.addEventListener("drop", (ev) => {
   ev.preventDefault();
+  if (currentTab() === "stickers") {
+    if (addStickerFromFiles(ev.dataTransfer.files)) return;
+  }
   const i = cellAt(ev);
   const file = ev.dataTransfer.files[0];
   if (i >= 0 && file) {
-    selected = i;
+    selectPhoto(i);
     loadFile(file, i);
   }
 });
@@ -187,12 +288,55 @@ rotInput.addEventListener("input", () => {
 // Retouche de la photo sélectionnée
 const brightInput = $("bright");
 const contrastInput = $("contrast");
-const setLookChips = chipGroup($("lookChips"), FILTER_LABELS, (k) => {
-  const s = slots[selected];
-  if (!s) return;
-  s.look = k;
-  render();
+// Filtres : vignettes d'aperçu calculées sur la photo sélectionnée (filtre CSS, identique au rendu final)
+const lookBox = $("lookChips");
+const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "look-tile";
+  const c = document.createElement("canvas");
+  c.width = 96;
+  c.height = 64;
+  c.style.filter = filterCss({ look: k });
+  const span = document.createElement("span");
+  span.textContent = label;
+  b.append(c, span);
+  b.onclick = () => {
+    const s = slots[selected];
+    if (!s) return;
+    s.look = k;
+    render();
+  };
+  lookBox.appendChild(b);
+  return [k, b, c];
 });
+let lookThumbSrc = null;
+function drawLookThumbs(img) {
+  if (img === lookThumbSrc) return;
+  lookThumbSrc = img;
+  for (const [, , c] of lookTiles) {
+    const g = c.getContext("2d");
+    if (img) {
+      const k = Math.max(c.width / img.width, c.height / img.height);
+      g.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k);
+    } else {
+      const gr = g.createLinearGradient(0, 0, c.width, c.height);
+      gr.addColorStop(0, "#e9a14a");
+      gr.addColorStop(0.5, "#5aa0d8");
+      gr.addColorStop(1, "#4c9a5a");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, c.width, c.height);
+    }
+  }
+}
+const setLookChips = (isOn, disabled) => {
+  const s = slots[selected];
+  drawLookThumbs(s && s.img);
+  lookTiles.forEach(([k, b]) => {
+    b.classList.toggle("on", isOn(k));
+    b.disabled = disabled;
+  });
+};
 brightInput.addEventListener("input", () => {
   const s = slots[selected];
   if (!s) return;
@@ -274,7 +418,7 @@ multiInput.addEventListener("change", () => {
   }
   // s'il n'y a plus de case vide, on remplace depuis la première
   const targets = free.length ? free : Array.from({ length: n }, (_, k) => k);
-  selected = targets[0];
+  selectPhoto(targets[0]);
   Promise.all(files.slice(0, targets.length).map((f, k) => loadFile(f, targets[k]))).then(() => {
     const extra = files.length - targets.length;
     setMessage(extra > 0 ? `${targets.length} photos importées, ${extra} ignorée(s) : pas assez de cases.` : `${files.length} photo(s) importée(s).`, extra > 0);

@@ -36,7 +36,7 @@ document.addEventListener("pointerdown", (ev) => {
 });
 
 function pickFor(index) {
-  selected = index;
+  selectPhoto(index);
   fileInput.value = "";
   fileInput.click();
 }
