@@ -69,6 +69,7 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
 - **Annuler / rétablir** : boutons flèches courbes en haut (ou Ctrl/Cmd+Z, Ctrl+Maj+Z).
 - **Sauvegarde automatique** : le montage en cours (photos et réglages) est restauré à la réouverture.
 - **Zone imprimable** : repères pointillés (≈ 3 mm, estimation) selon le papier de l'imprimante choisie. Ces valeurs sont des estimations à vérifier par un test d'impression.
+- **Étalonnage** : dans l'onglet Montage, « Étalonner la marge » imprime une page de test à cadres numérotés (0 à 8 mm) avec tes réglages habituels ; repère le cadre le plus à l'extérieur entièrement visible et saisis son numéro. La marge est mémorisée par imprimante et par papier (dans le navigateur) et remplace l'estimation ; « Valeur par défaut » l'annule.
 - **Mise en page** : grille, « une grande photo » ou mosaïque (3 à 6 photos) ; marge extérieure séparée (optionnelle) ; fond, coins arrondis et cadre dans « Apparence ».
 - **Texte** : légende par photo, titre en haut ou en bas, date du jour automatique.
 - **Photos** : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF (60 Mo max) ; les grandes photos sont réduites à 3600 px.
