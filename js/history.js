@@ -259,13 +259,14 @@
     updateBtns();
     scheduleSave();
   }
-  window.MontageDoc = { getState, loadState, idb };
+  const doc = { getState, loadState, idb, ready: null };
+  window.MontageDoc = doc;
 
   // état de départ : on ne le restaure qu'une fois, avant toute action de l'utilisateur
   hist = [getState()];
   idx = 0;
   updateBtns();
-  restore()
+  doc.ready = restore()
     .then((did) => {
       hist = [getState()];
       idx = 0;

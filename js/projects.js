@@ -1,7 +1,13 @@
 // Projets nommés : plusieurs montages enregistrés sur l'appareil (IndexedDB, magasin « projects »).
 // Chargé après history.js, qui expose window.MontageDoc.
 (function () {
-  const { getState, loadState, idb } = window.MontageDoc;
+  const { getState, loadState, idb, ready } = window.MontageDoc;
+  const CKEY = "montage-project";
+  const remember = (id) => {
+    try {
+      id ? localStorage.setItem(CKEY, id) : localStorage.removeItem(CKEY);
+    } catch (e) {}
+  };
   const panel = $("projectsPanel");
   const list = $("projectsList");
   const nameInput = $("projectName");
@@ -86,6 +92,7 @@
     const rec = { id, name, updated: Date.now(), thumb: thumbOf(), ...plainState() };
     await store("readwrite", (o) => o.put(rec, id));
     currentId = id;
+    remember(id);
     nameInput.dataset.saved = name;
     savedSig = sigOf();
     return rec;
@@ -119,6 +126,7 @@
     );
     loadState({ settings: { ...DEFAULT_SETTINGS, ...rec.settings }, slots, selected: rec.selected, stickers: stk.filter(Boolean) });
     currentId = rec.id;
+    remember(rec.id);
     nameInput.value = nameInput.dataset.saved = rec.name;
     savedSig = sigOf();
     closePanel();
@@ -197,7 +205,10 @@
         mk("Supprimer", async () => {
           if (!confirm(`Supprimer le projet « ${rec.name} » ?`)) return;
           await store("readwrite", (o) => o.delete(rec.id));
-          if (rec.id === currentId) currentId = null;
+          if (rec.id === currentId) {
+            currentId = null;
+            remember(null);
+          }
           refresh();
         }, "ghost")
       );
@@ -245,9 +256,29 @@
     if (!confirmLeave()) return;
     loadState({ settings: { ...DEFAULT_SETTINGS }, slots: [], selected: 0 });
     currentId = null;
+    remember(null);
     savedSig = null;
     nameInput.value = nameInput.dataset.saved = "";
     closePanel();
     setMessage("Nouveau montage.");
   };
+
+  // après un rechargement, le montage restauré reste lié à son projet enregistré
+  (ready || Promise.resolve()).then(async () => {
+    let id = null;
+    try {
+      id = localStorage.getItem(CKEY);
+    } catch (e) {}
+    if (!id) return;
+    const rec = await store("readonly", (o) => o.get(id));
+    if (!rec) return remember(null);
+    const saved = JSON.stringify(
+      { settings: { ...DEFAULT_SETTINGS, ...rec.settings }, selected: rec.selected, slots: rec.slots, stickers: rec.stickers || [] },
+      (k, v) => (k === "img" || k === "blob" || k === "exif" || k === "selected" ? undefined : v)
+    );
+    currentId = id;
+    nameInput.value = nameInput.dataset.saved = rec.name;
+    savedSig = saved;
+    updateStatus();
+  });
 })();
