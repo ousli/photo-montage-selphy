@@ -121,7 +121,12 @@ const STICKER_TOL_DEFAULT = 40;
 function cutUpdate() {
   const s = currentSticker();
   if (!s || s.kind !== "image" || !$("stickerCutBox").open) return;
-  if (!cutPreview || cutPreview.id !== s.id) if (!cutStart(s)) return setMessage("Impossible d'analyser les bords de cette image.", true);
+  if (!cutPreview || cutPreview.id !== s.id)
+    if (!cutStart(s)) {
+      // bords déjà transparents : on referme tout de suite le bloc au lieu de le laisser ouvert sans aperçu
+      $("stickerCutBox").open = false;
+      return setMessage("Ce sticker a déjà un fond transparent : rien à retirer.", true);
+    }
   const r = cutRender(Number($("stickerTol").value), false);
   $("stickerCutInfo").textContent = `${r.pct} % de l'image sera effacé`;
   render();
