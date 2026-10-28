@@ -21,6 +21,8 @@ Ouvre `index.html` dans ton navigateur.
 - **Préréglages :** un préréglage fourni par format de l'imprimante choisie ; tu peux enregistrer les tiens avec un nom (stockés dans le navigateur).
 - **Annuler / rétablir et sauvegarde automatique :** voir « Montage avancé » ci-dessous.
 - **Stickers :** onglet « Stickers » : emoji ou image importée (PNG/WebP), posés par-dessus tout le montage. Glisse pour déplacer, coin = taille, rond = rotation, pincement à deux doigts, molette ; Dupliquer, Devant/Derrière, Suppr. Inclus dans l'export, annulables et sauvegardés. Les images se collent (Cmd/Ctrl+V ou bouton « Coller », ex. « Copier l'image » depuis Pinterest) ou se glissent sur le montage ; « Retirer le fond » efface un fond uni, avec aperçu en direct (fond en rose) avant d'appliquer ; annulable. Chaque sticker (emoji, PNG, détouré) peut avoir un contour de couleur et d'épaisseur réglables, qui suit sa silhouette (effet sticker découpé).
+- **Stickers (suite) :** contour optionnel (interrupteur, épaisseur, couleur) sur emoji et images détourées ; « Retirer le fond » pour une image à fond uni (aperçu puis application).
+- **Projets :** bouton « Projets » : enregistrer plusieurs montages nommés, les rouvrir, les renommer ou les supprimer. Le projet ouvert est retrouvé après un rechargement et un avertissement évite de perdre des modifications non enregistrées.
 - **Thème :** clair ou sombre, qui suit le réglage de l'appareil ; le bouton soleil/lune de l'en-tête force l'un ou l'autre (choix mémorisé dans le navigateur). Le bouton palette de l'en-tête permet de choisir la couleur d'accent (8 teintes, palettes officielles Material 3 calculées avec [material-color-utilities](https://github.com/material-foundation/material-color-utilities), Apache-2.0, copié dans `vendor/`).
 - **Design :** Material Design 3 (tokens `--md-*`, formes, états, ressorts et transitions M3, snackbar, ripple). Les animations sont désactivées avec « réduire les animations ».
 - **Sortie :** Télécharger (JPG) ou Imprimer. Sur mobile, un seul bouton « Télécharger » ouvre la feuille de partage (Photos, Fichiers, Imprimer, app Canon…) ; sur ordinateur, il télécharge le fichier et « Imprimer » ouvre la boîte d'impression.
@@ -53,7 +55,8 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
   - `printers-data`, `printers` : catalogue d'imprimantes, sélecteur, papier et zone imprimable
   - `selection`, `import`, `cell-menu`, `interactions` : sélection des cases, import des photos, menu, gestes canvas
   - `editors`, `pickers`, `montage-ui`, `settings`, `controls`, `segmented` : réglages et interface
-  - `stickers` / `stickers-ui` : stickers (modèle, rendu, hit-test) et leur onglet
+  - `stickers` / `stickers-ui` : stickers (modèle, rendu, contour, retrait du fond, hit-test) et leur onglet
+  - `projects` : projets nommés (IndexedDB), panneau Projets
   - `theme` : thème clair/sombre et couleur d'accent (variables CSS dans `styles.css`, chargé dans `<head>` après `vendor/m3-palette.js`)
   - `ripple` : onde de l'état pressé M3
   - `export`, `presets`, `pwa`, `tabs`, `main` : impression/export, préréglages, hors ligne, onglets, premier rendu
