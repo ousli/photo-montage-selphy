@@ -21,7 +21,16 @@ function setMessage(text, isError = false) {
   messageEl.textContent = text;
   messageEl.classList.toggle("error", isError);
   clearTimeout(setMessage.t);
-  if (text) setMessage.t = setTimeout(() => (messageEl.textContent = ""), isError ? 8000 : 5000);
+  clearTimeout(setMessage.o);
+  messageEl.classList.remove("leaving");
+  if (text)
+    setMessage.t = setTimeout(() => {
+      messageEl.classList.add("leaving");
+      setMessage.o = setTimeout(() => {
+        messageEl.textContent = "";
+        messageEl.classList.remove("leaving");
+      }, 200);
+    }, isError ? 8000 : 5000);
 }
 
 function canvasSize() {

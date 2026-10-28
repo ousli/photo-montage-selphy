@@ -33,6 +33,7 @@ function addSticker(data) {
   const s = { id: stickerId(), x: 0.5, y: 0.5, size: 0.2, rot: 0, ...data };
   stickers.push(s);
   selectSticker(s.id);
+  popSticker(s.id);
   render();
   return s;
 }
@@ -76,11 +77,28 @@ function stickerHalf(s) {
 }
 
 let stickerExport = false;
+// petit rebond à l'ajout (échelle transitoire, hors historique et hors export)
+const stickerPop = new Map();
+function popSticker(id) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const t0 = performance.now();
+  const step = (t) => {
+    const x = Math.min(1, (t - t0) / 380);
+    if (x >= 1) stickerPop.delete(id);
+    else stickerPop.set(id, 1 - 0.4 * Math.cos(x * Math.PI * 2.2) * Math.exp(-5 * x));
+    render();
+    if (x < 1) requestAnimationFrame(step);
+  };
+  stickerPop.set(id, 0.6);
+  requestAnimationFrame(step);
+}
+
 function drawSticker(s) {
   const [hw, hh] = stickerHalf(s);
   ctx.save();
   ctx.translate(s.x * canvas.width, s.y * canvas.height);
   ctx.rotate((s.rot * Math.PI) / 180);
+  if (!stickerExport && stickerPop.has(s.id)) ctx.scale(stickerPop.get(s.id), stickerPop.get(s.id));
   if (s.kind === "image") {
     const im = cutPreview && cutPreview.id === s.id && !stickerExport ? cutPreview.canvas : s.img;
     if (im) {

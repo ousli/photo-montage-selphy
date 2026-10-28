@@ -130,13 +130,19 @@
       ).join("");
     };
     const close = () => {
-      menu.hidden = true;
       btn.setAttribute("aria-expanded", "false");
+      if (menu.hidden || menu.classList.contains("closing")) return;
+      menu.classList.add("closing");
+      setTimeout(() => {
+        menu.hidden = true;
+        menu.classList.remove("closing");
+      }, 150);
     };
     btn.onclick = (e) => {
       e.stopPropagation();
       if (!menu.hidden) return close();
       render();
+      menu.classList.remove("closing");
       menu.hidden = false;
       btn.setAttribute("aria-expanded", "true");
       const r = btn.getBoundingClientRect();

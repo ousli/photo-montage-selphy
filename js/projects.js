@@ -218,13 +218,20 @@
   }
 
   function openPanel() {
+    panel.classList.remove("closing");
     panel.hidden = false;
     if (!nameInput.value && currentId) nameInput.value = currentName();
     updateStatus();
     refresh();
   }
   function closePanel() {
-    panel.hidden = true;
+    if (panel.hidden || panel.classList.contains("closing")) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return void (panel.hidden = true);
+    panel.classList.add("closing");
+    setTimeout(() => {
+      panel.hidden = true;
+      panel.classList.remove("closing");
+    }, 200);
   }
 
   $("projectsBtn").onclick = openPanel;

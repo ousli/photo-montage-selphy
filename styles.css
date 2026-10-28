@@ -451,7 +451,7 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
   #resetAllBtn { display: none; }
   .layout { display: block; padding: 0; }
   .stage { position: fixed; top: var(--top-h); left: 0; right: 0;
-    bottom: calc(var(--reserve) + var(--safe-b)); display: flex; transition: bottom 0.3s ease; }
+    bottom: calc(var(--reserve) + var(--safe-b)); display: flex; transition: bottom 0.4s var(--md-ease-emph, ease); }
   .preview { flex: 1; min-height: 0; padding: 6px; border: 0; border-radius: 0; }
   canvas { max-width: 100%; max-height: 100%; }
   .hint { display: none; }
@@ -463,7 +463,7 @@ input.swatch.custom::-moz-color-swatch { border: 0; background: transparent; }
     display: flex; flex-direction: column; gap: 0; padding: 0 0 var(--safe-b); max-height: none; overflow: hidden;
     background: var(--card); border-top: 1px solid var(--line); border-radius: 18px 18px 0 0;
     box-shadow: 0 -6px 24px rgba(20, 30, 70, 0.15); height: calc(var(--handle-h) + var(--tabs-h) + var(--mid-h) + var(--safe-b));
-    transition: height 0.3s ease; }
+    transition: height 0.4s var(--md-ease-emph, ease); }
   .sidebar[data-sheet="min"] { height: calc(var(--handle-h) + var(--tabs-h) + var(--safe-b)); }
   .sidebar[data-sheet="max"] { height: calc(var(--handle-h) + var(--tabs-h) + var(--max-h) + var(--safe-b)); }
   .sheet-handle { display: flex; justify-content: center; align-items: center; flex: none; height: var(--handle-h);
@@ -848,4 +848,28 @@ button.swatch { min-height: 0; padding: 0; width: 28px; height: 28px; background
 .accent-menu button[aria-checked="true"] { font-weight: 700; }
 .accent-dot { width: 24px; height: 24px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 15%, transparent); }
 @media (max-width: 860px) { .topbar h1 .ic { display: none; } .accent-menu button { min-height: 48px; } }
+/* Transitions M3 : entrée 400 ms (décélération), sortie 200 ms (accélération), contenu qui change en fondu court */
+:root { --md-dec: cubic-bezier(0.05, 0.7, 0.1, 1); --md-acc: cubic-bezier(0.3, 0, 0.8, 0.15); }
+@keyframes m3-slide-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes m3-slide-down { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(24px); } }
+@keyframes m3-menu-in { from { opacity: 0; transform: scaleY(0.85) translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes m3-fade-out { to { opacity: 0; } }
+@keyframes m3-panel-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes m3-canvas { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes m3-row-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.message:not(:empty) { animation: m3-slide-up 0.4s var(--md-dec); }
+.message.leaving { animation: m3-slide-down 0.2s var(--md-acc) forwards; }
+.tab-panel:not([hidden]) { animation: m3-panel-in 0.25s var(--md-dec); }
+.modal:not([hidden]) { animation: m3-in 0.2s var(--md-eff); }
+.modal:not([hidden]) .modal-card { animation: m3-slide-up 0.5s var(--md-dec); }
+.modal.closing { animation: m3-fade-out 0.2s var(--md-acc) forwards; }
+.modal.closing .modal-card { animation: m3-slide-down 0.2s var(--md-acc) forwards; }
+.accent-menu, .cell-menu:not([hidden]) { transform-origin: top right; }
+.accent-menu:not([hidden]) { animation: m3-menu-in 0.2s var(--md-dec); }
+.accent-menu.closing { animation: m3-fade-out 0.15s var(--md-acc) forwards; }
+.cell-menu:not([hidden]) { animation: m3-menu-in 0.2s var(--md-dec); transform-origin: top left; }
+canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
+.project-row { animation: m3-row-in 0.4s var(--md-dec) both; }
+.project-row:nth-child(2) { animation-delay: 0.04s; } .project-row:nth-child(3) { animation-delay: 0.08s; } .project-row:nth-child(4) { animation-delay: 0.12s; } .project-row:nth-child(n+5) { animation-delay: 0.16s; }
+
 @media (prefers-reduced-motion: reduce) { #printBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
