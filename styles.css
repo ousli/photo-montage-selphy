@@ -825,4 +825,16 @@ label:has(> input[type="range"]) > b { color: var(--md-on-surface-variant); }
 button.swatch { min-height: 0; padding: 0; width: 28px; height: 28px; background-image: none; }
 .swatch.on { box-shadow: 0 0 0 2px var(--md-primary); }
 @media (max-width: 860px) { button.swatch { min-height: 0; width: 38px; height: 38px; } }
-@media (prefers-reduced-motion: reduce) { .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
+
+/* Touches expressives (M3 Expressive) : un seul moment fort (Imprimer), libellés accentués sur la sélection, forme qui se transforme */
+.top-actions { align-items: center; align-content: center; }
+#printBtn { min-height: 56px; padding: 0 24px; border-radius: var(--md-shape-lg); font-weight: 700; letter-spacing: 0.007em; box-shadow: var(--md-elev2); transition: border-radius 0.35s var(--md-spatial), background-color 0.2s var(--md-eff), box-shadow 0.2s var(--md-eff); }
+#printBtn:hover:not(:disabled) { border-radius: var(--md-shape-xl); box-shadow: var(--md-elev3); }
+#printBtn .ic { width: 24px; height: 24px; }
+.font-chip, .look-tile { transition: border-radius 0.35s var(--md-spatial), background-color 0.2s var(--md-eff), border-color 0.2s var(--md-eff), color 0.2s var(--md-eff); }
+.font-chip.on { border-radius: var(--md-shape-lg); font-weight: 700; }
+.seg button.on, .tabs button.on, .printer-item.on, .look-tile.on { font-weight: 700; }
+.tabs button.on .tab-ic { border-radius: var(--md-shape-lg); }
+.tab-ic { transition: border-radius 0.35s var(--md-spatial), background-color 0.2s var(--md-eff); }
+@media (max-width: 860px) { #printBtn { min-height: 48px; padding: 0 20px; } }
+@media (prefers-reduced-motion: reduce) { #printBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
