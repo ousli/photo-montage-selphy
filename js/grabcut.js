@@ -147,7 +147,10 @@ function gcDims(w, h) {
 }
 
 // marks (facultatif, taille gcDims) : 1 = à garder, 2 = à effacer (traits de l'utilisateur)
-function grabCutAlpha(src, w, h, inset, marks) {
+// strength : 0 (prudent, garde le maximum de sujet) à 1 (agressif)
+function grabCutAlpha(src, w, h, strength, marks) {
+  const inset = 0.01 + 0.14 * strength;
+  const bias = (0.5 - strength) * 3;
   const [sw, sh] = gcDims(w, h);
   const small = document.createElement("canvas");
   small.width = sw;
@@ -214,7 +217,7 @@ function grabCutAlpha(src, w, h, inset, marks) {
         e.u[i] = p; e.v[i] = T; e.c1[i] = 1e6; e.c2[i] = 0;
       } else {
         const r = px[p * 3], g = px[p * 3 + 1], b = px[p * 3 + 2];
-        const df = gcCost(fgM, r, g, b), db = gcCost(bgM, r, g, b);
+        const df = gcCost(fgM, r, g, b) - bias, db = gcCost(bgM, r, g, b) + bias;
         const m = Math.min(df, db);
         // S→p (coûte db si p finit fond) et p→T (coûte df si p finit sujet) : un seul arc suffit sur la différence
         if (db - df > 0) (e.u[i] = S), (e.v[i] = p), (e.c1[i] = db - df);
