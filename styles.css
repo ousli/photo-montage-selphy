@@ -837,4 +837,15 @@ button.swatch { min-height: 0; padding: 0; width: 28px; height: 28px; background
 .tabs button.on .tab-ic { border-radius: var(--md-shape-lg); }
 .tab-ic { transition: border-radius 0.35s var(--md-spatial), background-color 0.2s var(--md-eff); }
 @media (max-width: 860px) { #printBtn { min-height: 48px; padding: 0 20px; } }
+
+/* Menu de couleur d'accent (menu M3) */
+.accent-menu { position: fixed; z-index: 70; min-width: 200px; padding: 8px 0; background: var(--md-sc); border-radius: var(--md-shape-xs); box-shadow: var(--md-elev2); animation: m3-in 0.15s var(--md-ease); }
+.accent-menu[hidden] { display: none; }
+.accent-menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 16px 0 12px; border-radius: 0; background-color: transparent; color: var(--md-on-surface); font-weight: 400; font-size: 0.875rem; text-align: left; box-shadow: none; }
+.accent-menu button:hover:not(:disabled) { background-color: color-mix(in srgb, var(--md-on-surface) 8%, transparent); box-shadow: none; }
+.accent-menu button span { flex: 1; }
+.accent-menu button b { color: var(--md-primary); width: 1em; }
+.accent-menu button[aria-checked="true"] { font-weight: 700; }
+.accent-dot { width: 24px; height: 24px; border-radius: 50%; flex: none; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-on-surface) 15%, transparent); }
+@media (max-width: 860px) { .topbar h1 .ic { display: none; } .accent-menu button { min-height: 48px; } }
 @media (prefers-reduced-motion: reduce) { #printBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
