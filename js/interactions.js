@@ -145,12 +145,14 @@ function moveStickerGesture(ev) {
   const cy = st.y * canvas.height;
   if (stickerDrag.part === "scale") {
     st.size = clampSize((stickerDrag.size0 * (Math.hypot(pt.x - cx, pt.y - cy) || 1)) / stickerDrag.dist0);
+    snapStickerSize(st);
   } else if (stickerDrag.part === "rotate") {
     const da = ((Math.atan2(pt.y - cy, pt.x - cx) - stickerDrag.ang0) * 180) / Math.PI;
     st.rot = Math.round(wrapAngle(stickerDrag.rot0 + da));
   } else {
     st.x = Math.max(0, Math.min(1, (pt.x - stickerDrag.dx) / canvas.width));
     st.y = Math.max(0, Math.min(1, (pt.y - stickerDrag.dy) / canvas.height));
+    snapStickerMove(st);
   }
   render();
 }

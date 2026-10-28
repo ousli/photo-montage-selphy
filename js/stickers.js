@@ -98,6 +98,43 @@ function drawSticker(s) {
 }
 
 // pixels du canevas pour un pixel d'écran
+// Butée aimantée sur la zone imprimable (bord mécanique de l'imprimante) : déplacement et taille
+function stickerBounds(s) {
+  const [hw, hh] = stickerHalf(s);
+  const a = (s.rot * Math.PI) / 180;
+  const c = Math.abs(Math.cos(a));
+  const n = Math.abs(Math.sin(a));
+  return [hw * c + hh * n, hw * n + hh * c];
+}
+function snapStickerMove(s) {
+  const d = safeInsetPx(canvas.width, canvas.height);
+  if (!d) return;
+  const thr = 10 * screenK();
+  const [bw, bh] = stickerBounds(s);
+  const x = s.x * canvas.width;
+  const y = s.y * canvas.height;
+  const sx = (edge, lo, hi) => (Math.abs(edge - lo) < thr ? lo : Math.abs(edge - hi) < thr ? hi : null);
+  const nx = sx(x, d + bw, canvas.width - d - bw);
+  const ny = sx(y, d + bh, canvas.height - d - bh);
+  if (nx !== null) s.x = nx / canvas.width;
+  if (ny !== null) s.y = ny / canvas.height;
+}
+function snapStickerSize(s) {
+  const d = safeInsetPx(canvas.width, canvas.height);
+  if (!d) return;
+  const thr = 10 * screenK();
+  const [bw, bh] = stickerBounds(s);
+  const cx = s.x * canvas.width;
+  const cy = s.y * canvas.height;
+  let best = null;
+  [
+    [bw, cx - d], [bw, canvas.width - d - cx],
+    [bh, cy - d], [bh, canvas.height - d - cy],
+  ].forEach(([cur, room]) => {
+    if (room > 0 && Math.abs(cur - room) < thr && (!best || Math.abs(cur - room) < best.gap)) best = { gap: Math.abs(cur - room), f: room / cur };
+  });
+  if (best) s.size = clampSize(s.size * best.f);
+}
 const screenK = () => canvas.width / canvas.getBoundingClientRect().width;
 
 function drawStickers(forExport) {

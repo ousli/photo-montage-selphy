@@ -15,6 +15,15 @@ function refreshMontageUI() {
   if (miss) $("layoutNote").textContent = `Pas de mise en page « ${LAYOUT_LABELS[layoutKey]} » pour ${count()} photos : la grille est utilisée.`;
   $("outerWrap").hidden = $("gapLink").checked;
   setGapChips((v) => Number(v) === gapV() && ($("gapLink").checked || Number($("outerGap").value) === gapV()), false);
+  // ancre aimantée sur la marge mécanique de l'imprimante (zone rognée au tirage)
+  if (window.setSliderAnchors) {
+    const safe = safeInsetPx(...canvasSize());
+    const mm = paperInfo() ? ` (${paperInfo().safe} mm)` : "";
+    const list = safe > 0 ? [safe] : [];
+    const t = `Repère : marge de sécurité de l'imprimante${mm}`;
+    setSliderAnchors($("outerGap"), list, t);
+    setSliderAnchors($("gap"), $("gapLink").checked ? list : [], t);
+  }
   $("frameBox").hidden = !$("frameOn").checked;
   refreshPrinterUI();
 }

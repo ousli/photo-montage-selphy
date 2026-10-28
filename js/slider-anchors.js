@@ -1,32 +1,54 @@
-// Ancre à la valeur par défaut sur chaque curseur : graduation, aimant, double-clic pour revenir
+// Ancres sur les curseurs : valeur par défaut (graduation, aimant, double-clic) et ancres supplémentaires (setSliderAnchors)
 (() => {
   const sliders = [...document.querySelectorAll('input[type="range"]')].filter((el) => !el.list);
   const def = new Map();
+  const extra = new Map();
+  const ticks = new Map();
   sliders.forEach((el) => {
     const v = el.getAttribute("value");
     if (v === null) return;
     def.set(el, Number(v));
     const dl = document.createElement("datalist");
     dl.id = `${el.id}Ticks`;
-    const o = document.createElement("option");
-    o.value = v;
-    dl.appendChild(o);
     el.after(dl);
     el.setAttribute("list", dl.id);
     el.title = "Double-clic : valeur par défaut";
+    ticks.set(el, dl);
+    drawTicks(el);
   });
+  function drawTicks(el) {
+    const dl = ticks.get(el);
+    dl.textContent = "";
+    [def.get(el), ...(extra.get(el) || [])].forEach((v) => {
+      const o = document.createElement("option");
+      o.value = v;
+      dl.appendChild(o);
+    });
+  }
+  // valeurs aimantées en plus de la valeur par défaut (ex. marge de sécurité de l'imprimante)
+  window.setSliderAnchors = (el, values, title) => {
+    if (!def.has(el)) return;
+    const next = values.filter((v) => v >= Number(el.min) && v <= Number(el.max)).map(Math.round);
+    const cur = extra.get(el) || [];
+    if (next.join() === cur.join()) return;
+    extra.set(el, next);
+    el.title = next.length && title ? `${title} · double-clic : valeur par défaut` : "Double-clic : valeur par défaut";
+    drawTicks(el);
+  };
   // en capture, pour que l'aimant agisse avant les autres écouteurs
   document.addEventListener(
     "input",
     (e) => {
       const el = e.target;
       if (!def.has(el)) return;
-      const d = def.get(el);
       const range = Number(el.max) - Number(el.min);
-      if (Math.abs(el.value - d) <= Math.max(1, Math.round(range * 0.03))) el.value = d;
+      const thr = Math.max(1, Math.round(range * 0.03));
+      const near = [def.get(el), ...(extra.get(el) || [])].filter((a) => Math.abs(el.value - a) <= thr);
+      if (near.length) el.value = near.sort((a, b) => Math.abs(el.value - a) - Math.abs(el.value - b))[0];
     },
     true
   );
+  if (typeof refreshMontageUI === "function") refreshMontageUI(); // ancres dépendantes de l'imprimante
   document.addEventListener("dblclick", (e) => {
     const el = e.target;
     if (!def.has(el)) return;
