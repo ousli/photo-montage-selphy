@@ -552,3 +552,11 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .emoji-btn { font-size: 1.5rem; line-height: 1; padding: 6px 0; background: var(--surface); border: 1px solid var(--line2); border-radius: 8px; cursor: pointer; }
 .emoji-btn:active { background: var(--soft); }
 @media (max-width: 430px) { .emoji-btn { font-size: 1.35rem; padding: 8px 0; } }
+.sticker-cut { margin-top: 12px; border-top: 1px solid var(--line2); padding-top: 10px; }
+.sticker-cut summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+#stickerSel .row { margin-top: 10px; }
+#stickerSrc { margin-bottom: 8px; }
+#stickerImage .exif-note, #stickerNote { margin-top: 10px; }
+#stickerSel { margin-top: 16px; border-top: 1px solid var(--line2); }
+#stickerSel h2 { margin-top: 14px; }
+.sticker-cut summary { font-size: 0.95rem; }

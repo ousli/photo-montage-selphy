@@ -8,6 +8,17 @@ const EMOJI_CATS = {
   "Voyage": "✈️ 🏖️ 🏔️ 🚗 ⛵ 🗺️ 📍 🎒 📷 🎵 ⚽ 🏄 🍕 🍔 🍦 🍹",
 };
 let emojiCat = Object.keys(EMOJI_CATS)[0];
+let stickerSrc = "emoji";
+
+const setSrcChips = chipGroup($("stickerSrc"), { emoji: "Emoji", image: "Image" }, (k) => {
+  stickerSrc = k;
+  showStickerSrc();
+});
+function showStickerSrc() {
+  $("stickerEmoji").hidden = stickerSrc !== "emoji";
+  $("stickerImage").hidden = stickerSrc !== "image";
+  setSrcChips((k) => k === stickerSrc, false);
+}
 
 const setEmojiCatChips = chipGroup($("emojiCats"), Object.fromEntries(Object.keys(EMOJI_CATS).map((k) => [k, k])), (k) => {
   emojiCat = k;
@@ -68,6 +79,7 @@ document.addEventListener("keydown", (ev) => {
 
 function refreshStickerUI() {
   const s = currentSticker();
+  $("stickerSel").hidden = !s;
   $("stickerNote").hidden = !!s;
   $("stickerNote").textContent = stickers.length ? "Touche un sticker sur le montage pour le sélectionner." : "Ajoute un emoji ou une image, puis déplace-le, agrandis-le (coin) ou fais-le pivoter (rond).";
   const i = stickers.findIndex((x) => x.id === selectedSticker);
@@ -116,3 +128,4 @@ document.addEventListener("paste", (ev) => {
 });
 
 fillEmojiGrid();
+showStickerSrc();
