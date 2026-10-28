@@ -70,6 +70,22 @@ function drawTitle(w) {
   ctx.restore();
 }
 
+// date orange à lueur, comme sur un appareil jetable
+function drawStamp(t, x, y, size, maxW) {
+  ctx.save();
+  ctx.fillStyle = "#ff8a1f";
+  ctx.shadowColor = "rgba(255, 90, 0, 0.85)";
+  ctx.shadowBlur = size * 0.35;
+  let sz = size * 1.1;
+  ctx.font = `bold ${sz}px "Courier New", Menlo, monospace`;
+  while (sz > 14 && ctx.measureText(t).width > maxW) {
+    sz -= 2;
+    ctx.font = `bold ${sz}px "Courier New", Menlo, monospace`;
+  }
+  ctx.fillText(t, x, y);
+  ctx.restore();
+}
+
 function drawOverlay(s, pr) {
   const lines = exifLines(s);
   if (!lines.length) return;
@@ -96,6 +112,7 @@ function drawOverlay(s, pr) {
   const x = right ? sx + sw - pad : sx + pad;
   const y0 = top ? sy + pad + lh / 2 : sy + sh - pad - lh / 2 - (lines.length - 1) * lh;
   lines.forEach((t, i) => {
+    if (t === s.exif.stamp) return drawStamp(t, x, y0 + i * lh, st.size, sw - pad * 2);
     drawText(t, x, y0 + i * lh, st, sw - pad * 2);
   });
   ctx.restore();
@@ -121,9 +138,9 @@ const LOOK_CSS = {
 };
 // Émulations de pellicule : courbe par canal (noir relevé, blanc adouci, contraste en S), saturation et grain stable (hash de la position, donc identique à chaque rendu)
 const FILM_STOCKS = {
-  gold: { ch: [[0.04, 1, 0.3], [0.04, 0.97, 0.3], [0.05, 0.86, 0.25]], sat: 1.1, grain: 6 },
-  ektar: { ch: [[0.02, 1, 0.45], [0.02, 0.99, 0.45], [0.03, 0.965, 0.4]], sat: 1.32, grain: 3 },
-  k2383: { ch: [[0.015, 1, 0.7], [0.04, 0.97, 0.7], [0.065, 0.9, 0.62]], sat: 0.92, grain: 4 },
+  gold: { ch: [[0.05, 1, 0.35], [0.045, 0.95, 0.35], [0.07, 0.76, 0.3]], sat: 1.22, grain: 6 },
+  ektar: { ch: [[0.01, 1.02, 0.65], [0.01, 0.99, 0.65], [0.02, 0.96, 0.6]], sat: 1.55, grain: 3 },
+  k2383: { ch: [[0.0, 1, 0.95], [0.05, 0.95, 0.9], [0.1, 0.83, 0.8]], sat: 0.95, grain: 4 },
 };
 const filmLut = {};
 function filmLuts(look) {

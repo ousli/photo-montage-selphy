@@ -902,3 +902,16 @@ canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
 .topbar .top-actions #downloadBtn .ic { width: 20px; height: 20px; }
 .topbar .top-actions { align-items: center; }
 .topbar h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+/* Mobile : cibles de 48 dp dans la barre du haut ; le thème passe dans le menu d'apparence (palette) */
+.accent-menu .accent-theme { display: none; }
+.accent-menu .accent-theme svg { width: 24px; height: 24px; flex: none; }
+@media (max-width: 860px) {
+  #themeBtn { display: none; }
+  .accent-menu .accent-theme { display: flex; }
+  .topbar .top-actions button.round, .topbar .top-actions button:not(.round), .topbar .top-actions #downloadBtn { height: 48px; min-height: 48px; }
+  .topbar .top-actions button.round { width: 48px; }
+  .topbar .top-actions button { min-width: 48px; }
+  .topbar .top-actions #downloadBtn { padding-left: 16px; padding-right: 16px; }
+  .topbar .top-actions, .topbar .undo-bar { gap: 0; }
+}

@@ -7,7 +7,7 @@ const captionH = () => {
 };
 const DEFAULT_OVL = { font: "sans", color: "#ffffff", size: 30 };
 const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, place: false, gps: false };
-const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS" };
+const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS", stamp: "Date tampon" };
 const CORNER_LABELS = { tl: "↖ Haut gauche", tr: "↗ Haut droite", bl: "↙ Bas gauche", br: "↘ Bas droite" };
 const ovlStyleOf = (s) => (s && s.exifStyle) || DEFAULT_OVL;
 const exifFieldsOf = (s) => (s && s.exifFields) || DEFAULT_EXIF_FIELDS;
@@ -22,6 +22,9 @@ function formatExif(r) {
   const d = r.DateTimeOriginal || r.CreateDate;
   if (d instanceof Date && !isNaN(d)) {
     out.date = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    // tampon façon appareil jetable : 'AA MM JJ
+    const z = (n) => String(n).padStart(2, "0");
+    out.stamp = `'${z(d.getFullYear() % 100)} ${z(d.getMonth() + 1)} ${z(d.getDate())}`;
   }
   const make = (r.Make || "").trim();
   const model = (r.Model || "").trim();
