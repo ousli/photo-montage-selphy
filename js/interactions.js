@@ -307,7 +307,7 @@ const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
     const s = slots[selected];
     if (!s) return;
     s.look = k;
-    s.amt = 100;
+    s.amt = FILM_AMT;
     render();
   };
   lookBox.appendChild(b);
@@ -365,7 +365,7 @@ $("filterResetBtn").onclick = () => {
   s.look = "none";
   s.bright = 100;
   s.contrast = 100;
-  s.amt = 100;
+  s.amt = FILM_AMT;
   render();
 };
 $("filterAllBtn").onclick = () => {

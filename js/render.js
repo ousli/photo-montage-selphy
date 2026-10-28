@@ -121,10 +121,11 @@ function drawOverlay(s, pr) {
 // Retouche d'une photo : { look: none | bw | sepia | vivid | gold | ektar | k2383, bright, contrast } (100 = inchangé)
 const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", gold: "Gold 200", ektar: "Ektar 100", k2383: "Kodak 2383" };
 const FILM_NOTES = { gold: "Gold 200 : chaud, jaune doré, grain visible", ektar: "Ektar 100 : couleurs très saturées, contrasté", k2383: "Kodak 2383 : look cinéma, contrasté, ombres teintées de bleu-vert" };
-const filterOf = (s) => ({ look: ({ film: "gold", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100, amt: s.amt ?? 100 });
+const FILM_AMT = 70; // intensité par défaut des pellicules
+const filterOf = (s) => ({ look: ({ film: "gold", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100, amt: s.amt ?? FILM_AMT });
 const hasFilter = (s) => {
   const f = filterOf(s);
-  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100 || f.amt !== 100;
+  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
 };
 const filterCss = (s) => {
   const f = filterOf(s);
