@@ -529,6 +529,22 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 /* Bouton d'import multiple : un peu plus visible parmi les réglages */
 #multiBtn { background: var(--hi-bg); border: 1.5px solid var(--accent); color: var(--accent-ink); font-weight: 700; box-shadow: 0 1px 4px rgba(51, 102, 255, 0.25); }
 #multiBtn:hover:not(:disabled) { background: var(--hi-bg2); }
+/* Projets nommés */
+.modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(20, 24, 36, 0.5); }
+.modal[hidden] { display: none; }
+.modal-card { width: min(560px, 100%); max-height: 86vh; overflow: auto; display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 14px; background: var(--card); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
+.modal-head h2 { margin: 0; font-size: 1rem; }
+.project-save { display: flex; gap: 8px; }
+.project-save input { flex: 1; min-width: 0; }
+.projects-list { display: flex; flex-direction: column; gap: 8px; }
+.project-row { display: grid; grid-template-columns: 72px 1fr; gap: 4px 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.project-row.current { border-color: var(--accent); }
+.project-row img { width: 72px; height: 54px; object-fit: contain; background: var(--bg); border-radius: 6px; }
+.project-info strong, .project-info small { display: block; overflow-wrap: anywhere; }
+.project-info small { color: var(--muted); }
+.project-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.project-actions button { min-height: 0; padding: 6px 10px; font-size: 0.85rem; }
 @media (max-width: 860px) {
   .top-actions { gap: 6px; flex-wrap: nowrap; }
   .top-actions button { padding-left: 10px; padding-right: 10px; }
@@ -566,3 +582,9 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .danger-btn { width: 100%; margin-top: 12px; background: transparent; color: #e5383b; border: 1.5px solid #e5383b; font-weight: 600; }
 .danger-btn:hover:not(:disabled) { background: #e5383b; color: #fff; filter: none; }
 #stickerSel .exif-note { margin-top: 8px; }
+.modal-card { gap: 16px; }
+.modal-section { display: flex; flex-direction: column; gap: 8px; }
+.modal-label { margin: 0; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.hint-left { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.hint-left.warn { color: #b25e00; font-weight: 600; }
+.modal-head button.round { flex: none; }

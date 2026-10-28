@@ -112,7 +112,7 @@
   const dbP = new Promise((res, rej) => {
     if (!window.indexedDB) return rej(new Error("no idb"));
     // ouverture sans version imposée : une base déjà passée en version supérieure (autre branche) reste utilisable
-    const need = (db) => ["kv", "photos"].filter((n) => !db.objectStoreNames.contains(n));
+    const need = (db) => ["kv", "photos", "projects"].filter((n) => !db.objectStoreNames.contains(n));
     const mk = (db) => need(db).forEach((n) => db.createObjectStore(n));
     const open = (ver) => {
       const r = ver ? indexedDB.open("montage-photo", ver) : indexedDB.open("montage-photo");
@@ -249,6 +249,17 @@
     applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected, stickers: stk }, true);
     return hasPhotos || stk.length > 0;
   }
+
+  // ouvre un état complet (projet nommé) : repart d'un historique neuf
+  function loadState(st) {
+    flush();
+    applyState(st, true);
+    hist = [getState()];
+    idx = 0;
+    updateBtns();
+    scheduleSave();
+  }
+  window.MontageDoc = { getState, loadState, idb };
 
   // état de départ : on ne le restaure qu'une fois, avant toute action de l'utilisateur
   hist = [getState()];
