@@ -124,29 +124,29 @@ function paperInfo() {
   }
   const pr = printerOf(printerId) || printerOf(DEFAULT_PRINTER);
   const paper = pr.papers.find((x) => x.id === paperId) || pr.papers[0];
-  const cal = calibGet(pr.id, paper.id);
-  return cal == null ? paper : { ...paper, safe: cal, calibrated: true };
+  const ov = safeGet(pr.id, paper.id);
+  return ov == null ? paper : { ...paper, safe: ov, est: paper.safe };
 }
 
-// Marge réellement rognée, mesurée par l'utilisateur (page de test) : par imprimante + papier, prioritaire sur l'estimation
-const CALIB_KEY = "montage-calib";
-function calibAll() {
+// Marge de sécurité réglée par l'utilisateur, par imprimante + papier : prioritaire sur l'estimation du catalogue
+const SAFE_KEY = "montage-safe";
+function safeAll() {
   try {
-    return JSON.parse(localStorage.getItem(CALIB_KEY)) || {};
+    return JSON.parse(localStorage.getItem(SAFE_KEY)) || {};
   } catch (e) {
     return {};
   }
 }
-function calibGet(pid, paper) {
-  const v = calibAll()[`${pid}|${paper}`];
+function safeGet(pid, paper) {
+  const v = safeAll()[`${pid}|${paper}`];
   return Number.isFinite(v) ? v : null;
 }
-function calibSet(pid, paper, mm) {
-  const all = calibAll();
+function safeSet(pid, paper, mm) {
+  const all = safeAll();
   if (mm == null) delete all[`${pid}|${paper}`];
   else all[`${pid}|${paper}`] = mm;
   try {
-    localStorage.setItem(CALIB_KEY, JSON.stringify(all));
+    localStorage.setItem(SAFE_KEY, JSON.stringify(all));
   } catch (e) {}
 }
 function setPrinterState(id, pid, custom) {

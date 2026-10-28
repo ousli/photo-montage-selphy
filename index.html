@@ -10,9 +10,9 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=87" />
+  <link rel="stylesheet" href="./styles.css?v=88" />
   <p id="message" class="message" role="status" aria-live="polite"></p>
-  <script src="./js/theme.js?v=87"></script>
+  <script src="./js/theme.js?v=88"></script>
 </head>
 <body>
   <div id="projectsPanel" class="modal projects-full" hidden>
@@ -155,16 +155,9 @@
           <span>Zone imprimable</span>
         </label>
         <p id="paperNote" class="exif-note"></p>
-        <details class="adv" id="calibBox" hidden><summary>Étalonner la marge</summary>
-          <p class="exif-note">1. Imprime la page de test avec les mêmes réglages que d'habitude (même papier, sans bord). 2. Repère le cadre le plus à l'extérieur qui est entièrement visible sur le tirage : son numéro est la marge rognée, en mm. 3. Saisis-la ci-dessous.</p>
-          <button id="calibPrint" type="button" class="secondary">Imprimer la page de test</button>
-          <div class="custom-paper"><label>Marge rognée (mm) <input id="calibSafe" type="number" inputmode="decimal" min="0" max="15" step="0.5" /></label></div>
-          <div class="row">
-            <button id="calibSave" type="button">Enregistrer</button>
-            <button id="calibReset" type="button" class="secondary">Valeur par défaut</button>
-          </div>
-          <p id="calibNote" class="exif-note"></p>
-        </details>
+        <label id="safeWrap" hidden>Marge de sécurité <b></b>
+          <input id="safeMm" type="range" min="0" max="10" step="1" value="2" />
+        </label>
         <details class="adv"><summary>Préréglages</summary>
           <div id="presetList" class="presets"></div>
           <div class="row">
@@ -343,33 +336,33 @@
   </main>
 
   <div id="cellMenu" class="cell-menu" hidden></div>
-  <script src="./js/core.js?v=87"></script>
-  <script src="./js/exif.js?v=87"></script>
-  <script src="./js/layout.js?v=87"></script>
-  <script src="./js/render.js?v=87"></script>
-  <script src="./js/stickers.js?v=87"></script>
-  <script src="./js/printers-data.js?v=87"></script>
-  <script src="./js/printers.js?v=87"></script>
-  <script src="./js/selection.js?v=87"></script>
-  <script src="./js/import.js?v=87"></script>
-  <script src="./js/cell-menu.js?v=87"></script>
-  <script src="./js/interactions.js?v=87"></script>
-  <script src="./js/editors.js?v=87"></script>
-  <script src="./js/pickers.js?v=87"></script>
-  <script src="./js/montage-ui.js?v=87"></script>
-  <script src="./js/settings.js?v=87"></script>
-  <script src="./js/controls.js?v=87"></script>
-  <script src="./js/stickers-ui.js?v=87"></script>
-  <script src="./js/export.js?v=87"></script>
-  <script src="./js/calibration.js?v=87"></script>
-  <script src="./js/segmented.js?v=87"></script>
-  <script src="./js/presets.js?v=87"></script>
-  <script src="./js/pwa.js?v=87"></script>
-  <script src="./js/tabs.js?v=87"></script>
-  <script src="./js/ripple.js?v=87"></script>
-  <script src="./js/slider-anchors.js?v=87"></script>
-  <script src="./js/main.js?v=87"></script>
-  <script src="./js/history.js?v=87"></script>
-  <script src="./js/projects.js?v=87"></script>
+  <script src="./js/core.js?v=88"></script>
+  <script src="./js/exif.js?v=88"></script>
+  <script src="./js/layout.js?v=88"></script>
+  <script src="./js/render.js?v=88"></script>
+  <script src="./js/stickers.js?v=88"></script>
+  <script src="./js/printers-data.js?v=88"></script>
+  <script src="./js/printers.js?v=88"></script>
+  <script src="./js/selection.js?v=88"></script>
+  <script src="./js/import.js?v=88"></script>
+  <script src="./js/cell-menu.js?v=88"></script>
+  <script src="./js/interactions.js?v=88"></script>
+  <script src="./js/editors.js?v=88"></script>
+  <script src="./js/pickers.js?v=88"></script>
+  <script src="./js/montage-ui.js?v=88"></script>
+  <script src="./js/settings.js?v=88"></script>
+  <script src="./js/controls.js?v=88"></script>
+  <script src="./js/stickers-ui.js?v=88"></script>
+  <script src="./js/export.js?v=88"></script>
+  <script src="./js/safe-margin.js?v=88"></script>
+  <script src="./js/segmented.js?v=88"></script>
+  <script src="./js/presets.js?v=88"></script>
+  <script src="./js/pwa.js?v=88"></script>
+  <script src="./js/tabs.js?v=88"></script>
+  <script src="./js/ripple.js?v=88"></script>
+  <script src="./js/slider-anchors.js?v=88"></script>
+  <script src="./js/main.js?v=88"></script>
+  <script src="./js/history.js?v=88"></script>
+  <script src="./js/projects.js?v=88"></script>
 </body>
 </html>
