@@ -70,3 +70,16 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
 - **Mise en page** : grille, « une grande photo » ou mosaïque (3 à 6 photos) ; marge extérieure séparée (optionnelle) ; fond, coins arrondis et cadre dans « Apparence ».
 - **Texte** : légende par photo, titre en haut ou en bas, date du jour automatique.
 - **Photos** : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF (60 Mo max) ; les grandes photos sont réduites à 3600 px.
+
+## Tests de non-régression
+
+`tests/run.js` (Playwright, Chromium + WebKit) génère des photos de test, fait varier ratio, orientation, nombre de photos, imprimante, mise en page, marges, titre, légendes, retouches, cadrage et stickers, puis compare l'empreinte (SHA-256) des pixels du canvas d'export à `tests/baseline.json` et signale toute erreur console.
+
+```
+cd tests && npm install
+node run.js                      # compare aux références
+node run.js --update             # change volontaire du rendu : réécrit les références
+node run.js --browser=chromium   # un seul navigateur
+```
+
+Les références sont par navigateur et par système (polices, emoji) : sur une autre machine, lance d'abord `--update` sur la version de départ.

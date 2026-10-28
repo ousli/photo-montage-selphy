@@ -1,0 +1,266 @@
+{
+ "chromium-darwin": {
+  "defaut": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "16e0d28ab0688fea33e52246f58c63dac408c4b3b00bf722c221283d80258bad"
+  },
+  "libre-3:2-landscape": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "53576c5294e9f93cf80247e4dc5c81c77b08c7377ea8354f12c52d17e2b8782d"
+  },
+  "libre-3:2-portrait": {
+   "w": 1200,
+   "h": 1800,
+   "sha": "4716d29cd8347fba7fdc29bf3f4da60067cf3ace0b64ae265c2b6ebbf6c88e60"
+  },
+  "libre-4:3-landscape": {
+   "w": 1800,
+   "h": 1350,
+   "sha": "49cf901b30e1c687a8c1eacb4e0e7904b1e14f96dc627128c77f91a214e8d967"
+  },
+  "libre-4:3-portrait": {
+   "w": 1350,
+   "h": 1800,
+   "sha": "2d0c76cdda207f3dd4cae54efe15c82123d69557b58646c1ab8120c4c3d7fd23"
+  },
+  "libre-16:9-landscape": {
+   "w": 1800,
+   "h": 1013,
+   "sha": "6d0feafa328abf8d9bd0b843a32b896785163d7cfcc321c49045f2b6158f4720"
+  },
+  "libre-16:9-portrait": {
+   "w": 1013,
+   "h": 1800,
+   "sha": "007387014b8cacf1cea4d4c37d2acd1e2f533089398fe3e1140268a16a5692da"
+  },
+  "libre-1-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "60359953aac7cf3565b22fa32a56e97b8f116a6d6d2f62131d1f726d13199716"
+  },
+  "libre-2-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "53576c5294e9f93cf80247e4dc5c81c77b08c7377ea8354f12c52d17e2b8782d"
+  },
+  "libre-3-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "83f79cf070dbaa9dab39b055248e3dda1bd4ae7dcdee021aea4c945cbabb5e77"
+  },
+  "libre-4-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "4b1acd71b4b8ecab9ec5c83ab571fdae1b972b55d7d7b2c419938431a8a63793"
+  },
+  "libre-5-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "c2d4d65e0c43676643849675a82cde64c6b59ebe8ec207c1375d1224b6b108c8"
+  },
+  "libre-6-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "7bed6b4d773ca79412e271881a0582de7f4a0e2ed2c7bd621f92c0fee4998135"
+  },
+  "mise-en-page-grid": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "4b1acd71b4b8ecab9ec5c83ab571fdae1b972b55d7d7b2c419938431a8a63793"
+  },
+  "mise-en-page-hero": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "450b8113511c50b8c2a1f7a4680480ddaee7fb4058c1d2f1ebf69c3305de995e"
+  },
+  "mise-en-page-mosaic": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "649660f2a63a3d5d7e667598a5192d5e1732af89a338673ac366e5dc88ffa287"
+  },
+  "marges-cadre-arrondi": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "9fc904d57ca9c46d832beb50bc13dc3f99ec78fe58c1e9386c64a57c87b56f06"
+  },
+  "titre": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "ffa8f93c3e83277c751dd320ac42897445be794b4b150df06af1c7455cad5c71"
+  },
+  "legendes": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "1b2aa37de857179908a29ec43fd0a7b48c6740d978ce53961c11ca6f835d336c"
+  },
+  "retouche-nb": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "6a1a088c5afb03da438c2aa2a59d07e7fa981fe37aa90079da79051fb50a288f"
+  },
+  "retouche-sepia": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "d6855f06ce06bcd9e453c1db9d06ed438f1ecf79e84b86cc823b59ac4b3ae563"
+  },
+  "cadrage-zoom-rotation": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "1e93c85e563047878cd9a6a1faeafac27ba3f42853c2d611ca1803fea1c20ffc"
+  },
+  "sticker-emoji": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "37c9515d5769947c4cd0058fd2e62d3aff81f45247bc16b6aa5a3640aaa9a1d2"
+  },
+  "sticker-image-contour": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "8fe64038da26ba7274f4df95a29322d772f8dbff375ef012f17f4a13f59f63a9"
+  },
+  "imprimante-par-defaut": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "16e0d28ab0688fea33e52246f58c63dac408c4b3b00bf722c221283d80258bad"
+  },
+  "imprimante-autre": {
+   "w": 1800,
+   "h": 1208,
+   "sha": "b8b5f55c838e3037283a1063d58323cbae9f71dac38896567ad177c5064ed33d"
+  }
+ },
+ "webkit-darwin": {
+  "defaut": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "0ab160a058cdb2851fa97df1e27707f1cb18acee894af1c95a24b7a0bda8c1d5"
+  },
+  "libre-3:2-landscape": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "efca158f78c6efea3eb4480b51b560703476b159d09f8f5a080b0e77da981a32"
+  },
+  "libre-3:2-portrait": {
+   "w": 1200,
+   "h": 1800,
+   "sha": "47a23e02c081b6ecde05c2a6f4cc8eb6e82f580a470701dd9b1efefe78c454d2"
+  },
+  "libre-4:3-landscape": {
+   "w": 1800,
+   "h": 1350,
+   "sha": "d65b273936b406e1625327d0ca58b489a8a022425dab2226d0e161ebc807bee0"
+  },
+  "libre-4:3-portrait": {
+   "w": 1350,
+   "h": 1800,
+   "sha": "9606c2341222c511a302f95b7b4155bcab647d31e75551c4e691e2262fe854e3"
+  },
+  "libre-16:9-landscape": {
+   "w": 1800,
+   "h": 1013,
+   "sha": "566b1fa88829834e58173b005ec707e61fc40a2565dafe4c9e551e24e7d044cd"
+  },
+  "libre-16:9-portrait": {
+   "w": 1013,
+   "h": 1800,
+   "sha": "189d57611d48e290bd46f60bb833ef25e8de287e840f597eba93de7d02f4dde3"
+  },
+  "libre-1-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "60359953aac7cf3565b22fa32a56e97b8f116a6d6d2f62131d1f726d13199716"
+  },
+  "libre-2-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "efca158f78c6efea3eb4480b51b560703476b159d09f8f5a080b0e77da981a32"
+  },
+  "libre-3-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "1f8d401758a16d6ccc1b3ca01ec5c79b5e255bc329222c4f031c70ec5a51f01c"
+  },
+  "libre-4-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "e71ba0b6648610d52aaf4dfc0521026f5bae9cc0a9107e949d2fda9ba8617b85"
+  },
+  "libre-5-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "2d4cd6c86c30f3eefe07b87331d750ea55a83371cdefa59cfa05d6e30dc3459d"
+  },
+  "libre-6-photos": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "d90517d606bafedec23df177b1205006f9184ee30360592e526e815b5518dd93"
+  },
+  "mise-en-page-grid": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "e71ba0b6648610d52aaf4dfc0521026f5bae9cc0a9107e949d2fda9ba8617b85"
+  },
+  "mise-en-page-hero": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "b682de2c9a9b1fe00994eefca8ed5654e08ddda86b870a7c0db3bfde9f2987aa"
+  },
+  "mise-en-page-mosaic": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "66eb35959ff4a5400af5ea8c7da77e24918c3455d3ca8ee0fa1981c1a5790c90"
+  },
+  "marges-cadre-arrondi": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "c3e4b744ad274e83f69d4c6410762ea5406b17961610d842b213646e1249cb39"
+  },
+  "titre": {
+   "w": 1800,
+   "h": 1200,
+   "sha": "3e4898bae7a2d7a6033840ce5bbfb2b7e97f5f76a158f35b27befb1f0a82f77b"
+  },
+  "legendes": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "893c2ac8b7bc1494d63ec5a8d9d3424c6ae4e09dde4f52819fec614e4708b6b9"
+  },
+  "retouche-nb": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "fcab6e4def6910e13d27051d215e64610e09ad2d1874fafa8a5247ceffa9cc50"
+  },
+  "retouche-sepia": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "aca9751f7c0f8d79e49877929f20c252e20c6f94e1ea7b81d2c56dda86b417a1"
+  },
+  "cadrage-zoom-rotation": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "aa536f87fb54bc131114815462790fe92c234189f676a45c1fbd70ce0c58cc64"
+  },
+  "sticker-emoji": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "179711b6dafeeacaf707f41e4c4c774f45cc4e67722901190124d9cc318f7026"
+  },
+  "sticker-image-contour": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "cfdbfe53bfae4951bbece4fde07eb181563431bd37349c359d891844692027c4"
+  },
+  "imprimante-par-defaut": {
+   "w": 1800,
+   "h": 1216,
+   "sha": "0ab160a058cdb2851fa97df1e27707f1cb18acee894af1c95a24b7a0bda8c1d5"
+  },
+  "imprimante-autre": {
+   "w": 1800,
+   "h": 1208,
+   "sha": "75e8a0d62c9f92d91196e811b4a17a9a1bec495830602dc75789525b8e77ecb9"
+  }
+ }
+}
