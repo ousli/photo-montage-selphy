@@ -20,6 +20,29 @@
     return t.toDataURL("image/jpeg", 0.7);
   }
 
+  // « Canon SELPHY CP1300 · Carte postale 148×100 mm · Paysage » lu depuis les réglages enregistrés
+  function formatOf(st) {
+    const orient = st.orientation === "portrait" ? "Portrait" : "Paysage";
+    if (st.printer === PRINTER_FREE) return `Format libre ${st.ratio} · ${orient}`;
+    if (st.printer === PRINTER_CUSTOM) return `Papier personnalisé ${st.custom.w}×${st.custom.h} mm · ${orient}`;
+    const pr = printerOf(st.printer);
+    const pa = pr && (pr.papers.find((x) => x.id === st.paper) || pr.papers[0]);
+    return pr ? `${pr.brand} ${pr.name} · ${pa.label} ${pa.w}×${pa.h} mm · ${orient}` : `${st.ratio} · ${orient}`;
+  }
+  function photosOf(rec) {
+    const n = Number(rec.settings.count) || rec.slots.length;
+    const f = rec.slots.slice(0, n).filter(Boolean).length;
+    return f < n ? `${f}/${n} photos` : `${n} photo${n > 1 ? "s" : ""}`;
+  }
+  const previewOf = () => {
+    const t = document.createElement("canvas");
+    const k = 640 / Math.max(canvas.width, canvas.height);
+    t.width = Math.max(1, Math.round(canvas.width * k));
+    t.height = Math.max(1, Math.round(canvas.height * k));
+    t.getContext("2d").drawImage(canvas, 0, 0, t.width, t.height);
+    return t.toDataURL("image/jpeg", 0.8);
+  };
+
   // l'état sans les éléments d'image décodés : les blobs sont stockés tels quels
   function plainState() {
     const st = getState();
@@ -55,6 +78,8 @@
     if (currentId) s.textContent = isDirty() ? `Projet « ${currentName()} » : modifications non enregistrées` : `Projet « ${currentName()} » : enregistré`;
     else s.textContent = hasWork() ? "Montage non enregistré" : "Montage vide";
     s.classList.toggle("warn", isDirty());
+    $("projectFormat").textContent = `${formatOf(getState().settings)} · ${stickers.length ? stickers.length + " sticker" + (stickers.length > 1 ? "s" : "") + " · " : ""}${slots.slice(0, count()).filter(Boolean).length}/${count()} photos`;
+    $("projectPreview").src = previewOf();
   }
 
   async function saveProject(id, name) {
@@ -128,10 +153,17 @@
       info.className = "project-info";
       const n = document.createElement("strong");
       n.textContent = rec.name;
+      if (rec.id === currentId) {
+        const badge = document.createElement("span");
+        badge.className = "project-badge";
+        badge.textContent = "Projet actif";
+        n.append(" ", badge);
+      }
       const d = document.createElement("small");
-      const photos = rec.slots.filter(Boolean).length;
-      d.textContent = `${fmtDate(rec.updated)} · ${photos} photo${photos > 1 ? "s" : ""}`;
-      info.append(n, d);
+      d.textContent = `${fmtDate(rec.updated)} · ${photosOf(rec)}`;
+      const f = document.createElement("small");
+      f.textContent = formatOf(rec.settings);
+      info.append(n, d, f);
       const acts = document.createElement("div");
       acts.className = "project-actions";
       const mk = (label, fn, cls) => {

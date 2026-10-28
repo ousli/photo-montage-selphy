@@ -10,29 +10,33 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=65" />
-  <script src="./js/theme.js?v=65"></script>
+  <link rel="stylesheet" href="./styles.css?v=66" />
+  <script src="./js/theme.js?v=66"></script>
 </head>
 <body>
-  <div id="projectsPanel" class="modal" hidden>
+  <div id="projectsPanel" class="modal projects-full" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="projectsTitle">
       <div class="modal-head">
         <h2 id="projectsTitle">Projets</h2>
         <button type="button" id="projectsClose" class="round" aria-label="Fermer"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
-      <section class="modal-section">
-        <label for="projectName" class="modal-label">Montage en cours</label>
-        <p id="projectStatus" class="hint-left"></p>
-        <div class="project-save">
-          <input id="projectName" type="text" maxlength="60" placeholder="Nom du projet" autocomplete="off" />
-          <button type="button" id="projectSave">Enregistrer</button>
+      <section class="modal-section project-hero">
+        <div class="project-hero-img"><img id="projectPreview" alt="Aperçu du montage en cours" /></div>
+        <div class="project-hero-body">
+          <label for="projectName" class="modal-label">Montage en cours</label>
+          <p id="projectStatus" class="hint-left"></p>
+          <p id="projectFormat" class="hint-left"></p>
+          <div class="project-save">
+            <input id="projectName" type="text" maxlength="60" placeholder="Nom du projet" autocomplete="off" />
+            <button type="button" id="projectSave">Enregistrer</button>
+          </div>
+          <button type="button" id="projectNew" class="ghost">Nouveau montage vide</button>
         </div>
       </section>
       <section class="modal-section">
         <div class="modal-label">Mes projets</div>
         <div id="projectsList" class="projects-list"></div>
       </section>
-      <button type="button" id="projectNew" class="ghost">Nouveau montage vide</button>
     </div>
   </div>
 
@@ -314,31 +318,31 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=65"></script>
-  <script src="./js/exif.js?v=65"></script>
-  <script src="./js/layout.js?v=65"></script>
-  <script src="./js/render.js?v=65"></script>
-  <script src="./js/stickers.js?v=65"></script>
-  <script src="./js/printers-data.js?v=65"></script>
-  <script src="./js/printers.js?v=65"></script>
-  <script src="./js/selection.js?v=65"></script>
-  <script src="./js/import.js?v=65"></script>
-  <script src="./js/cell-menu.js?v=65"></script>
-  <script src="./js/interactions.js?v=65"></script>
-  <script src="./js/editors.js?v=65"></script>
-  <script src="./js/pickers.js?v=65"></script>
-  <script src="./js/montage-ui.js?v=65"></script>
-  <script src="./js/settings.js?v=65"></script>
-  <script src="./js/controls.js?v=65"></script>
-  <script src="./js/stickers-ui.js?v=65"></script>
-  <script src="./js/export.js?v=65"></script>
-  <script src="./js/segmented.js?v=65"></script>
-  <script src="./js/presets.js?v=65"></script>
-  <script src="./js/pwa.js?v=65"></script>
-  <script src="./js/tabs.js?v=65"></script>
-  <script src="./js/slider-anchors.js?v=65"></script>
-  <script src="./js/main.js?v=65"></script>
-  <script src="./js/history.js?v=65"></script>
-  <script src="./js/projects.js?v=65"></script>
+  <script src="./js/core.js?v=66"></script>
+  <script src="./js/exif.js?v=66"></script>
+  <script src="./js/layout.js?v=66"></script>
+  <script src="./js/render.js?v=66"></script>
+  <script src="./js/stickers.js?v=66"></script>
+  <script src="./js/printers-data.js?v=66"></script>
+  <script src="./js/printers.js?v=66"></script>
+  <script src="./js/selection.js?v=66"></script>
+  <script src="./js/import.js?v=66"></script>
+  <script src="./js/cell-menu.js?v=66"></script>
+  <script src="./js/interactions.js?v=66"></script>
+  <script src="./js/editors.js?v=66"></script>
+  <script src="./js/pickers.js?v=66"></script>
+  <script src="./js/montage-ui.js?v=66"></script>
+  <script src="./js/settings.js?v=66"></script>
+  <script src="./js/controls.js?v=66"></script>
+  <script src="./js/stickers-ui.js?v=66"></script>
+  <script src="./js/export.js?v=66"></script>
+  <script src="./js/segmented.js?v=66"></script>
+  <script src="./js/presets.js?v=66"></script>
+  <script src="./js/pwa.js?v=66"></script>
+  <script src="./js/tabs.js?v=66"></script>
+  <script src="./js/slider-anchors.js?v=66"></script>
+  <script src="./js/main.js?v=66"></script>
+  <script src="./js/history.js?v=66"></script>
+  <script src="./js/projects.js?v=66"></script>
 </body>
 </html>
