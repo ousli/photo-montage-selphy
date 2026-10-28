@@ -41,7 +41,19 @@
   function applyAccent(dark) {
     const a = ACCENTS.find((x) => x.id === savedAccent());
     TOKENS.forEach((k) => root.style.removeProperty("--md-" + k));
-    if (a.id === "violet" || !window.M3Palette) return;
+    if (a.id === "violet") return;
+    if (!window.M3Palette) {
+      // palette (88 Ko) chargée seulement pour un accent autre que le violet ; en bloquant au démarrage pour éviter un flash de couleur
+      if (document.readyState === "loading") document.write('<script src="./vendor/m3-palette.js"><\/script>');
+      else {
+        const sc = document.createElement("script");
+        sc.src = "./vendor/m3-palette.js";
+        sc.onload = () => applyAccent(dark);
+        document.head.appendChild(sc);
+        return;
+      }
+      if (!window.M3Palette) return;
+    }
     const t = window.M3Palette(a.seed, dark);
     TOKENS.forEach((k) => root.style.setProperty("--md-" + k, t[k]));
   }

@@ -1,17 +1,17 @@
 // Export, téléchargement et impression
 
 function exportDataUrl() {
-  render(true);
+  renderNow(true);
   const url = canvas.toDataURL("image/jpeg", 0.95);
-  render();
+  renderNow();
   return url;
 }
 
 function exportBlob() {
   return new Promise((res) => {
-    render(true);
+    renderNow(true);
     canvas.toBlob((b) => {
-      render();
+      renderNow();
       res(b);
     }, "image/jpeg", 0.95);
   });
