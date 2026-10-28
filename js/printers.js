@@ -123,7 +123,31 @@ function paperInfo() {
     return { w: Math.max(c.w, c.h), h: Math.min(c.w, c.h), safe: c.safe, label: "Personnalisé" };
   }
   const pr = printerOf(printerId) || printerOf(DEFAULT_PRINTER);
-  return pr.papers.find((x) => x.id === paperId) || pr.papers[0];
+  const paper = pr.papers.find((x) => x.id === paperId) || pr.papers[0];
+  const ov = safeGet(pr.id, paper.id);
+  return ov == null ? paper : { ...paper, safe: ov, est: paper.safe };
+}
+
+// Marge de sécurité réglée par l'utilisateur, par imprimante + papier : prioritaire sur l'estimation du catalogue
+const SAFE_KEY = "montage-safe";
+function safeAll() {
+  try {
+    return JSON.parse(localStorage.getItem(SAFE_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+function safeGet(pid, paper) {
+  const v = safeAll()[`${pid}|${paper}`];
+  return Number.isFinite(v) ? v : null;
+}
+function safeSet(pid, paper, mm) {
+  const all = safeAll();
+  if (mm == null) delete all[`${pid}|${paper}`];
+  else all[`${pid}|${paper}`] = mm;
+  try {
+    localStorage.setItem(SAFE_KEY, JSON.stringify(all));
+  } catch (e) {}
 }
 function setPrinterState(id, pid, custom) {
   printerId = id === PRINTER_CUSTOM || id === PRINTER_FREE || printerOf(id) ? id : DEFAULT_PRINTER;

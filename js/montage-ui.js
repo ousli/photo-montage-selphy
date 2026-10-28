@@ -58,7 +58,7 @@ function refreshPrinterUI() {
     : !$("guides").checked
       ? `Papier ${dims}.`
       : pi.safe > 0
-        ? `Papier ${dims}. La partie grisée (environ ${pi.safe} mm, estimation) peut être rognée à l'impression.`
+        ? `Papier ${dims}. La partie grisée (environ ${pi.safe} mm) est une marge approximative, rognée plus ou moins selon l'imprimante : ajuste-la avec le curseur ci-dessous pour te repérer.`
         : `Papier ${dims}. Pas de rognage estimé pour ce modèle.`;
 }
 

@@ -10,9 +10,9 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=86" />
+  <link rel="stylesheet" href="./styles.css?v=88" />
   <p id="message" class="message" role="status" aria-live="polite"></p>
-  <script src="./js/theme.js?v=86"></script>
+  <script src="./js/theme.js?v=88"></script>
 </head>
 <body>
   <div id="projectsPanel" class="modal projects-full" hidden>
@@ -155,6 +155,9 @@
           <span>Zone imprimable</span>
         </label>
         <p id="paperNote" class="exif-note"></p>
+        <label id="safeWrap" hidden>Marge de sécurité <b></b>
+          <input id="safeMm" type="range" min="0" max="10" step="1" value="2" />
+        </label>
         <details class="adv"><summary>Préréglages</summary>
           <div id="presetList" class="presets"></div>
           <div class="row">
@@ -333,32 +336,33 @@
   </main>
 
   <div id="cellMenu" class="cell-menu" hidden></div>
-  <script src="./js/core.js?v=86"></script>
-  <script src="./js/exif.js?v=86"></script>
-  <script src="./js/layout.js?v=86"></script>
-  <script src="./js/render.js?v=86"></script>
-  <script src="./js/stickers.js?v=86"></script>
-  <script src="./js/printers-data.js?v=86"></script>
-  <script src="./js/printers.js?v=86"></script>
-  <script src="./js/selection.js?v=86"></script>
-  <script src="./js/import.js?v=86"></script>
-  <script src="./js/cell-menu.js?v=86"></script>
-  <script src="./js/interactions.js?v=86"></script>
-  <script src="./js/editors.js?v=86"></script>
-  <script src="./js/pickers.js?v=86"></script>
-  <script src="./js/montage-ui.js?v=86"></script>
-  <script src="./js/settings.js?v=86"></script>
-  <script src="./js/controls.js?v=86"></script>
-  <script src="./js/stickers-ui.js?v=86"></script>
-  <script src="./js/export.js?v=86"></script>
-  <script src="./js/segmented.js?v=86"></script>
-  <script src="./js/presets.js?v=86"></script>
-  <script src="./js/pwa.js?v=86"></script>
-  <script src="./js/tabs.js?v=86"></script>
-  <script src="./js/ripple.js?v=86"></script>
-  <script src="./js/slider-anchors.js?v=86"></script>
-  <script src="./js/main.js?v=86"></script>
-  <script src="./js/history.js?v=86"></script>
-  <script src="./js/projects.js?v=86"></script>
+  <script src="./js/core.js?v=88"></script>
+  <script src="./js/exif.js?v=88"></script>
+  <script src="./js/layout.js?v=88"></script>
+  <script src="./js/render.js?v=88"></script>
+  <script src="./js/stickers.js?v=88"></script>
+  <script src="./js/printers-data.js?v=88"></script>
+  <script src="./js/printers.js?v=88"></script>
+  <script src="./js/selection.js?v=88"></script>
+  <script src="./js/import.js?v=88"></script>
+  <script src="./js/cell-menu.js?v=88"></script>
+  <script src="./js/interactions.js?v=88"></script>
+  <script src="./js/editors.js?v=88"></script>
+  <script src="./js/pickers.js?v=88"></script>
+  <script src="./js/montage-ui.js?v=88"></script>
+  <script src="./js/settings.js?v=88"></script>
+  <script src="./js/controls.js?v=88"></script>
+  <script src="./js/stickers-ui.js?v=88"></script>
+  <script src="./js/export.js?v=88"></script>
+  <script src="./js/safe-margin.js?v=88"></script>
+  <script src="./js/segmented.js?v=88"></script>
+  <script src="./js/presets.js?v=88"></script>
+  <script src="./js/pwa.js?v=88"></script>
+  <script src="./js/tabs.js?v=88"></script>
+  <script src="./js/ripple.js?v=88"></script>
+  <script src="./js/slider-anchors.js?v=88"></script>
+  <script src="./js/main.js?v=88"></script>
+  <script src="./js/history.js?v=88"></script>
+  <script src="./js/projects.js?v=88"></script>
 </body>
 </html>

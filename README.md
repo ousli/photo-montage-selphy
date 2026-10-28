@@ -60,6 +60,7 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
   - `theme` : thème clair/sombre et couleur d'accent (variables CSS dans `styles.css`, chargé dans `<head>` après `vendor/m3-palette.js`)
   - `ripple` : onde de l'état pressé M3
   - (rendu regroupé par image : `render()` planifie, `renderNow()` dessine tout de suite ; `exifr` et la palette d'accent se chargent à la demande)
+  - `safe-margin` : curseur de marge de sécurité (0 à 5 mm, mémorisé par imprimante + papier, stockage dans `printers.js`)
   - `export`, `presets`, `pwa`, `tabs`, `main` : impression/export, préréglages, hors ligne, onglets, premier rendu
   - `history` : historique annuler/rétablir et sauvegarde automatique (IndexedDB)
 
@@ -68,6 +69,7 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
 - **Annuler / rétablir** : boutons flèches courbes en haut (ou Ctrl/Cmd+Z, Ctrl+Maj+Z).
 - **Sauvegarde automatique** : le montage en cours (photos et réglages) est restauré à la réouverture.
 - **Zone imprimable** : repères pointillés (≈ 3 mm, estimation) selon le papier de l'imprimante choisie. Ces valeurs sont des estimations à vérifier par un test d'impression.
+- **Marge de sécurité** : dans l'onglet Montage, un curseur (0 à 5 mm) règle la zone grisée. Repères : 1 mm (minimum) et l'estimation de l'imprimante. C'est une marge approximative, à ajuster pour te repérer ; l'interrupteur « Zone imprimable » la masque
 - **Mise en page** : grille, « une grande photo » ou mosaïque (3 à 6 photos) ; marge extérieure séparée (optionnelle) ; fond, coins arrondis et cadre dans « Apparence ».
 - **Texte** : légende par photo, titre en haut ou en bas, date du jour automatique.
 - **Photos** : JPEG, PNG, WebP, HEIC/HEIF, AVIF, GIF (60 Mo max) ; les grandes photos sont réduites à 3600 px.
