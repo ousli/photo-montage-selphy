@@ -384,10 +384,7 @@ function cutRender(tol, final, holes = false) {
   const near = (i) => d[i + 3] < 8 || distAt(i) <= tol;
   const seen = new Uint8Array(w * h);
   let n = 0;
-  const auto = cutPreview.alpha;
-  if (auto) {
-    for (let p = 0; p < w * h; p++) if (auto[p] < 128) (seen[p] = 1), n++;
-  } else if (holes) {
+  if (holes) {
     for (let p = 0; p < w * h; p++) if (near(p * 4)) (seen[p] = 1), n++;
   } else {
     const stack = [];
@@ -412,15 +409,14 @@ function cutRender(tol, final, holes = false) {
   const out = new ImageData(w, h);
   const o = out.data;
   o.set(d);
-  if (auto && final) for (let p = 0; p < w * h; p++) o[p * 4 + 3] = Math.min(d[p * 4 + 3], auto[p]);
   for (let p = 0; p < w * h; p++) {
     const i = p * 4;
-    if (seen[p] && !(auto && final)) {
+    if (seen[p]) {
       if (final) o[i + 3] = 0;
       else (o[i] = 255), (o[i + 1] = 40), (o[i + 2] = 160), (o[i + 3] = 110);
     }
   }
-  if (final && !auto) {
+  if (final) {
     // couronne d'un pixel autour du fond : opacité selon l'écart à la couleur du fond, puis retrait de la teinte du fond mélangée
     const span = tol * 0.8 + 8;
     for (let y = 1; y < h - 1; y++)
@@ -440,18 +436,6 @@ function cutRender(tol, final, holes = false) {
   }
   cutPreview.cx.putImageData(out, 0, 0);
   return { n, pct: Math.round((n / (w * h)) * 100) };
-}
-
-// fond non uni : détourage automatique (js/grabcut.js) ; inset = marge ignorée autour du sujet (fraction)
-function cutAuto(inset) {
-  const { w, h } = cutPreview;
-  const c = document.createElement("canvas");
-  c.width = w;
-  c.height = h;
-  c.getContext("2d").putImageData(cutPreview.data, 0, 0);
-  cutPreview.alpha = grabCutAlpha(c, w, h, inset);
-  cutPreview.autoInset = inset;
-  return !!cutPreview.alpha;
 }
 
 function cutCancel() {
