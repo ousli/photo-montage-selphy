@@ -297,7 +297,7 @@ const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
   const c = document.createElement("canvas");
   c.width = 96;
   c.height = 64;
-  c.style.filter = filterCss({ look: k });
+  if (!FILM_STOCKS[k]) c.style.filter = filterCss({ look: k });
   const span = document.createElement("span");
   span.textContent = label;
   b.append(c, span);
@@ -314,11 +314,12 @@ let lookThumbSrc = null;
 function drawLookThumbs(img) {
   if (img === lookThumbSrc) return;
   lookThumbSrc = img;
-  for (const [, , c] of lookTiles) {
+  for (const [k, , c] of lookTiles) {
     const g = c.getContext("2d");
     if (img) {
       const k = Math.max(c.width / img.width, c.height / img.height);
       g.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k);
+      if (FILM_STOCKS[k]) filterPixels(g, c.width, c.height, { look: k });
     } else {
       const gr = g.createLinearGradient(0, 0, c.width, c.height);
       gr.addColorStop(0, "#e9a14a");

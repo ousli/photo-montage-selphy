@@ -101,9 +101,9 @@ function drawOverlay(s, pr) {
   ctx.restore();
 }
 
-// Retouche d'une photo : { look: none | bw | sepia | vivid | film, bright, contrast } (100 = inchangé)
-const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", film: "Argentique" };
-const filterOf = (s) => ({ look: s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
+// Retouche d'une photo : { look: none | bw | sepia | vivid | portra | fuji, bright, contrast } (100 = inchangé)
+const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", portra: "Portra", fuji: "Fuji" };
+const filterOf = (s) => ({ look: s.look === "film" ? "portra" : s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
 const hasFilter = (s) => {
   const f = filterOf(s);
   return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
@@ -112,12 +112,34 @@ const filterCss = (s) => {
   const f = filterOf(s);
   return `brightness(${f.bright}%) contrast(${f.contrast}%)${LOOK_CSS[f.look] || ""}`;
 };
-// Vif : couleurs plus denses pour l'impression thermique. Argentique : noirs relevés, teinte chaude, saturation douce
+// Vif : couleurs plus denses pour l'impression thermique. Portra / Fuji : émulations de pellicule (voir FILM_STOCKS), calculées pixel par pixel
 const LOOK_CSS = {
   bw: " grayscale(1)",
   sepia: " sepia(1)",
   vivid: " saturate(1.38) contrast(1.08)",
-  film: " contrast(0.92) brightness(1.05) sepia(0.18) saturate(0.88)",
+};
+// Émulations de pellicule : courbe par canal (noir relevé, blanc adouci, contraste en S), saturation et grain stable (hash de la position, donc identique à chaque rendu)
+const FILM_STOCKS = {
+  portra: { ch: [[0.05, 1, 0.22], [0.045, 0.985, 0.22], [0.07, 0.925, 0.18]], sat: 0.9, grain: 5 },
+  fuji: { ch: [[0.03, 0.98, 0.42], [0.055, 1, 0.42], [0.065, 0.955, 0.36]], sat: 1.14, grain: 7 },
+};
+const filmLut = {};
+function filmLuts(look) {
+  if (filmLut[look]) return filmLut[look];
+  return (filmLut[look] = FILM_STOCKS[look].ch.map(([lo, hi, c]) => {
+    const t = new Uint8Array(256);
+    for (let v = 0; v < 256; v++) {
+      const x = v / 255;
+      const sm = x * x * (3 - 2 * x);
+      t[v] = Math.round(255 * (lo + (hi - lo) * (x + c * (sm - x))));
+    }
+    return t;
+  }));
+}
+const filmNoise = (x, y) => {
+  let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) & 255) / 127.5 - 1;
 };
 const LUM = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 const sepiaMix = (r, g, b, a) => [
@@ -147,11 +169,13 @@ function filterPixels(g, w, h, s) {
       const l = LUM(r, gr, bl);
       r = l + 1.38 * (r - l); gr = l + 1.38 * (gr - l); bl = l + 1.38 * (bl - l);
       r = (r - 127.5) * 1.08 + 127.5; gr = (gr - 127.5) * 1.08 + 127.5; bl = (bl - 127.5) * 1.08 + 127.5;
-    } else if (f.look === "film") {
-      r = ((r - 127.5) * 0.92 + 127.5) * 1.05; gr = ((gr - 127.5) * 0.92 + 127.5) * 1.05; bl = ((bl - 127.5) * 0.92 + 127.5) * 1.05;
-      [r, gr, bl] = sepiaMix(r, gr, bl, 0.18);
+    } else if (FILM_STOCKS[f.look]) {
+      const st = FILM_STOCKS[f.look];
+      const lut = filmLuts(f.look);
+      r = lut[0][clamp(r) | 0]; gr = lut[1][clamp(gr) | 0]; bl = lut[2][clamp(bl) | 0];
       const l = LUM(r, gr, bl);
-      r = l + 0.88 * (r - l); gr = l + 0.88 * (gr - l); bl = l + 0.88 * (bl - l);
+      const n = filmNoise((i >> 2) % w, ((i >> 2) / w) | 0) * st.grain * (1 - Math.abs(l / 127.5 - 1) * 0.6);
+      r = l + st.sat * (r - l) + n; gr = l + st.sat * (gr - l) + n; bl = l + st.sat * (bl - l) + n;
     }
     d[i] = clamp(r);
     d[i + 1] = clamp(gr);
@@ -180,7 +204,7 @@ function paintSlot(g, s, c, dx, dy) {
 
 function drawSlot(s, c) {
   if (!hasFilter(s)) return paintSlot(ctx, s, c, 0, 0);
-  if (CTX_FILTER) {
+  if (CTX_FILTER && !FILM_STOCKS[filterOf(s).look]) {
     ctx.filter = filterCss(s);
     return paintSlot(ctx, s, c, 0, 0);
   }

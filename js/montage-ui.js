@@ -12,7 +12,7 @@ function refreshMontageUI() {
   setLayoutChips((k) => k === layoutKey, false);
   const miss = !layoutAvailable(layoutKey, count());
   $("layoutNote").hidden = !miss;
-  if (miss) $("layoutNote").textContent = `Pas de mise en page « ${LAYOUT_LABELS[layoutKey]} » pour ${count()} photos : la grille est utilisée.`;
+  if (miss) $("layoutNote").textContent = `Pas de mise en page « ${LAYOUT_LABELS[layoutKey]} » pour ${count()} photo${count() > 1 ? "s" : ""} : la grille est utilisée.`;
   $("outerWrap").hidden = $("gapLink").checked;
   setGapChips((v) => Number(v) === gapV() && ($("gapLink").checked || Number($("outerGap").value) === gapV()), false);
   // ancre aimantée sur la marge mécanique de l'imprimante (zone rognée au tirage)
