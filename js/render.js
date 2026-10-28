@@ -193,7 +193,19 @@ function drawSlot(s, c) {
   ctx.drawImage(off, c.x, c.y);
 }
 
+// render() regroupe les demandes d'une même image (un seul dessin par frame) ; l'export dessine tout de suite
+let renderQueued = false;
 function render(forExport = false) {
+  if (forExport) return renderNow(true);
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => {
+    renderQueued = false;
+    renderNow(false);
+  });
+}
+
+function renderNow(forExport = false) {
   const [w, h] = canvasSize();
   canvas.width = w;
   canvas.height = h;

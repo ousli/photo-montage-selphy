@@ -59,6 +59,7 @@ Sur mobile, le bouton « Télécharger » ouvre la feuille de partage : choisis 
   - `projects` : projets nommés (IndexedDB), panneau Projets
   - `theme` : thème clair/sombre et couleur d'accent (variables CSS dans `styles.css`, chargé dans `<head>` après `vendor/m3-palette.js`)
   - `ripple` : onde de l'état pressé M3
+  - (rendu regroupé par image : `render()` planifie, `renderNow()` dessine tout de suite ; `exifr` et la palette d'accent se chargent à la demande)
   - `export`, `presets`, `pwa`, `tabs`, `main` : impression/export, préréglages, hors ligne, onglets, premier rendu
   - `history` : historique annuler/rétablir et sauvegarde automatique (IndexedDB)
 

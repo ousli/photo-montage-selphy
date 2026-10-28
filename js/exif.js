@@ -44,8 +44,25 @@ function formatExif(r) {
   return Object.keys(out).length ? out : null;
 }
 
+// exifr (76 Ko) n'est chargé qu'à la première photo importée
+let exifrLoad = null;
+function loadExifr() {
+  if (typeof exifr !== "undefined") return Promise.resolve(true);
+  exifrLoad ||= new Promise((res) => {
+    const sc = document.createElement("script");
+    sc.src = "./vendor/exifr.full.umd.js";
+    sc.onload = () => res(true);
+    sc.onerror = () => {
+      exifrLoad = null;
+      res(false);
+    };
+    document.head.appendChild(sc);
+  });
+  return exifrLoad;
+}
+
 async function readExif(file) {
-  if (typeof exifr === "undefined") return null;
+  if (!(await loadExifr())) return null;
   try {
     return formatExif(await exifr.parse(file, { gps: true }));
   } catch (e) {
