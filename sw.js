@@ -1,5 +1,5 @@
 // Incrémente la version pour forcer la mise à jour du cache
-const CACHE = "montage-photo-v85";
+const CACHE = "montage-photo-v86";
 const ASSETS = [
   "./",
   "./index.html",
