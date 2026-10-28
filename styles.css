@@ -546,3 +546,9 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 @keyframes theme-spin { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
 #themeBtn svg.theme-spin { animation: theme-spin 0.3s ease-out; }
 @media (prefers-reduced-motion: reduce) { #themeBtn svg.theme-spin { animation: none; } }
+
+/* Stickers */
+.emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin: 8px 0 12px; }
+.emoji-btn { font-size: 1.5rem; line-height: 1; padding: 6px 0; background: var(--surface); border: 1px solid var(--line2); border-radius: 8px; cursor: pointer; }
+.emoji-btn:active { background: var(--soft); }
+@media (max-width: 430px) { .emoji-btn { font-size: 1.35rem; padding: 8px 0; } }

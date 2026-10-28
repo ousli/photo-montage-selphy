@@ -115,6 +115,7 @@ $("resetAllBtn2").onclick = () => $("resetAllBtn").click();
 $("resetAllBtn").onclick = () => {
   if (!confirm("Réinitialiser les réglages et retirer toutes les photos ?")) return;
   slots.fill(null);
+  clearStickers();
   setSettings(DEFAULT_SETTINGS);
   selected = 0;
   render();

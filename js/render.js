@@ -225,7 +225,7 @@ function render(forExport = false) {
 
   if (!forExport) drawGuides(w, h);
 
-  if (!forExport && cells[selected]) {
+  if (!forExport && !selectedSticker && cells[selected]) {
     const c = cells[selected];
     ctx.strokeStyle = "#3366ff";
     ctx.lineWidth = 8;
@@ -233,5 +233,7 @@ function render(forExport = false) {
     ctx.stroke();
   }
   if (!forExport && swap) drawSwapOverlay();
+  drawStickers(forExport);
   refreshUI();
+  refreshStickerUI();
 }

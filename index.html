@@ -10,8 +10,8 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=48" />
-  <script src="./js/theme.js?v=46"></script>
+  <link rel="stylesheet" href="./styles.css?v=52" />
+  <script src="./js/theme.js?v=52"></script>
 </head>
 <body>
   <header class="topbar">
@@ -205,6 +205,30 @@
         <button id="capApplyAll" type="button" class="ghost small">Appliquer ce style à toutes les légendes</button>
       </section>
 
+      <section class="card tab-panel" data-panel="stickers" hidden>
+        <h2>Emoji</h2>
+        <div id="emojiCats" class="fonts"></div>
+        <div id="emojiGrid" class="emoji-grid"></div>
+        <h2>Image</h2>
+        <button id="stickerImportBtn" type="button" class="secondary small">Importer une image…</button>
+        <p class="exif-note">PNG ou WebP à fond transparent conseillés (réduite à 1024 px).</p>
+        <input id="stickerFile" type="file" accept="image/png,image/webp,image/gif,image/avif,image/jpeg,.png,.webp,.gif,.avif,.jpg,.jpeg" hidden />
+        <h2>Sticker sélectionné</h2>
+        <p id="stickerNote" class="exif-note"></p>
+        <label>Taille <b></b>
+          <input id="stickerSize" type="range" min="4" max="150" value="20" />
+        </label>
+        <label>Rotation <b></b>
+          <input id="stickerRot" type="range" min="-180" max="180" value="0" />
+        </label>
+        <div class="row">
+          <button id="stickerDup" type="button" class="secondary small">Dupliquer</button>
+          <button id="stickerFront" type="button" class="secondary small">Devant</button>
+          <button id="stickerBack" type="button" class="secondary small">Derrière</button>
+        </div>
+        <button id="stickerDel" type="button" class="ghost small">Supprimer le sticker</button>
+      </section>
+
       <section class="card tab-panel" data-panel="info" hidden>
         <h2>1. Afficher</h2>
         <div id="exifMode" class="fonts"></div>
@@ -231,6 +255,7 @@
         <button type="button" role="tab" data-tab="montage" class="on">Montage</button>
         <button type="button" role="tab" data-tab="photo">Photo</button>
         <button type="button" role="tab" data-tab="text">Texte</button>
+        <button type="button" role="tab" data-tab="stickers">Stickers</button>
         <button type="button" role="tab" data-tab="info">Infos</button>
       </nav>
     </aside>
@@ -245,27 +270,29 @@
 
   <div id="cellMenu" class="cell-menu" hidden></div>
   <script src="./vendor/exifr.full.umd.js"></script>
-  <script src="./js/core.js?v=44"></script>
-  <script src="./js/exif.js?v=44"></script>
-  <script src="./js/layout.js?v=44"></script>
-  <script src="./js/render.js?v=44"></script>
-  <script src="./js/printers-data.js?v=44"></script>
-  <script src="./js/printers.js?v=44"></script>
-  <script src="./js/selection.js?v=44"></script>
-  <script src="./js/import.js?v=44"></script>
-  <script src="./js/cell-menu.js?v=44"></script>
-  <script src="./js/interactions.js?v=44"></script>
-  <script src="./js/editors.js?v=44"></script>
-  <script src="./js/pickers.js?v=44"></script>
-  <script src="./js/montage-ui.js?v=44"></script>
-  <script src="./js/settings.js?v=44"></script>
-  <script src="./js/controls.js?v=44"></script>
-  <script src="./js/export.js?v=47"></script>
-  <script src="./js/segmented.js?v=44"></script>
-  <script src="./js/presets.js?v=44"></script>
-  <script src="./js/pwa.js?v=44"></script>
-  <script src="./js/tabs.js?v=44"></script>
-  <script src="./js/main.js?v=44"></script>
-  <script src="./js/history.js?v=44"></script>
+  <script src="./js/core.js?v=52"></script>
+  <script src="./js/exif.js?v=52"></script>
+  <script src="./js/layout.js?v=52"></script>
+  <script src="./js/render.js?v=52"></script>
+  <script src="./js/stickers.js?v=52"></script>
+  <script src="./js/printers-data.js?v=52"></script>
+  <script src="./js/printers.js?v=52"></script>
+  <script src="./js/selection.js?v=52"></script>
+  <script src="./js/import.js?v=52"></script>
+  <script src="./js/cell-menu.js?v=52"></script>
+  <script src="./js/interactions.js?v=52"></script>
+  <script src="./js/editors.js?v=52"></script>
+  <script src="./js/pickers.js?v=52"></script>
+  <script src="./js/montage-ui.js?v=52"></script>
+  <script src="./js/settings.js?v=52"></script>
+  <script src="./js/controls.js?v=52"></script>
+  <script src="./js/stickers-ui.js?v=52"></script>
+  <script src="./js/export.js?v=52"></script>
+  <script src="./js/segmented.js?v=52"></script>
+  <script src="./js/presets.js?v=52"></script>
+  <script src="./js/pwa.js?v=52"></script>
+  <script src="./js/tabs.js?v=52"></script>
+  <script src="./js/main.js?v=52"></script>
+  <script src="./js/history.js?v=52"></script>
 </body>
 </html>

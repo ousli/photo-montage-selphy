@@ -12,9 +12,9 @@
     if (c.exif && c.exif.placeState === "loading") delete c.exif.placeState;
     return { ...c, img, blob };
   }
-  const getState = () => ({ settings: getSettings(), slots: slots.map(snapSlot), selected });
+  const getState = () => ({ settings: getSettings(), slots: slots.map(snapSlot), selected, stickers: stickers.map(snapSticker) });
   // signature des seules modifications annulables (sans images, sans données EXIF dérivées)
-  const sig = (st) => JSON.stringify({ s: st.settings, l: st.slots }, (k, v) => (k === "img" || k === "blob" || k === "exif" ? undefined : v));
+  const sig = (st) => JSON.stringify({ s: st.settings, l: st.slots, k: st.stickers }, (k, v) => (k === "img" || k === "blob" || k === "exif" ? undefined : v));
 
   function applyState(st, resetSlots = true) {
     applying = true;
@@ -23,6 +23,8 @@
       if (resetSlots) slots.fill(null);
       st.slots.forEach((x, i) => (slots[i] = snapSlot(x)));
       selected = Math.min(st.selected || 0, count() - 1);
+      stickers = (st.stickers || []).map(snapSticker);
+      if (!getSticker(selectedSticker)) selectedSticker = null;
       render();
     } finally {
       applying = false;
@@ -147,6 +149,14 @@
         stored.add(x.uid);
       }
     }
+    for (const x of st.stickers) {
+      if (!x.uid || !x.blob) continue;
+      used.add(x.uid);
+      if (!stored.has(x.uid)) {
+        await idb("photos", "readwrite", (o) => o.put(x.blob, x.uid));
+        stored.add(x.uid);
+      }
+    }
     const keys = (await idb("photos", "readonly", (o) => o.getAllKeys())) || [];
     for (const k of keys) {
       if (!used.has(k)) {
@@ -158,6 +168,10 @@
       v: 1,
       settings: st.settings,
       selected: st.selected,
+      stickers: st.stickers.map((x) => {
+        const { img, blob, ...rest } = x;
+        return rest;
+      }),
       slots: st.slots.map((x) => {
         if (!x || !x.uid || !x.blob) return null;
         const { img, blob, ...rest } = x;
@@ -193,12 +207,30 @@
         return { ...x, img, blob };
       })
     );
+    const stk = (
+      await Promise.all(
+        (doc.stickers || []).map(async (x) => {
+          if (x.kind !== "image") return x;
+          const blob = await idb("photos", "readonly", (o) => o.get(x.uid));
+          if (!blob) return null;
+          const img = await new Promise((res) => {
+            const i = new Image();
+            i.onload = () => res(i);
+            i.onerror = () => res(null);
+            i.src = URL.createObjectURL(blob);
+          });
+          if (!img) return null;
+          stored.add(x.uid);
+          return { ...x, img, blob };
+        })
+      )
+    ).filter(Boolean);
     if (idx > 0) return false; // l'utilisateur a déjà commencé un nouveau montage
     const hasPhotos = loaded.some(Boolean);
     const settingsChanged = sig({ settings: doc.settings, slots: [] }) !== sig({ settings: getSettings(), slots: [] });
-    if (!hasPhotos && !settingsChanged) return false;
-    applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected }, true);
-    return hasPhotos;
+    if (!hasPhotos && !settingsChanged && !stk.length) return false;
+    applyState({ settings: { ...DEFAULT_SETTINGS, ...doc.settings }, slots: loaded, selected: doc.selected, stickers: stk }, true);
+    return hasPhotos || stk.length > 0;
   }
 
   // état de départ : on ne le restaure qu'une fois, avant toute action de l'utilisateur

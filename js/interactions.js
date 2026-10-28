@@ -14,6 +14,7 @@ function cellAt(ev) {
 }
 
 let drag = null;
+let stickerDrag = null; // { part, id, ... } geste en cours sur un sticker
 let swap = null; // { x, y } position du pointeur en coordonnées canvas pendant un échange
 const LONG_PRESS_MS = 400;
 const pointers = new Map();
@@ -22,11 +23,41 @@ let pinch = null;
 canvas.addEventListener("pointerdown", (ev) => {
   pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
   canvas.setPointerCapture(ev.pointerId);
+  if (pointers.size === 1) {
+    // les stickers sont au-dessus de tout : ils ont la priorité sur la photo en dessous
+    const pt = canvasPoint(ev);
+    const hit = stickerHit(pt.x, pt.y, ev.pointerType !== "mouse");
+    if (hit) {
+      hideMenu();
+      selectedSticker = hit.s.id;
+      const s = hit.s;
+      const cx = s.x * canvas.width;
+      const cy = s.y * canvas.height;
+      stickerDrag = {
+        part: hit.part,
+        id: s.id,
+        dx: pt.x - cx,
+        dy: pt.y - cy,
+        size0: s.size,
+        dist0: Math.hypot(pt.x - cx, pt.y - cy) || 1,
+        ang0: Math.atan2(pt.y - cy, pt.x - cx),
+        rot0: s.rot,
+      };
+      canvas.style.cursor = "grabbing";
+      render();
+      return;
+    }
+    if (selectedSticker) {
+      selectedSticker = null;
+      render();
+    }
+  }
   if (pointers.size === 2) {
     // deuxième doigt : pincement pour zoomer la photo de la case sélectionnée
     const [a, b] = [...pointers.values()];
     pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 };
     drag = null;
+    stickerDrag = null;
     return;
   }
   const i = cellAt(ev);
@@ -52,6 +83,9 @@ canvas.addEventListener("pointerdown", (ev) => {
 canvas.addEventListener("pointermove", (ev) => {
   if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
   const s = slots[selected];
+  if (stickerDrag) return moveStickerGesture(ev);
+  if (pinch && pointers.size >= 2 && currentSticker()) return pinchSticker(currentSticker());
+  if (!pointers.size && ev.pointerType === "mouse") return hoverCursor(ev);
   if (pinch && pointers.size >= 2) {
     if (!s) return;
     const [a, b] = [...pointers.values()];
@@ -98,6 +132,47 @@ canvas.addEventListener("pointermove", (ev) => {
   drag.y = ev.clientY;
   render();
 });
+function moveStickerGesture(ev) {
+  const st = currentSticker();
+  if (!st || !stickerDrag) return;
+  const pt = canvasPoint(ev);
+  const cx = st.x * canvas.width;
+  const cy = st.y * canvas.height;
+  if (stickerDrag.part === "scale") {
+    st.size = clampSize((stickerDrag.size0 * (Math.hypot(pt.x - cx, pt.y - cy) || 1)) / stickerDrag.dist0);
+  } else if (stickerDrag.part === "rotate") {
+    const da = ((Math.atan2(pt.y - cy, pt.x - cx) - stickerDrag.ang0) * 180) / Math.PI;
+    st.rot = Math.round(wrapAngle(stickerDrag.rot0 + da));
+  } else {
+    st.x = Math.max(0, Math.min(1, (pt.x - stickerDrag.dx) / canvas.width));
+    st.y = Math.max(0, Math.min(1, (pt.y - stickerDrag.dy) / canvas.height));
+  }
+  render();
+}
+
+// deux doigts avec un sticker sélectionné : taille, rotation et déplacement du sticker
+function pinchSticker(st) {
+  const [a, b] = [...pointers.values()];
+  const dist = Math.hypot(a.x - b.x, a.y - b.y);
+  const ang = Math.atan2(b.y - a.y, b.x - a.x);
+  const mx = (a.x + b.x) / 2;
+  const my = (a.y + b.y) / 2;
+  if (pinch.dist > 0) st.size = clampSize(st.size * (dist / pinch.dist));
+  st.rot = Math.round(wrapAngle(st.rot + ((ang - pinch.ang) * 180) / Math.PI));
+  const r = canvas.getBoundingClientRect();
+  st.x = Math.max(0, Math.min(1, st.x + (mx - pinch.mx) / r.width));
+  st.y = Math.max(0, Math.min(1, st.y + (my - pinch.my) / r.height));
+  Object.assign(pinch, { dist, ang, mx, my });
+  render();
+}
+
+// souris : curseur adapté au survol d'un sticker ou d'une poignée
+function hoverCursor(ev) {
+  const pt = canvasPoint(ev);
+  const hit = stickerHit(pt.x, pt.y, false);
+  canvas.style.cursor = !hit ? "grab" : hit.part === "scale" ? "nwse-resize" : hit.part === "rotate" ? "crosshair" : "move";
+}
+
 const endDrag = () => {
   if (drag) clearTimeout(drag.timer);
   const wasSwapping = !!swap;
@@ -108,6 +183,12 @@ const endDrag = () => {
 };
 canvas.addEventListener("pointerup", (ev) => {
   pointers.delete(ev.pointerId);
+  if (stickerDrag) {
+    stickerDrag = null;
+    canvas.style.cursor = "grab";
+    render();
+    return;
+  }
   if (pinch) {
     if (pointers.size < 2) pinch = null;
     endDrag();
@@ -138,12 +219,22 @@ document.addEventListener("selectionchange", () => {
 canvas.addEventListener("pointercancel", (ev) => {
   pointers.delete(ev.pointerId);
   if (pointers.size < 2) pinch = null;
+  stickerDrag = null;
   endDrag();
 });
 
 canvas.addEventListener(
   "wheel",
   (ev) => {
+    const pt = canvasPoint(ev);
+    const hit = stickerHit(pt.x, pt.y, false);
+    if (hit) {
+      ev.preventDefault();
+      selectedSticker = hit.s.id;
+      hit.s.size = clampSize(hit.s.size * (ev.deltaY < 0 ? 1.06 : 1 / 1.06));
+      render();
+      return;
+    }
     const i = cellAt(ev);
     if (i < 0 || !slots[i]) return;
     ev.preventDefault();
