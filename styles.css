@@ -563,3 +563,6 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
 .sticker-h { margin-top: 16px; }
 .cut-pink { color: #ff28a0; font-weight: 700; }
 .sticker-cut .row { margin-top: 10px; }
+.danger-btn { width: 100%; margin-top: 12px; background: transparent; color: #e5383b; border: 1.5px solid #e5383b; font-weight: 600; }
+.danger-btn:hover:not(:disabled) { background: #e5383b; color: #fff; filter: none; }
+#stickerSel .exif-note { margin-top: 8px; }

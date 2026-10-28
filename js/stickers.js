@@ -115,16 +115,21 @@ function drawStickers(forExport) {
   ctx.lineTo(0, -hh - h.rotDist);
   ctx.stroke();
   ctx.restore();
-  [[h.scale, "scale"], [h.rotate, "rotate"]].forEach(([p, kind]) => {
+  [[h.scale, "scale"], [h.rotate, "rotate"], [h.del, "del"]].forEach(([p, kind]) => {
     ctx.beginPath();
     ctx.arc(p.x, p.y, 10 * k, 0, Math.PI * 2);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = kind === "del" ? "#e5383b" : "#fff";
     ctx.fill();
-    ctx.strokeStyle = "#3366ff";
+    ctx.strokeStyle = kind === "del" ? "#fff" : "#3366ff";
     ctx.lineWidth = 2.5 * k;
     ctx.stroke();
     ctx.beginPath();
-    if (kind === "rotate") ctx.arc(p.x, p.y, 4.5 * k, -Math.PI * 0.8, Math.PI * 0.55);
+    if (kind === "del") {
+      ctx.moveTo(p.x - 4 * k, p.y - 4 * k);
+      ctx.lineTo(p.x + 4 * k, p.y + 4 * k);
+      ctx.moveTo(p.x + 4 * k, p.y - 4 * k);
+      ctx.lineTo(p.x - 4 * k, p.y + 4 * k);
+    } else if (kind === "rotate") ctx.arc(p.x, p.y, 4.5 * k, -Math.PI * 0.8, Math.PI * 0.55);
     else {
       ctx.moveTo(p.x - 4 * k, p.y + 4 * k);
       ctx.lineTo(p.x + 4 * k, p.y - 4 * k);
@@ -142,7 +147,7 @@ function stickerHandles(s) {
   const cy = s.y * canvas.height;
   const rotDist = 30 * k;
   const at = (lx, ly) => ({ x: cx + lx * Math.cos(a) - ly * Math.sin(a), y: cy + lx * Math.sin(a) + ly * Math.cos(a) });
-  return { scale: at(hw, hh), rotate: at(0, -hh - rotDist), rotDist, cx, cy };
+  return { scale: at(hw, hh), rotate: at(0, -hh - rotDist), del: at(-hw, -hh), rotDist, cx, cy };
 }
 
 // renvoie { s, part: "scale" | "rotate" | "body" } pour le point (px, py) du canevas, ou null
@@ -154,6 +159,7 @@ function stickerHit(px, py, touch) {
     const h = stickerHandles(cur);
     if (Math.hypot(px - h.scale.x, py - h.scale.y) <= r) return { s: cur, part: "scale" };
     if (Math.hypot(px - h.rotate.x, py - h.rotate.y) <= r) return { s: cur, part: "rotate" };
+    if (Math.hypot(px - h.del.x, py - h.del.y) <= r) return { s: cur, part: "del" };
   }
   for (let i = stickers.length - 1; i >= 0; i--) {
     const s = stickers[i];

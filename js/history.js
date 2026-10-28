@@ -111,13 +111,22 @@
   // ---- sauvegarde automatique ----
   const dbP = new Promise((res, rej) => {
     if (!window.indexedDB) return rej(new Error("no idb"));
-    const r = indexedDB.open("montage-photo", 1);
-    r.onupgradeneeded = () => {
-      r.result.createObjectStore("kv");
-      r.result.createObjectStore("photos");
+    // ouverture sans version imposée : une base déjà passée en version supérieure (autre branche) reste utilisable
+    const need = (db) => ["kv", "photos"].filter((n) => !db.objectStoreNames.contains(n));
+    const mk = (db) => need(db).forEach((n) => db.createObjectStore(n));
+    const open = (ver) => {
+      const r = ver ? indexedDB.open("montage-photo", ver) : indexedDB.open("montage-photo");
+      r.onupgradeneeded = () => mk(r.result);
+      r.onsuccess = () => {
+        const db = r.result;
+        if (!need(db).length) return res(db);
+        const v = db.version + 1;
+        db.close();
+        open(v);
+      };
+      r.onerror = () => rej(r.error);
     };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    open();
   });
   dbP.catch(saveFailed);
   const idb = (store, mode, fn) =>
@@ -136,7 +145,7 @@
     console.error("Sauvegarde automatique impossible", e);
     if (warned) return;
     warned = true;
-    setMessage("Sauvegarde automatique impossible (navigation privée ou stockage plein ?) : télécharge ton montage pour ne rien perdre.", true);
+    setMessage(`Sauvegarde automatique impossible (${(e && (e.name || e.message)) || "erreur inconnue"}) : télécharge ton montage pour ne rien perdre.`, true);
   }
 
   const stored = new Set();

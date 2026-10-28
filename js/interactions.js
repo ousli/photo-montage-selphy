@@ -27,6 +27,11 @@ canvas.addEventListener("pointerdown", (ev) => {
     // les stickers sont au-dessus de tout : ils ont la priorité sur la photo en dessous
     const pt = canvasPoint(ev);
     const hit = stickerHit(pt.x, pt.y, ev.pointerType !== "mouse");
+    if (hit && hit.part === "del") {
+      hideMenu();
+      removeSticker(hit.s.id);
+      return;
+    }
     if (hit) {
       hideMenu();
       selectedSticker = hit.s.id;
@@ -170,7 +175,7 @@ function pinchSticker(st) {
 function hoverCursor(ev) {
   const pt = canvasPoint(ev);
   const hit = stickerHit(pt.x, pt.y, false);
-  canvas.style.cursor = !hit ? "grab" : hit.part === "scale" ? "nwse-resize" : hit.part === "rotate" ? "crosshair" : "move";
+  canvas.style.cursor = !hit ? "grab" : hit.part === "scale" ? "nwse-resize" : hit.part === "rotate" ? "crosshair" : hit.part === "del" ? "pointer" : "move";
 }
 
 const endDrag = () => {
