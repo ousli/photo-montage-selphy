@@ -2,12 +2,16 @@
 
 // Onglets du panneau
 const tabBtns = Array.from(document.querySelectorAll(".tabs button"));
+// Desktop : réglages globaux à gauche (panneau Montage), inspecteur contextuel à droite
+const wideMq = matchMedia("(min-width: 861px)");
+const isWide = () => wideMq.matches;
 function showTab(name) {
+  if (isWide() && name === "montage") name = "photo";
   tabBtns.forEach((b) => {
     b.classList.toggle("on", b.dataset.tab === name);
     b.setAttribute("aria-selected", String(b.dataset.tab === name));
   });
-  document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.dataset.panel !== name));
+  document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.dataset.panel !== name && !(isWide() && p.dataset.panel === "montage")));
   try { localStorage.setItem("montage-tab", name); } catch (e) {}
 }
 tabBtns.forEach((b) => b.addEventListener("click", () => {
@@ -50,3 +54,21 @@ const currentTab = () => (tabBtns.find((b) => b.classList.contains("on")) || {})
 let savedTab = "montage";
 try { savedTab = localStorage.getItem("montage-tab") || "montage"; } catch (e) {}
 showTab(savedTab);
+
+// Déplace les panneaux entre la colonne gauche/inspecteur (desktop) et la feuille basse (mobile)
+function layoutPanels() {
+  const insp = $("inspector"), body = document.querySelector(".sheet-body"), nav = document.querySelector(".tabs");
+  const panels = Array.from(document.querySelectorAll(".tab-panel")).filter((p) => p.dataset.panel !== "montage");
+  const msg = $("message");
+  if (isWide()) {
+    insp.append(nav, ...panels);
+    document.body.classList.add("wide-layout");
+  } else {
+    body.append(...panels, msg);
+    $("sheet").append(nav);
+    document.body.classList.remove("wide-layout");
+  }
+  showTab(currentTab() || "montage");
+}
+wideMq.addEventListener("change", layoutPanels);
+layoutPanels();

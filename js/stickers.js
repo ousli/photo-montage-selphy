@@ -25,6 +25,7 @@ function snapSticker(s) {
 function selectSticker(id) {
   selectedSticker = id;
   selected = -1;
+  if (id != null && typeof isWide === "function" && isWide() && currentTab() !== "stickers") showTab("stickers");
 }
 
 // point d'entrée unique pour ajouter un sticker (emoji, image importée, futures sources)

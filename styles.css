@@ -70,7 +70,7 @@ h2 { margin: 0 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spaci
 
 .layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: minmax(300px, 340px) 1fr minmax(300px, 340px);
   gap: 20px;
   max-width: 1800px;
   margin: 0 auto;
@@ -610,3 +610,11 @@ body.no-photo [data-panel="info"] > :not(.nosel-note) { display: none !important
   .projects-full .project-row img { height: 100px; }
 }
 @media (max-width: 420px) { .projects-full .projects-list { grid-template-columns: 1fr; } }
+
+/* Desktop : inspecteur contextuel à droite */
+.inspector { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 84px;
+  max-height: calc(100vh - 104px); overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; scrollbar-width: thin; }
+.inspector .tabs { order: -1; }
+.inspector .card > h2:not(:first-child) { margin-top: 6px; }
+.wide-layout .tabs button[data-tab="montage"] { display: none; }
+@media (max-width: 860px) { .inspector { display: none; } }

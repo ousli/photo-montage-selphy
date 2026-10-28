@@ -133,6 +133,7 @@ function refreshExifUI(s) {
 function selectPhoto(i) {
   selected = i;
   selectedSticker = null;
+  if (i >= 0 && typeof isWide === "function" && isWide() && currentTab() === "stickers") showTab("photo");
 }
 
 const FORMAT_EXT = /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i;
