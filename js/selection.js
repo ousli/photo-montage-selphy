@@ -69,6 +69,8 @@ function refreshUI() {
   brightInput.value = f.bright;
   contrastInput.value = f.contrast;
   brightInput.disabled = contrastInput.disabled = !s;
+  amtInput.value = f.amt;
+  amtInput.closest("label").hidden = !FILM_STOCKS[f.look];
   setLookChips((k) => k === f.look, !s);
   $("filterResetBtn").disabled = !s || !hasFilter(s);
   $("filterAllBtn").disabled = !s;
@@ -109,7 +111,7 @@ function refreshExifUI(s) {
   Object.keys(EXIF_FIELD_LABELS).forEach((k) => {
     if (!exifAvailable(s, k)) return;
     const row = document.createElement("div");
-    const v = k === "place" ? s.exif.place || (s.exif.placeState === "loading" ? "recherche…" : "—") : s.exif[k];
+    const v = k === "place" ? s.exif.place || (s.exif.placeState === "loading" ? "recherche…" : "—") : exifVal(s, k);
     row.innerHTML = "<span></span><b></b>";
     row.firstChild.textContent = EXIF_FIELD_LABELS[k];
     row.lastChild.textContent = v;

@@ -42,6 +42,7 @@ function canvasSize() {
 
 function gridFor(n) {
   const land = isLandscape();
+  if (n === 1) return [1, 1];
   if (n === 2) return land ? [1, 2] : [2, 1];
   if (n === 3) return land ? [1, 3] : [3, 1];
   if (n === 4) return [2, 2];

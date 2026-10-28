@@ -570,11 +570,8 @@ button.round:disabled { opacity: 0.35; box-shadow: none; }
   .topbar h1 span { display: none; }
 }
 
-/* Bascule de thème : cercle qui s'étend depuis le bouton, icône qui pivote */
-.theme-anim::view-transition-old(root),
-.theme-anim::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-.theme-anim::view-transition-old(root) { z-index: 1; }
-.theme-anim::view-transition-new(root) { z-index: 2; }
+/* Bascule de thème : fondu enchaîné (opacité seule, rien à recalculer pendant l'animation), icône qui pivote */
+.theme-anim::view-transition-group(root) { animation-duration: 0.28s; animation-timing-function: cubic-bezier(0.2, 0, 0, 1); }
 @keyframes theme-spin { from { transform: rotate(-90deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
 #themeBtn svg.theme-spin { animation: theme-spin 0.3s ease-out; }
 @media (prefers-reduced-motion: reduce) { #themeBtn svg.theme-spin { animation: none; } }
@@ -897,3 +894,28 @@ canvas.changed { animation: m3-canvas 0.15s var(--md-eff); }
 @media (max-width: 860px) { .topbar h1 { font-size: 1.375rem; } .topbar { min-height: var(--top-h); } }
 
 @media (prefers-reduced-motion: reduce) { #downloadBtn, .font-chip, .look-tile, .tab-ic, button, .seg-pill, .switch input, .switch input::after { transition: none !important; } }
+
+/* Barre du haut : tous les boutons à la même hauteur (40 px), centrés sur le même axe que le titre */
+.topbar .top-actions button.round, .topbar .top-actions button:not(.round) { height: 40px; min-height: 40px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
+.topbar .top-actions button.round { width: 40px; }
+.topbar .top-actions #downloadBtn { height: 40px; min-height: 40px; padding-left: 20px; padding-right: 20px; }
+.topbar .top-actions #downloadBtn .ic { width: 20px; height: 20px; }
+.topbar .top-actions { align-items: center; }
+.topbar h1 { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+/* Mobile : cibles de 48 dp dans la barre du haut ; le thème passe dans le menu d'apparence (palette) */
+.accent-menu .accent-theme { display: none; }
+.accent-menu .accent-theme svg { width: 24px; height: 24px; flex: none; }
+@media (max-width: 860px) {
+  #themeBtn { display: none; }
+  .accent-menu .accent-theme { display: flex; }
+  .topbar .top-actions button.round, .topbar .top-actions button:not(.round), .topbar .top-actions #downloadBtn { height: 48px; min-height: 48px; }
+  .topbar .top-actions button.round { width: 48px; }
+  .topbar .top-actions button { min-width: 48px; }
+  .topbar .top-actions #downloadBtn { padding-left: 16px; padding-right: 16px; }
+  .topbar .top-actions, .topbar .undo-bar { gap: 4px; }
+  .topbar .top-actions #downloadBtn, .topbar .top-actions #projectsBtn { width: 48px; padding: 0; }
+  .topbar .top-actions #downloadBtn { margin-left: 4px; }
+  .topbar { gap: 8px; }
+  .topbar h1 { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

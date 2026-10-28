@@ -7,7 +7,7 @@ const captionH = () => {
 };
 const DEFAULT_OVL = { font: "sans", color: "#ffffff", size: 30 };
 const DEFAULT_EXIF_FIELDS = { date: true, camera: true, settings: true, place: false, gps: false };
-const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS" };
+const EXIF_FIELD_LABELS = { date: "Date", camera: "Appareil", settings: "Réglages", place: "Lieu", gps: "Coordonnées GPS", stamp: "Date tampon" };
 const CORNER_LABELS = { tl: "↖ Haut gauche", tr: "↗ Haut droite", bl: "↙ Bas gauche", br: "↘ Bas droite" };
 const ovlStyleOf = (s) => (s && s.exifStyle) || DEFAULT_OVL;
 const exifFieldsOf = (s) => (s && s.exifFields) || DEFAULT_EXIF_FIELDS;
@@ -22,6 +22,9 @@ function formatExif(r) {
   const d = r.DateTimeOriginal || r.CreateDate;
   if (d instanceof Date && !isNaN(d)) {
     out.date = d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    // tampon façon appareil jetable : 'AA MM JJ
+    const z = (n) => String(n).padStart(2, "0");
+    out.stamp = `'${z(d.getFullYear() % 100)} ${z(d.getMonth() + 1)} ${z(d.getDate())}`;
   }
   const make = (r.Make || "").trim();
   const model = (r.Model || "").trim();
@@ -107,7 +110,19 @@ function ensurePlace(s) {
     })
     .then(() => render());
 }
-const exifAvailable = (s, k) => !!(s && s.exif && (k === "place" ? s.exif.lat != null : s.exif[k]));
+// tampon : recalculé depuis la date en français pour les photos enregistrées avant l'ajout du champ
+const FR_MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+function stampOf(e) {
+  if (!e) return "";
+  if (e.stamp) return e.stamp;
+  const m = /^(\d+)\S* (\S+) (\d{4})$/.exec((e.date || "").replace(/\u202f|\u00a0/g, " "));
+  const mo = m ? FR_MONTHS.indexOf(m[2]) : -1;
+  if (mo < 0) return "";
+  const z = (n) => String(n).padStart(2, "0");
+  return `'${z(m[3] % 100)} ${z(mo + 1)} ${z(m[1])}`;
+}
+const exifVal = (s, k) => (k === "stamp" ? stampOf(s.exif) : s.exif[k]);
+const exifAvailable = (s, k) => !!(s && s.exif && (k === "place" ? s.exif.lat != null : exifVal(s, k)));
 
 // lignes EXIF actives pour une photo
 function exifLines(s) {
@@ -115,7 +130,7 @@ function exifLines(s) {
   if (exifModeOf(s) === "none") return [];
   const f = exifFieldsOf(s);
   if (f.place) ensurePlace(s);
-  return Object.keys(EXIF_FIELD_LABELS).filter((k) => f[k] && s.exif[k]).map((k) => s.exif[k]);
+  return Object.keys(EXIF_FIELD_LABELS).filter((k) => f[k] && exifVal(s, k)).map((k) => exifVal(s, k));
 }
 const hasExifCaption = (s) => exifModeOf(s) === "caption" && exifLines(s).length > 0;
 // texte sous la photo : légende manuelle et/ou infos EXIF

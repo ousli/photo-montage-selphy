@@ -317,8 +317,31 @@ async function importStickerFile(file) {
 }
 
 // Retrait de fond : aperçu non destructif (cutPreview) puis application.
-// Le fond = pixels proches (distance RVB <= tol) de la couleur des bords, atteignables depuis les bords.
-let cutPreview = null; // { id, w, h, data, bg, canvas }
+// Le fond = pixels proches (distance RVB <= tol) d'une des couleurs dominantes des bords (jusqu'à 3 : fond uni, dégradé léger,
+// damier « faux transparent »). Il est atteint depuis les bords, ou partout si holes (trous à l'intérieur du sujet).
+// À l'application, le contour est adouci selon la distance à la couleur du fond et la teinte de fond résiduelle est retirée.
+let cutPreview = null; // { id, w, h, data, pal, canvas, cx }
+
+function edgePalette(samples) {
+  const buckets = new Map();
+  for (const [r, g, b] of samples) {
+    const k = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    const e = buckets.get(k) || { n: 0, r: 0, g: 0, b: 0 };
+    e.n++;
+    e.r += r;
+    e.g += g;
+    e.b += b;
+    buckets.set(k, e);
+  }
+  const list = [...buckets.values()].sort((x, y) => y.n - x.n);
+  const pal = [];
+  for (const e of list) {
+    if (pal.length >= 3 || e.n < samples.length * 0.1) break;
+    const c = [e.r / e.n, e.g / e.n, e.b / e.n];
+    if (pal.every((q) => Math.hypot(q[0] - c[0], q[1] - c[1], q[2] - c[2]) > 36)) pal.push(c);
+  }
+  return pal.length ? pal : [[list[0].r / list[0].n, list[0].g / list[0].n, list[0].b / list[0].n]];
+}
 
 function cutStart(s) {
   const src = s.img;
@@ -331,51 +354,57 @@ function cutStart(s) {
   cx.drawImage(src, 0, 0);
   const data = cx.getImageData(0, 0, w, h);
   const d = data.data;
-  const ch = [[], [], []];
+  const samples = [];
   const edge = (x, y) => {
     const i = (y * w + x) * 4;
-    if (d[i + 3] < 8) return;
-    for (let k = 0; k < 3; k++) ch[k].push(d[i + k]);
+    if (d[i + 3] >= 8) samples.push([d[i], d[i + 1], d[i + 2]]);
   };
   for (let x = 0; x < w; x++) (edge(x, 0), edge(x, h - 1));
   for (let y = 0; y < h; y++) (edge(0, y), edge(w - 1, y));
-  if (!ch[0].length) return false;
-  const bg = ch.map((a) => a.sort((p, q) => p - q)[a.length >> 1]);
-  cutPreview = { id: s.id, w, h, data, bg, canvas: document.createElement("canvas"), cx: null };
+  if (!samples.length) return false;
+  cutPreview = { id: s.id, w, h, data, pal: edgePalette(samples), canvas: document.createElement("canvas"), cx: null };
   cutPreview.canvas.width = w;
   cutPreview.canvas.height = h;
   cutPreview.cx = cutPreview.canvas.getContext("2d");
   return true;
 }
 
-// recalcule le canevas d'aperçu (fond en rose translucide) ou final (fond transparent)
-function cutRender(tol, final) {
-  const { w, h, data, bg } = cutPreview;
+// recalcule le canevas d'aperçu (fond en rose translucide) ou final (fond transparent, contour adouci)
+function cutRender(tol, final, holes = false) {
+  const { w, h, data, pal } = cutPreview;
   const d = data.data;
-  const t2 = tol * tol;
-  const near = (i) => {
-    const dr = d[i] - bg[0], dg = d[i + 1] - bg[1], db = d[i + 2] - bg[2];
-    return d[i + 3] < 8 || dr * dr + dg * dg + db * db <= t2;
+  const distAt = (i) => {
+    let m = Infinity;
+    for (const q of pal) {
+      const dr = d[i] - q[0], dg = d[i + 1] - q[1], db = d[i + 2] - q[2];
+      m = Math.min(m, dr * dr + dg * dg + db * db);
+    }
+    return Math.sqrt(m);
   };
+  const near = (i) => d[i + 3] < 8 || distAt(i) <= tol;
   const seen = new Uint8Array(w * h);
-  const stack = [];
-  const push = (x, y) => {
-    const p = y * w + x;
-    if (seen[p] || !near(p * 4)) return;
-    seen[p] = 1;
-    stack.push(p);
-  };
-  for (let x = 0; x < w; x++) (push(x, 0), push(x, h - 1));
-  for (let y = 0; y < h; y++) (push(0, y), push(w - 1, y));
   let n = 0;
-  while (stack.length) {
-    const p = stack.pop();
-    n++;
-    const x = p % w, y = (p - x) / w;
-    if (x > 0) push(x - 1, y);
-    if (x < w - 1) push(x + 1, y);
-    if (y > 0) push(x, y - 1);
-    if (y < h - 1) push(x, y + 1);
+  if (holes) {
+    for (let p = 0; p < w * h; p++) if (near(p * 4)) (seen[p] = 1), n++;
+  } else {
+    const stack = [];
+    const push = (x, y) => {
+      const p = y * w + x;
+      if (seen[p] || !near(p * 4)) return;
+      seen[p] = 1;
+      stack.push(p);
+    };
+    for (let x = 0; x < w; x++) (push(x, 0), push(x, h - 1));
+    for (let y = 0; y < h; y++) (push(0, y), push(w - 1, y));
+    while (stack.length) {
+      const p = stack.pop();
+      n++;
+      const x = p % w, y = (p - x) / w;
+      if (x > 0) push(x - 1, y);
+      if (x < w - 1) push(x + 1, y);
+      if (y > 0) push(x, y - 1);
+      if (y < h - 1) push(x, y + 1);
+    }
   }
   const out = new ImageData(w, h);
   const o = out.data;
@@ -388,11 +417,21 @@ function cutRender(tol, final) {
     }
   }
   if (final) {
-    // adoucit d'un pixel le contour
+    // couronne d'un pixel autour du fond : opacité selon l'écart à la couleur du fond, puis retrait de la teinte du fond mélangée
+    const span = tol * 0.8 + 8;
     for (let y = 1; y < h - 1; y++)
       for (let x = 1; x < w - 1; x++) {
         const p = y * w + x;
-        if (!seen[p] && (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w])) o[p * 4 + 3] = 150;
+        if (seen[p] || !(seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w])) continue;
+        const i = p * 4;
+        let best = pal[0], bd = Infinity;
+        for (const q of pal) {
+          const e = Math.hypot(d[i] - q[0], d[i + 1] - q[1], d[i + 2] - q[2]);
+          if (e < bd) (bd = e), (best = q);
+        }
+        const a = Math.min(1, Math.max(0.15, (bd - tol) / span + 0.15));
+        o[i + 3] = Math.round(d[i + 3] * a);
+        if (a < 0.98) for (let k = 0; k < 3; k++) o[i + k] = Math.max(0, Math.min(255, (d[i + k] - best[k] * (1 - a)) / a));
       }
   }
   cutPreview.cx.putImageData(out, 0, 0);
@@ -405,10 +444,10 @@ function cutCancel() {
   render();
 }
 
-async function cutApply(tol) {
+async function cutApply(tol, holes) {
   const s = getSticker(cutPreview && cutPreview.id);
   if (!s) return cutCancel();
-  const r = cutRender(tol, true);
+  const r = cutRender(tol, true, holes);
   const blob = await new Promise((res) => cutPreview.canvas.toBlob(res, "image/png"));
   if (!blob || r.n < 16) return false;
   s.img = cutPreview.canvas;

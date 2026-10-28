@@ -5,6 +5,8 @@ const EMOJI_CATS = {
   "Fêtes": "🎉 🎊 🎂 🎈 🎁 🥂 🍾 ✨ 🎀 🎄 🎃 💐 🌹 💍 🎓 🏆",
   "Cœurs": "❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💖 💘 💕 💯 ⭐ 🌟 🔥 💫",
   "Nature": "☀️ 🌈 ☁️ ❄️ 🌸 🌻 🌴 🍀 🌊 🌙 🐶 🐱 🦋 🐝 🐢 🦄",
+  "Animaux": "🐶 🐱 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐸 🐵 🐧 🦉 🐙 🐬 🦖",
+  "Gourmand": "🍓 🍒 🍑 🍉 🍋 🥑 🍩 🍪 🧁 🍰 🍫 ☕ 🍷 🍺 🥐 🍣",
   "Voyage": "✈️ 🏖️ 🏔️ 🚗 ⛵ 🗺️ 📍 🎒 📷 🎵 ⚽ 🏄 🍕 🍔 🍦 🍹",
 };
 let emojiCat = Object.keys(EMOJI_CATS)[0];
@@ -127,7 +129,7 @@ function cutUpdate() {
       $("stickerCutBox").open = false;
       return setMessage("Ce sticker a déjà un fond transparent : rien à retirer.", true);
     }
-  const r = cutRender(Number($("stickerTol").value), false);
+  const r = cutRender(Number($("stickerTol").value), false, $("stickerCutHoles").checked);
   $("stickerCutInfo").textContent = `${r.pct} % de l'image sera effacé`;
   render();
 }
@@ -145,13 +147,14 @@ $("stickerTol").ondblclick = () => {
   $("stickerTol").value = STICKER_TOL_DEFAULT;
   cutUpdate();
 };
+$("stickerCutHoles").onchange = cutUpdate;
 $("stickerCutBox").addEventListener("toggle", () => ($("stickerCutBox").open ? cutUpdate() : cutClose()));
 $("stickerCutCancel").onclick = () => {
   $("stickerCutBox").open = false;
 };
 $("stickerCutApply").onclick = async () => {
   if (!cutPreview) return;
-  const ok = await cutApply(Number($("stickerTol").value));
+  const ok = await cutApply(Number($("stickerTol").value), $("stickerCutHoles").checked);
   $("stickerCutBox").open = false;
   setMessage(ok ? "Fond retiré. Tu peux annuler avec ↶." : "Presque rien à effacer : augmente la quantité.", !ok);
 };

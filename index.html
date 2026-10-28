@@ -10,9 +10,9 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Montage" />
-  <link rel="stylesheet" href="./styles.css?v=89" />
+  <link rel="stylesheet" href="./styles.css?v=98" />
   <p id="message" class="message" role="status" aria-live="polite"></p>
-  <script src="./js/theme.js?v=89"></script>
+  <script src="./js/theme.js?v=98"></script>
 </head>
 <body>
   <div id="projectsPanel" class="modal projects-full" hidden>
@@ -45,7 +45,7 @@
     <h1><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L8 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Montage<b class="hide-sm"> photo</b></span></h1>
     <div class="top-actions">
       <span id="offlinePill" class="pill" hidden>Hors ligne</span>
-      <button type="button" id="accentBtn" class="round" aria-label="Couleur d'accent" title="Couleur d'accent"></button>
+      <button type="button" id="accentBtn" class="round" aria-label="Apparence" title="Apparence (thème et couleur)"></button>
       <button type="button" id="themeBtn" class="round" aria-label="Changer de thème"></button>
       <div class="undo-bar">
         <button type="button" id="undoBtn" class="round" aria-label="Annuler" title="Annuler (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
@@ -88,6 +88,7 @@
         <input id="multiInput" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/gif,.jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.gif" multiple hidden />
         <label>Nombre de photos
           <select id="photoCount">
+            <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
@@ -187,6 +188,9 @@
         <button id="resetBtn" type="button" class="ghost small">Réinitialiser le cadrage</button>
         <h2>Retouche</h2>
         <div id="lookChips" class="fonts"></div>
+        <label>Intensité de la pellicule <b></b>
+          <input id="filmAmt" type="range" min="0" max="100" value="100" />
+        </label>
         <label>Luminosité <b></b>
           <input id="bright" type="range" min="50" max="150" value="100" />
         </label>
@@ -279,11 +283,12 @@
           <p class="exif-note">Astuce : le ✕ rouge sur le sticker, ou la touche Suppr, le supprime aussi.</p>
           <details id="stickerCutBox" class="sticker-cut">
             <summary>Retirer le fond</summary>
-            <p class="exif-note">Le fond uni est détecté depuis les bords. Les zones <span class="cut-pink">roses</span> sur le montage seront effacées : règle le curseur jusqu'à ce que seul le fond soit rose.</p>
+            <p class="exif-note">Fond uni ou damier : détecté depuis les bords. Les zones <span class="cut-pink">roses</span> sur le montage seront effacées : règle le curseur jusqu'à ce que seul le fond soit rose.</p>
             <label>Quantité de fond effacée
               <input id="stickerTol" type="range" min="5" max="150" value="40" list="stickerTolTicks" />
               <datalist id="stickerTolTicks"><option value="40"></option></datalist>
             </label>
+            <label class="check switch"><input id="stickerCutHoles" type="checkbox" /><span>Effacer aussi à l'intérieur (trous, anses)</span></label>
             <p id="stickerCutInfo" class="exif-note"></p>
             <div class="row">
               <button id="stickerCutApply" type="button" class="secondary small">Appliquer</button>
@@ -335,33 +340,33 @@
   </main>
 
   <div id="cellMenu" class="cell-menu" hidden></div>
-  <script src="./js/core.js?v=89"></script>
-  <script src="./js/exif.js?v=89"></script>
-  <script src="./js/layout.js?v=89"></script>
-  <script src="./js/render.js?v=89"></script>
-  <script src="./js/stickers.js?v=89"></script>
-  <script src="./js/printers-data.js?v=89"></script>
-  <script src="./js/printers.js?v=89"></script>
-  <script src="./js/selection.js?v=89"></script>
-  <script src="./js/import.js?v=89"></script>
-  <script src="./js/cell-menu.js?v=89"></script>
-  <script src="./js/interactions.js?v=89"></script>
-  <script src="./js/editors.js?v=89"></script>
-  <script src="./js/pickers.js?v=89"></script>
-  <script src="./js/montage-ui.js?v=89"></script>
-  <script src="./js/settings.js?v=89"></script>
-  <script src="./js/controls.js?v=89"></script>
-  <script src="./js/stickers-ui.js?v=89"></script>
-  <script src="./js/export.js?v=89"></script>
-  <script src="./js/safe-margin.js?v=89"></script>
-  <script src="./js/segmented.js?v=89"></script>
-  <script src="./js/presets.js?v=89"></script>
-  <script src="./js/pwa.js?v=89"></script>
-  <script src="./js/tabs.js?v=89"></script>
-  <script src="./js/ripple.js?v=89"></script>
-  <script src="./js/slider-anchors.js?v=89"></script>
-  <script src="./js/main.js?v=89"></script>
-  <script src="./js/history.js?v=89"></script>
-  <script src="./js/projects.js?v=89"></script>
+  <script src="./js/core.js?v=98"></script>
+  <script src="./js/exif.js?v=98"></script>
+  <script src="./js/layout.js?v=98"></script>
+  <script src="./js/render.js?v=98"></script>
+  <script src="./js/stickers.js?v=98"></script>
+  <script src="./js/printers-data.js?v=98"></script>
+  <script src="./js/printers.js?v=98"></script>
+  <script src="./js/selection.js?v=98"></script>
+  <script src="./js/import.js?v=98"></script>
+  <script src="./js/cell-menu.js?v=98"></script>
+  <script src="./js/interactions.js?v=98"></script>
+  <script src="./js/editors.js?v=98"></script>
+  <script src="./js/pickers.js?v=98"></script>
+  <script src="./js/montage-ui.js?v=98"></script>
+  <script src="./js/settings.js?v=98"></script>
+  <script src="./js/controls.js?v=98"></script>
+  <script src="./js/stickers-ui.js?v=98"></script>
+  <script src="./js/export.js?v=98"></script>
+  <script src="./js/safe-margin.js?v=98"></script>
+  <script src="./js/segmented.js?v=98"></script>
+  <script src="./js/presets.js?v=98"></script>
+  <script src="./js/pwa.js?v=98"></script>
+  <script src="./js/tabs.js?v=98"></script>
+  <script src="./js/ripple.js?v=98"></script>
+  <script src="./js/slider-anchors.js?v=98"></script>
+  <script src="./js/main.js?v=98"></script>
+  <script src="./js/history.js?v=98"></script>
+  <script src="./js/projects.js?v=98"></script>
 </body>
 </html>

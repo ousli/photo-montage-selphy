@@ -70,6 +70,22 @@ function drawTitle(w) {
   ctx.restore();
 }
 
+// date orange à lueur, comme sur un appareil jetable
+function drawStamp(t, x, y, size, maxW) {
+  ctx.save();
+  ctx.fillStyle = "#ff8a1f";
+  ctx.shadowColor = "rgba(255, 90, 0, 0.85)";
+  ctx.shadowBlur = size * 0.35;
+  let sz = size * 1.1;
+  ctx.font = `bold ${sz}px "Courier New", Menlo, monospace`;
+  while (sz > 14 && ctx.measureText(t).width > maxW) {
+    sz -= 2;
+    ctx.font = `bold ${sz}px "Courier New", Menlo, monospace`;
+  }
+  ctx.fillText(t, x, y);
+  ctx.restore();
+}
+
 function drawOverlay(s, pr) {
   const lines = exifLines(s);
   if (!lines.length) return;
@@ -96,28 +112,53 @@ function drawOverlay(s, pr) {
   const x = right ? sx + sw - pad : sx + pad;
   const y0 = top ? sy + pad + lh / 2 : sy + sh - pad - lh / 2 - (lines.length - 1) * lh;
   lines.forEach((t, i) => {
+    if (t === stampOf(s.exif)) return drawStamp(t, x, y0 + i * lh, st.size, sw - pad * 2);
     drawText(t, x, y0 + i * lh, st, sw - pad * 2);
   });
   ctx.restore();
 }
 
-// Retouche d'une photo : { look: none | bw | sepia | vivid | film, bright, contrast } (100 = inchangé)
-const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", film: "Argentique" };
-const filterOf = (s) => ({ look: s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
+// Retouche d'une photo : { look: none | bw | sepia | vivid | gold | ektar | k2383, bright, contrast } (100 = inchangé)
+const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", gold: "Gold 200", ektar: "Ektar 100", k2383: "Kodak 2383" };
+const FILM_NOTES = { gold: "Gold 200 : chaud, jaune doré, grain visible", ektar: "Ektar 100 : couleurs très saturées, contrasté", k2383: "Kodak 2383 : look cinéma, contrasté, ombres teintées de bleu-vert" };
+const filterOf = (s) => ({ look: ({ film: "gold", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100, amt: s.amt ?? 100 });
 const hasFilter = (s) => {
   const f = filterOf(s);
-  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
+  return f.look !== "none" || f.bright !== 100 || f.contrast !== 100 || f.amt !== 100;
 };
 const filterCss = (s) => {
   const f = filterOf(s);
   return `brightness(${f.bright}%) contrast(${f.contrast}%)${LOOK_CSS[f.look] || ""}`;
 };
-// Vif : couleurs plus denses pour l'impression thermique. Argentique : noirs relevés, teinte chaude, saturation douce
+// Vif : couleurs plus denses pour l'impression thermique. Gold / Ektar / 2383 (inspirées de pellicules Kodak) : émulations de pellicule (voir FILM_STOCKS), calculées pixel par pixel
 const LOOK_CSS = {
   bw: " grayscale(1)",
   sepia: " sepia(1)",
   vivid: " saturate(1.38) contrast(1.08)",
-  film: " contrast(0.92) brightness(1.05) sepia(0.18) saturate(0.88)",
+};
+// Émulations de pellicule : courbe par canal (noir relevé, blanc adouci, contraste en S), saturation et grain stable (hash de la position, donc identique à chaque rendu)
+const FILM_STOCKS = {
+  gold: { ch: [[0.05, 1, 0.35], [0.045, 0.95, 0.35], [0.07, 0.76, 0.3]], sat: 1.22, grain: 6 },
+  ektar: { ch: [[0.01, 1.02, 0.65], [0.01, 0.99, 0.65], [0.02, 0.96, 0.6]], sat: 1.55, grain: 3 },
+  k2383: { ch: [[0.0, 1, 0.95], [0.05, 0.95, 0.9], [0.1, 0.83, 0.8]], sat: 0.95, grain: 4 },
+};
+const filmLut = {};
+function filmLuts(look) {
+  if (filmLut[look]) return filmLut[look];
+  return (filmLut[look] = FILM_STOCKS[look].ch.map(([lo, hi, c]) => {
+    const t = new Uint8Array(256);
+    for (let v = 0; v < 256; v++) {
+      const x = v / 255;
+      const sm = x * x * (3 - 2 * x);
+      t[v] = Math.round(255 * (lo + (hi - lo) * (x + c * (sm - x))));
+    }
+    return t;
+  }));
+}
+const filmNoise = (x, y) => {
+  let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) & 255) / 127.5 - 1;
 };
 const LUM = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 const sepiaMix = (r, g, b, a) => [
@@ -147,11 +188,16 @@ function filterPixels(g, w, h, s) {
       const l = LUM(r, gr, bl);
       r = l + 1.38 * (r - l); gr = l + 1.38 * (gr - l); bl = l + 1.38 * (bl - l);
       r = (r - 127.5) * 1.08 + 127.5; gr = (gr - 127.5) * 1.08 + 127.5; bl = (bl - 127.5) * 1.08 + 127.5;
-    } else if (f.look === "film") {
-      r = ((r - 127.5) * 0.92 + 127.5) * 1.05; gr = ((gr - 127.5) * 0.92 + 127.5) * 1.05; bl = ((bl - 127.5) * 0.92 + 127.5) * 1.05;
-      [r, gr, bl] = sepiaMix(r, gr, bl, 0.18);
+    } else if (FILM_STOCKS[f.look]) {
+      const st = FILM_STOCKS[f.look];
+      const lut = filmLuts(f.look);
+      const r0 = r, g0 = gr, b0 = bl;
+      r = lut[0][clamp(r) | 0]; gr = lut[1][clamp(gr) | 0]; bl = lut[2][clamp(bl) | 0];
       const l = LUM(r, gr, bl);
-      r = l + 0.88 * (r - l); gr = l + 0.88 * (gr - l); bl = l + 0.88 * (bl - l);
+      const n = filmNoise((i >> 2) % w, ((i >> 2) / w) | 0) * st.grain * (1 - Math.abs(l / 127.5 - 1) * 0.6);
+      r = l + st.sat * (r - l) + n; gr = l + st.sat * (gr - l) + n; bl = l + st.sat * (bl - l) + n;
+      const a = f.amt / 100; // intensité : mélange avec la photo d'origine
+      r = r0 + (r - r0) * a; gr = g0 + (gr - g0) * a; bl = b0 + (bl - b0) * a;
     }
     d[i] = clamp(r);
     d[i + 1] = clamp(gr);
@@ -161,7 +207,7 @@ function filterPixels(g, w, h, s) {
 }
 
 // dx, dy : origine de la case dans le contexte g (0 quand on dessine directement sur le canvas)
-function paintSlot(g, s, c, dx, dy) {
+function paintSlot(g, s, c, dx, dy, src = s.img) {
   const rad = (s.rot * Math.PI) / 180;
   const sin = Math.abs(Math.sin(rad));
   const cos = Math.abs(Math.cos(rad));
@@ -175,22 +221,32 @@ function paintSlot(g, s, c, dx, dy) {
   const cy = c.y - dy + c.h / 2 + s.oy * c.h;
   g.translate(cx, cy);
   g.rotate(rad);
-  g.drawImage(s.img, -dw / 2, -dh / 2, dw, dh);
+  g.drawImage(src, -dw / 2, -dh / 2, dw, dh);
+}
+
+// Retouche calculée pixel par pixel : faite une seule fois sur une copie de la photo (mise en cache par photo et réglages),
+// pas à chaque image, sinon chaque clic ou geste recalcule des millions de pixels
+const FILTER_SRC_MAX = 1800;
+const filteredSrc = new WeakMap();
+function filteredSource(s) {
+  const f = filterOf(s);
+  const key = `${f.look}|${f.bright}|${f.contrast}|${f.amt}`;
+  const hit = filteredSrc.get(s.img);
+  if (hit && hit.key === key) return hit.canvas;
+  const k = Math.min(1, FILTER_SRC_MAX / Math.max(s.img.width, s.img.height));
+  const cv = document.createElement("canvas");
+  cv.width = Math.max(1, Math.round(s.img.width * k));
+  cv.height = Math.max(1, Math.round(s.img.height * k));
+  const g = cv.getContext("2d", { willReadFrequently: true });
+  g.drawImage(s.img, 0, 0, cv.width, cv.height);
+  filterPixels(g, cv.width, cv.height, s);
+  filteredSrc.set(s.img, { key, canvas: cv });
+  return cv;
 }
 
 function drawSlot(s, c) {
   if (!hasFilter(s)) return paintSlot(ctx, s, c, 0, 0);
-  if (CTX_FILTER) {
-    ctx.filter = filterCss(s);
-    return paintSlot(ctx, s, c, 0, 0);
-  }
-  const off = document.createElement("canvas");
-  off.width = Math.max(1, Math.ceil(c.w));
-  off.height = Math.max(1, Math.ceil(c.h));
-  const g = off.getContext("2d");
-  paintSlot(g, s, c, c.x, c.y);
-  filterPixels(g, off.width, off.height, s);
-  ctx.drawImage(off, c.x, c.y);
+  paintSlot(ctx, s, c, 0, 0, filteredSource(s));
 }
 
 // render() regroupe les demandes d'une même image (un seul dessin par frame) ; l'export dessine tout de suite

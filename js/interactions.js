@@ -288,6 +288,7 @@ rotInput.addEventListener("input", () => {
 // Retouche de la photo sélectionnée
 const brightInput = $("bright");
 const contrastInput = $("contrast");
+const amtInput = $("filmAmt");
 // Filtres : vignettes d'aperçu calculées sur la photo sélectionnée (filtre CSS, identique au rendu final)
 const lookBox = $("lookChips");
 const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
@@ -297,14 +298,16 @@ const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
   const c = document.createElement("canvas");
   c.width = 96;
   c.height = 64;
-  c.style.filter = filterCss({ look: k });
+  if (!FILM_STOCKS[k]) c.style.filter = filterCss({ look: k });
   const span = document.createElement("span");
   span.textContent = label;
+  if (FILM_NOTES[k]) b.title = `Style inspiré de Kodak ${FILM_NOTES[k]}`;
   b.append(c, span);
   b.onclick = () => {
     const s = slots[selected];
     if (!s) return;
     s.look = k;
+    s.amt = 100;
     render();
   };
   lookBox.appendChild(b);
@@ -314,11 +317,12 @@ let lookThumbSrc = null;
 function drawLookThumbs(img) {
   if (img === lookThumbSrc) return;
   lookThumbSrc = img;
-  for (const [, , c] of lookTiles) {
+  for (const [k, , c] of lookTiles) {
     const g = c.getContext("2d");
     if (img) {
-      const k = Math.max(c.width / img.width, c.height / img.height);
-      g.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k);
+      const sc = Math.max(c.width / img.width, c.height / img.height);
+      g.drawImage(img, (c.width - img.width * sc) / 2, (c.height - img.height * sc) / 2, img.width * sc, img.height * sc);
+      if (FILM_STOCKS[k]) filterPixels(g, c.width, c.height, { look: k });
     } else {
       const gr = g.createLinearGradient(0, 0, c.width, c.height);
       gr.addColorStop(0, "#e9a14a");
@@ -349,19 +353,26 @@ contrastInput.addEventListener("input", () => {
   s.contrast = Number(contrastInput.value);
   render();
 });
+amtInput.addEventListener("input", () => {
+  const s = slots[selected];
+  if (!s) return;
+  s.amt = Number(amtInput.value);
+  render();
+});
 $("filterResetBtn").onclick = () => {
   const s = slots[selected];
   if (!s) return;
   s.look = "none";
   s.bright = 100;
   s.contrast = 100;
+  s.amt = 100;
   render();
 };
 $("filterAllBtn").onclick = () => {
   const src = slots[selected];
   if (!src) return;
   const f = filterOf(src);
-  slots.slice(0, count()).forEach((s) => s && Object.assign(s, { look: f.look, bright: f.bright, contrast: f.contrast }));
+  slots.slice(0, count()).forEach((s) => s && Object.assign(s, { look: f.look, bright: f.bright, contrast: f.contrast, amt: f.amt }));
   render();
   setMessage("Retouche appliquée à toutes les photos.");
 };

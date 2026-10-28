@@ -88,21 +88,8 @@
     };
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!document.startViewTransition || reduce) return change();
-    // le nouveau thème se propage en cercle depuis le bouton
-    const r = btn.getBoundingClientRect();
-    const x = r.left + r.width / 2;
-    const y = r.top + r.height / 2;
-    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
     root.classList.add("theme-anim");
     const t = document.startViewTransition(change);
-    t.ready
-      .then(() =>
-        root.animate(
-          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-          { duration: 320, easing: "ease-out", pseudoElement: "::view-transition-new(root)" }
-        )
-      )
-      .catch(() => {});
     t.finished.finally(() => root.classList.remove("theme-anim"));
   }
 
@@ -120,7 +107,9 @@
     const swatch = (a) => `<i class="accent-dot" style="background:${a.seed}"></i>`;
     const render = () => {
       const cur = savedAccent();
-      menu.innerHTML = ACCENTS.map(
+      const dark = effective() === "dark";
+      const themeItem = `<button type="button" role="menuitem" class="accent-theme" data-act="theme">${dark ? SUN : MOON}<span>${dark ? "Thème clair" : "Thème sombre"}</span></button>`;
+      menu.innerHTML = themeItem + ACCENTS.map(
         (a) => `<button type="button" role="menuitemradio" aria-checked="${a.id === cur}" data-id="${a.id}">${swatch(a)}<span>${a.name}</span><b>${a.id === cur ? "✓" : ""}</b></button>`
       ).join("");
     };
@@ -147,6 +136,10 @@
       on && on.focus();
     };
     menu.onclick = (e) => {
+      if (e.target.closest("[data-act=theme]")) {
+        close();
+        return toggle();
+      }
       const b = e.target.closest("button[data-id]");
       if (!b) return;
       try {
