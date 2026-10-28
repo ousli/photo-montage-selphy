@@ -101,9 +101,10 @@ function drawOverlay(s, pr) {
   ctx.restore();
 }
 
-// Retouche d'une photo : { look: none | bw | sepia | vivid | portra | fuji, bright, contrast } (100 = inchangé)
-const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", portra: "Portra", fuji: "Fuji" };
-const filterOf = (s) => ({ look: s.look === "film" ? "portra" : s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
+// Retouche d'une photo : { look: none | bw | sepia | vivid | portra | gold | ektar | trix, bright, contrast } (100 = inchangé)
+const FILTER_LABELS = { none: "Aucun", bw: "Noir et blanc", sepia: "Sépia", vivid: "Vif", portra: "Portra 400", gold: "Gold 200", ektar: "Ektar 100", trix: "Tri-X 400" };
+const FILM_NOTES = { portra: "Portra 400 : tons chair doux, noirs relevés", gold: "Gold 200 : chaud, jaune doré, grain visible", ektar: "Ektar 100 : couleurs très saturées, contrasté", trix: "Tri-X 400 : noir et blanc contrasté, gros grain" };
+const filterOf = (s) => ({ look: ({ film: "portra", fuji: "gold" })[s.look] || s.look || "none", bright: s.bright ?? 100, contrast: s.contrast ?? 100 });
 const hasFilter = (s) => {
   const f = filterOf(s);
   return f.look !== "none" || f.bright !== 100 || f.contrast !== 100;
@@ -112,7 +113,7 @@ const filterCss = (s) => {
   const f = filterOf(s);
   return `brightness(${f.bright}%) contrast(${f.contrast}%)${LOOK_CSS[f.look] || ""}`;
 };
-// Vif : couleurs plus denses pour l'impression thermique. Portra / Fuji : émulations de pellicule (voir FILM_STOCKS), calculées pixel par pixel
+// Vif : couleurs plus denses pour l'impression thermique. Portra / Gold / Ektar / Tri-X (inspirées de pellicules Kodak) : émulations de pellicule (voir FILM_STOCKS), calculées pixel par pixel
 const LOOK_CSS = {
   bw: " grayscale(1)",
   sepia: " sepia(1)",
@@ -121,7 +122,9 @@ const LOOK_CSS = {
 // Émulations de pellicule : courbe par canal (noir relevé, blanc adouci, contraste en S), saturation et grain stable (hash de la position, donc identique à chaque rendu)
 const FILM_STOCKS = {
   portra: { ch: [[0.05, 1, 0.22], [0.045, 0.985, 0.22], [0.07, 0.925, 0.18]], sat: 0.9, grain: 5 },
-  fuji: { ch: [[0.03, 0.98, 0.42], [0.055, 1, 0.42], [0.065, 0.955, 0.36]], sat: 1.14, grain: 7 },
+  gold: { ch: [[0.04, 1, 0.3], [0.04, 0.97, 0.3], [0.05, 0.86, 0.25]], sat: 1.1, grain: 6 },
+  ektar: { ch: [[0.02, 1, 0.45], [0.02, 0.99, 0.45], [0.03, 0.965, 0.4]], sat: 1.32, grain: 3 },
+  trix: { ch: [[0.045, 0.975, 0.55], [0.045, 0.975, 0.55], [0.045, 0.975, 0.55]], sat: 0, grain: 11 },
 };
 const filmLut = {};
 function filmLuts(look) {

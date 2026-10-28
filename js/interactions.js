@@ -300,6 +300,7 @@ const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
   if (!FILM_STOCKS[k]) c.style.filter = filterCss({ look: k });
   const span = document.createElement("span");
   span.textContent = label;
+  if (FILM_NOTES[k]) b.title = `Style inspiré de Kodak ${FILM_NOTES[k]}`;
   b.append(c, span);
   b.onclick = () => {
     const s = slots[selected];

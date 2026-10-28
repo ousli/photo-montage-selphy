@@ -119,16 +119,44 @@ function refreshStickerUI() {
 
 // Retrait du fond : aperçu en direct (rose) quand le bloc est ouvert, puis Appliquer
 let cutRaf = 0;
+let cutMode = "uni";
 const STICKER_TOL_DEFAULT = 40;
+const setCutModeChips = chipGroup($("stickerCutModes"), { uni: "Fond uni", auto: "Fond varié" }, (k) => {
+  cutMode = k;
+  if (cutPreview) cutPreview.alpha = null;
+  cutUpdate();
+});
 function cutUpdate() {
   const s = currentSticker();
   if (!s || s.kind !== "image" || !$("stickerCutBox").open) return;
+  setCutModeChips((k) => k === cutMode, false);
+  $("cutUniBox").hidden = cutMode !== "uni";
+  $("cutAutoBox").hidden = cutMode !== "auto";
   if (!cutPreview || cutPreview.id !== s.id)
     if (!cutStart(s)) {
       // bords déjà transparents : on referme tout de suite le bloc au lieu de le laisser ouvert sans aperçu
       $("stickerCutBox").open = false;
       return setMessage("Ce sticker a déjà un fond transparent : rien à retirer.", true);
     }
+  const inset = $("stickerInset");
+  inset.closest("label").querySelector(":scope > b").textContent = `${inset.value} %`;
+  if (cutMode === "auto") {
+    const want = Number(inset.value) / 100;
+    if (!cutPreview.alpha || cutPreview.autoInset !== want) {
+      $("stickerCutInfo").textContent = "Calcul du détourage…";
+      const id = cutPreview.id;
+      return setTimeout(() => {
+        if (!cutPreview || cutPreview.id !== id || cutMode !== "auto" || !$("stickerCutBox").open) return;
+        if (!cutAuto(want)) {
+          $("stickerCutInfo").textContent = "Sujet introuvable : essaie « Fond uni » ou change la marge.";
+          return;
+        }
+        const r = cutRender(0, false);
+        $("stickerCutInfo").textContent = `${r.pct} % de l'image sera effacé`;
+        render();
+      }, 30);
+    }
+  }
   const r = cutRender(Number($("stickerTol").value), false, $("stickerCutHoles").checked);
   $("stickerCutInfo").textContent = `${r.pct} % de l'image sera effacé`;
   render();
@@ -148,6 +176,10 @@ $("stickerTol").ondblclick = () => {
   cutUpdate();
 };
 $("stickerCutHoles").onchange = cutUpdate;
+$("stickerInset").oninput = () => {
+  clearTimeout(cutUpdate.t);
+  cutUpdate.t = setTimeout(cutUpdate, 250);
+};
 $("stickerCutBox").addEventListener("toggle", () => ($("stickerCutBox").open ? cutUpdate() : cutClose()));
 $("stickerCutCancel").onclick = () => {
   $("stickerCutBox").open = false;
