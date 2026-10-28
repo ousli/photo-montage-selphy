@@ -70,7 +70,7 @@ h2 { margin: 0 0 4px; font-size: 0.8rem; text-transform: uppercase; letter-spaci
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(250px, 290px) minmax(0, 1fr) minmax(250px, 290px);
+  grid-template-columns: minmax(290px, 330px) minmax(0, 1fr) minmax(290px, 330px);
   gap: 14px;
   max-width: 1800px;
   margin: 0 auto;
@@ -618,3 +618,12 @@ body.no-photo [data-panel="info"] > :not(.nosel-note) { display: none !important
 .inspector .card > h2:not(:first-child) { margin-top: 6px; }
 .wide-layout .tabs button[data-tab="montage"] { display: none; }
 @media (max-width: 860px) { .inspector { display: none; } }
+
+/* Filtres : vignettes d'aperçu */
+#lookChips { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.look-tile { display: flex; flex-direction: column; gap: 4px; padding: 4px; align-items: stretch; background: var(--soft); border: 2px solid transparent; border-radius: 10px; font-size: 0.78rem; font-weight: 600; color: var(--text); }
+.look-tile canvas { width: 100%; height: auto; aspect-ratio: 3 / 2; border-radius: 6px; box-shadow: none; cursor: inherit; background: none; max-height: none; }
+.look-tile:hover:not(:disabled) { filter: none; background: var(--soft2); }
+.look-tile.on { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px rgba(51, 102, 255, 0.15); }
+.look-tile:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 860px) { .look-tile { min-height: 0; } }

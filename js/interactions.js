@@ -288,12 +288,55 @@ rotInput.addEventListener("input", () => {
 // Retouche de la photo sélectionnée
 const brightInput = $("bright");
 const contrastInput = $("contrast");
-const setLookChips = chipGroup($("lookChips"), FILTER_LABELS, (k) => {
-  const s = slots[selected];
-  if (!s) return;
-  s.look = k;
-  render();
+// Filtres : vignettes d'aperçu calculées sur la photo sélectionnée (filtre CSS, identique au rendu final)
+const lookBox = $("lookChips");
+const lookTiles = Object.entries(FILTER_LABELS).map(([k, label]) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "look-tile";
+  const c = document.createElement("canvas");
+  c.width = 96;
+  c.height = 64;
+  c.style.filter = filterCss({ look: k });
+  const span = document.createElement("span");
+  span.textContent = label;
+  b.append(c, span);
+  b.onclick = () => {
+    const s = slots[selected];
+    if (!s) return;
+    s.look = k;
+    render();
+  };
+  lookBox.appendChild(b);
+  return [k, b, c];
 });
+let lookThumbSrc = null;
+function drawLookThumbs(img) {
+  if (img === lookThumbSrc) return;
+  lookThumbSrc = img;
+  for (const [, , c] of lookTiles) {
+    const g = c.getContext("2d");
+    if (img) {
+      const k = Math.max(c.width / img.width, c.height / img.height);
+      g.drawImage(img, (c.width - img.width * k) / 2, (c.height - img.height * k) / 2, img.width * k, img.height * k);
+    } else {
+      const gr = g.createLinearGradient(0, 0, c.width, c.height);
+      gr.addColorStop(0, "#e9a14a");
+      gr.addColorStop(0.5, "#5aa0d8");
+      gr.addColorStop(1, "#4c9a5a");
+      g.fillStyle = gr;
+      g.fillRect(0, 0, c.width, c.height);
+    }
+  }
+}
+const setLookChips = (isOn, disabled) => {
+  const s = slots[selected];
+  drawLookThumbs(s && s.img);
+  lookTiles.forEach(([k, b]) => {
+    b.classList.toggle("on", isOn(k));
+    b.disabled = disabled;
+  });
+};
 brightInput.addEventListener("input", () => {
   const s = slots[selected];
   if (!s) return;
